@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import AdminSidebar from '../../../components/AdminSidebar'
 import { ArrowLeft, Plus, Edit, Trash2, CheckCircle, Clock } from 'lucide-react'
 
 interface ServiceHour {
@@ -172,83 +173,56 @@ export default function ServicePage() {
   const canVerify = profile.role === 'parent'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex">
+      <AdminSidebar userRole={profile?.role || 'student'} />
+      
+      <div className="flex-1 md:ml-80">
+        <nav className="glass border-b border-gray-700 sticky top-0 z-30">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={20} />
-                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Community Service & Extracurricular Log
-              </h1>
+              <h1 className="text-2xl font-bold gradient-text">Community Service & Extracurriculars</h1>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <main className="p-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-red-600">
-                      {getTotalHours()}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Hours Logged
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-red-500 to-pink-500">
+                  <span className="text-white font-semibold">HR</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Total Hours Logged</dt>
+                  <dd className="text-2xl font-bold text-white">{getTotalHours()}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-green-600">
-                      {getVerifiedHours()}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Verified Hours
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-green-500 to-teal-500">
+                  <span className="text-white font-semibold">VR</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Verified Hours</dt>
+                  <dd className="text-2xl font-bold text-white">{getVerifiedHours()}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {serviceHours.length}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Organizations Served
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500">
+                  <span className="text-white font-semibold">OR</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Organizations Served</dt>
+                  <dd className="text-2xl font-bold text-white">{serviceHours.length}</dd>
                 </div>
               </div>
             </div>
@@ -259,7 +233,7 @@ export default function ServicePage() {
             <div className="mb-6">
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+                className="btn-gradient px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
               >
                 <Plus size={20} />
                 <span>Log Service Hours</span>
@@ -269,26 +243,26 @@ export default function ServicePage() {
 
           {/* Add/Edit Form */}
           {showForm && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="card p-6 mb-6">
+              <h3 className="text-lg font-medium text-white mb-4">
                 {editingService ? 'Edit Service Hours' : 'Log New Service Hours'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="organization" className="block text-sm font-medium text-gray-300 mb-2">
                     Organization
                   </label>
                   <input
                     type="text"
                     id="organization"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-red-500 focus:border-red-500"
+                    className="input w-full px-4 py-3 rounded-lg"
                     value={formData.organization}
                     onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="hours" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="hours" className="block text-sm font-medium text-gray-300 mb-2">
                     Hours
                   </label>
                   <input
@@ -297,7 +271,7 @@ export default function ServicePage() {
                     step="0.5"
                     min="0"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-red-500 focus:border-red-500"
+                    className="input w-full px-4 py-3 rounded-lg"
                     value={formData.hours}
                     onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
                   />
@@ -305,7 +279,7 @@ export default function ServicePage() {
                 <div className="flex space-x-3">
                   <button
                     type="submit"
-                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                    className="btn-gradient px-4 py-2 rounded-lg"
                   >
                     {editingService ? 'Update Hours' : 'Log Hours'}
                   </button>
@@ -316,7 +290,7 @@ export default function ServicePage() {
                       setEditingService(null)
                       setFormData({ organization: '', hours: '' })
                     }}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                    className="glass px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
                   >
                     Cancel
                   </button>
@@ -326,12 +300,12 @@ export default function ServicePage() {
           )}
 
           {/* Service Hours Table */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Service Hours Log</h3>
+          <div className="card overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-700">
+              <h3 className="text-lg font-medium text-white">Service Hours Log</h3>
             </div>
             {serviceHours.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
+              <div className="p-6 text-center text-gray-400">
                 No service hours logged yet. {canEdit && 'Click "Log Service Hours" to get started.'}
               </div>
             ) : (
@@ -359,7 +333,7 @@ export default function ServicePage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {serviceHours.map((service) => (
                       <tr key={service.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {service.organization}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

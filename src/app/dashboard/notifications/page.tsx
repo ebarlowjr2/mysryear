@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import AdminSidebar from '../../../components/AdminSidebar'
 import { ArrowLeft, Bell, CheckCircle, AlertCircle, Info, Trash2 } from 'lucide-react'
 
 interface Notification {
@@ -144,33 +145,27 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.read).length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex">
+      <AdminSidebar userRole={profile?.role || 'student'} />
+      
+      <div className="flex-1 md:ml-80">
+        <nav className="glass border-b border-gray-700 sticky top-0 z-30">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={20} />
-                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Smart Notifications & Reminders
-              </h1>
+              <h1 className="text-2xl font-bold gradient-text">Smart Notifications & Reminders</h1>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <main className="p-6">
           {/* Header with Stats */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="card p-6 mb-6">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-lg font-medium text-gray-900">Notifications</h2>
+                <h2 className="text-lg font-medium text-white">Notifications</h2>
                 <p className="text-sm text-gray-600">
                   {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
                 </p>
@@ -189,9 +184,9 @@ export default function NotificationsPage() {
           {/* Notifications List */}
           <div className="space-y-4">
             {notifications.length === 0 ? (
-              <div className="bg-white shadow rounded-lg p-8 text-center">
+              <div className="card p-8 text-center">
                 <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                <h3 className="text-lg font-medium text-white mb-2">No notifications</h3>
                 <p className="text-gray-600">
                   You&apos;re all caught up! Notifications will appear here when you have deadlines, reminders, or updates.
                 </p>
@@ -209,7 +204,7 @@ export default function NotificationsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <p className={`text-sm ${notification.read ? 'text-gray-600' : 'text-gray-900 font-medium'}`}>
+                          <p className={`text-sm ${notification.read ? 'text-gray-400' : 'text-white font-medium'}`}>
                             {notification.message}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
@@ -250,8 +245,8 @@ export default function NotificationsPage() {
               <p>• <strong>Role-based Alerts:</strong> Parents and counselors receive relevant notifications about student progress</p>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

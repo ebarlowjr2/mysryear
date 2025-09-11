@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import AdminSidebar from '../../../components/AdminSidebar'
 import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Search } from 'lucide-react'
 
 interface Scholarship {
@@ -187,83 +188,56 @@ export default function ScholarshipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex">
+      <AdminSidebar userRole={profile?.role || 'student'} />
+      
+      <div className="flex-1 md:ml-80">
+        <nav className="glass border-b border-gray-700 sticky top-0 z-30">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={20} />
-                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Scholarship & Opportunity Finder
-              </h1>
+              <h1 className="text-2xl font-bold gradient-text">Scholarship Finder</h1>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <main className="p-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {scholarships.length}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Available Scholarships
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500">
+                  <span className="text-white font-semibold">SC</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Available Scholarships</dt>
+                  <dd className="text-2xl font-bold text-white">{scholarships.length}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {bookmarkedScholarships.length}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Bookmarked
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                  <span className="text-white font-semibold">BM</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Bookmarked</dt>
+                  <dd className="text-2xl font-bold text-white">{bookmarkedScholarships.length}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-red-600">
-                      {scholarships.filter(s => isDeadlineSoon(s.deadline)).length}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Deadlines Soon
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-red-500 to-pink-500">
+                  <span className="text-white font-semibold">DL</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Deadlines Soon</dt>
+                  <dd className="text-2xl font-bold text-white">{scholarships.filter(s => isDeadlineSoon(s.deadline)).length}</dd>
                 </div>
               </div>
             </div>
@@ -296,7 +270,7 @@ export default function ScholarshipsPage() {
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        <h3 className="text-lg font-medium text-white mb-2">
                           {scholarship.title}
                         </h3>
                         <div className="space-y-2 text-sm text-gray-600">
@@ -373,8 +347,8 @@ export default function ScholarshipsPage() {
               </div>
             </div>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

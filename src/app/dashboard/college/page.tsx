@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import AdminSidebar from '../../../components/AdminSidebar'
 import { ArrowLeft, Plus, Edit, Trash2, CheckCircle, Clock } from 'lucide-react'
 
 interface CollegeApplication {
@@ -212,31 +213,25 @@ export default function CollegePage() {
   const canEdit = profile.role === 'student'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex">
+      <AdminSidebar userRole={profile?.role || 'student'} />
+      
+      <div className="flex-1 md:ml-80">
+        <nav className="glass border-b border-gray-700 sticky top-0 z-30">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={20} />
-                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                College & Career Readiness Hub
-              </h1>
+              <h1 className="text-2xl font-bold gradient-text">College & Career Readiness</h1>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <main className="p-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="card p-6">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -255,7 +250,7 @@ export default function CollegePage() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="card p-6">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -274,7 +269,7 @@ export default function CollegePage() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="card p-6">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -293,7 +288,7 @@ export default function CollegePage() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="card p-6">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -328,8 +323,8 @@ export default function CollegePage() {
 
           {/* Add/Edit Form */}
           {showForm && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="card p-6 mb-6">
+              <h3 className="text-lg font-medium text-white mb-4">
                 {editingApp ? 'Edit Application' : 'Add New College Application'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -434,9 +429,9 @@ export default function CollegePage() {
           )}
 
           {/* Applications Table */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="card overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">College Applications</h3>
+              <h3 className="text-lg font-medium text-white">College Applications</h3>
             </div>
             {applications.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
@@ -472,7 +467,7 @@ export default function CollegePage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {applications.map((app) => (
                       <tr key={app.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {app.college_name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -515,8 +510,8 @@ export default function CollegePage() {
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

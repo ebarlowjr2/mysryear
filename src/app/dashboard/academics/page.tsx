@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import Link from 'next/link'
+import AdminSidebar from '../../../components/AdminSidebar'
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react'
 
 interface AcademicRecord {
@@ -176,94 +177,65 @@ export default function AcademicsPage() {
   const canEdit = profile.role === 'student'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex">
+      <AdminSidebar userRole={profile?.role || 'student'} />
+      
+      <div className="flex-1 md:ml-80">
+        <nav className="glass border-b border-gray-700 sticky top-0 z-30">
+          <div className="px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
+              <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft size={20} />
-                <span>Back to Dashboard</span>
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Academic Progress Tracker
-              </h1>
+              <h1 className="text-2xl font-bold gradient-text">Academic Progress Tracker</h1>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Stats Cards */}
+        <main className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {calculateGPA()}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Current GPA
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                  <span className="text-white font-semibold">GPA</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Current GPA</dt>
+                  <dd className="text-2xl font-bold text-white">{calculateGPA()}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-green-600">
-                      {getTotalCredits()}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Credits
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-green-500 to-teal-500">
+                  <span className="text-white font-semibold">CR</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Total Credits</dt>
+                  <dd className="text-2xl font-bold text-white">{getTotalCredits()}</dd>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {records.length}
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Courses Completed
-                      </dt>
-                    </dl>
-                  </div>
+            <div className="card p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                  <span className="text-white font-semibold">CO</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-sm font-medium text-gray-400">Courses Completed</dt>
+                  <dd className="text-2xl font-bold text-white">{records.length}</dd>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Add Course Button */}
           {canEdit && (
             <div className="mb-6">
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="btn-gradient px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
               >
                 <Plus size={20} />
                 <span>Add Course</span>
@@ -271,28 +243,27 @@ export default function AcademicsPage() {
             </div>
           )}
 
-          {/* Add/Edit Form */}
           {showForm && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="card p-6 mb-6">
+              <h3 className="text-lg font-medium text-white mb-4">
                 {editingRecord ? 'Edit Course' : 'Add New Course'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
                     Subject
                   </label>
                   <input
                     type="text"
                     id="subject"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="input w-full px-4 py-3 rounded-lg"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="credits" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="credits" className="block text-sm font-medium text-gray-300 mb-2">
                     Credits
                   </label>
                   <input
@@ -301,19 +272,19 @@ export default function AcademicsPage() {
                     step="0.5"
                     min="0"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="input w-full px-4 py-3 rounded-lg"
                     value={formData.credits}
                     onChange={(e) => setFormData({ ...formData, credits: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label htmlFor="grade" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="grade" className="block text-sm font-medium text-gray-300 mb-2">
                     Grade
                   </label>
                   <select
                     id="grade"
                     required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="input w-full px-4 py-3 rounded-lg"
                     value={formData.grade}
                     onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                   >
@@ -335,7 +306,7 @@ export default function AcademicsPage() {
                 <div className="flex space-x-3">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="btn-gradient px-4 py-2 rounded-lg"
                   >
                     {editingRecord ? 'Update Course' : 'Add Course'}
                   </button>
@@ -346,7 +317,7 @@ export default function AcademicsPage() {
                       setEditingRecord(null)
                       setFormData({ subject: '', credits: '', grade: '' })
                     }}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                    className="glass px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
                   >
                     Cancel
                   </button>
@@ -355,52 +326,51 @@ export default function AcademicsPage() {
             </div>
           )}
 
-          {/* Records Table */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Course Records</h3>
+          <div className="card overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-700">
+              <h3 className="text-lg font-medium text-white">Course Records</h3>
             </div>
             {records.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
+              <div className="p-6 text-center text-gray-400">
                 No courses added yet. {canEdit && 'Click "Add Course" to get started.'}
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-800/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Subject
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Credits
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Grade
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Date Added
                       </th>
                       {canEdit && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Actions
                         </th>
                       )}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-700">
                     {records.map((record) => (
-                      <tr key={record.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={record.id} className="hover:bg-gray-700/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                           {record.subject}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {record.credits}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {record.grade}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {new Date(record.created_at).toLocaleDateString()}
                         </td>
                         {canEdit && (
@@ -408,13 +378,13 @@ export default function AcademicsPage() {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEdit(record)}
-                                className="text-blue-600 hover:text-blue-900"
+                                className="text-purple-400 hover:text-purple-300 transition-colors"
                               >
                                 <Edit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDelete(record.id)}
-                                className="text-red-600 hover:text-red-900"
+                                className="text-red-400 hover:text-red-300 transition-colors"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -428,8 +398,8 @@ export default function AcademicsPage() {
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
