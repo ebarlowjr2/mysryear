@@ -393,8 +393,8 @@ export default function ServicePage() {
               </div>
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
