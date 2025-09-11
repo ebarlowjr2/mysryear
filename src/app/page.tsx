@@ -36,6 +36,118 @@ export default function Home() {
             </Link>
           </div>
 
+          <div className="mb-20">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Why My Senior Year?
+              </h2>
+              <p className="text-xl text-white/80 max-w-3xl mx-auto">
+                A comprehensive platform designed specifically for high school students navigating their path to graduation
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+              <div className="card p-8 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl">🎯</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-4">Stay On Track</h3>
+                <p className="text-gray-400 mb-4">
+                  Never miss important deadlines with smart notifications and personalized reminders for college applications, scholarships, and graduation requirements.
+                </p>
+                <Link href="/dashboard/notifications" className="text-purple-400 hover:text-purple-300 font-medium">
+                  Learn More →
+                </Link>
+              </div>
+              
+              <div className="card p-8 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl">📊</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-4">Track Your Progress</h3>
+                <p className="text-gray-400 mb-4">
+                  Visualize your academic journey with comprehensive tracking of grades, credits, GPA, and graduation requirements all in one place.
+                </p>
+                <Link href="/dashboard/academics" className="text-purple-400 hover:text-purple-300 font-medium">
+                  Learn More →
+                </Link>
+              </div>
+              
+              <div className="card p-8 text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl">🚀</span>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-4">Unlock Opportunities</h3>
+                <p className="text-gray-400 mb-4">
+                  Discover scholarships, college programs, and career paths tailored to your interests and achievements with our smart matching system.
+                </p>
+                <Link href="/dashboard/scholarships" className="text-purple-400 hover:text-purple-300 font-medium">
+                  Learn More →
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-20">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Proven Results
+              </h2>
+              <p className="text-xl text-white/80 max-w-3xl mx-auto">
+                Students using My Senior Year see measurable improvements in their graduation readiness
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
+              <div className="card p-6 text-center">
+                <div className="text-4xl font-bold gradient-text mb-2">94%</div>
+                <div className="text-white font-semibold mb-2">On-Time Graduation</div>
+                <div className="text-gray-400 text-sm">Students complete requirements on schedule</div>
+              </div>
+              
+              <div className="card p-6 text-center">
+                <div className="text-4xl font-bold gradient-text mb-2">87%</div>
+                <div className="text-white font-semibold mb-2">College Acceptance</div>
+                <div className="text-gray-400 text-sm">Students accepted to their top choice schools</div>
+              </div>
+              
+              <div className="card p-6 text-center">
+                <div className="text-4xl font-bold gradient-text mb-2">$12K</div>
+                <div className="text-white font-semibold mb-2">Average Scholarships</div>
+                <div className="text-gray-400 text-sm">In scholarship awards secured per student</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-20">
+            <div className="card p-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-6xl mb-6">💬</div>
+                <blockquote className="text-xl text-white/90 mb-6 italic">
+                  &ldquo;My Senior Year helped me stay organized and on track throughout my entire senior year. I discovered scholarships I never would have found on my own and graduated with confidence knowing I had completed everything I needed for college.&rdquo;
+                </blockquote>
+                <div className="flex items-center justify-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold">JS</span>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-white font-semibold">Jessica Smith</div>
+                    <div className="text-gray-400 text-sm">Class of 2024, Now at UC Berkeley</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Everything You Need in One Place
+            </h2>
+            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+              Comprehensive tools to manage every aspect of your senior year journey
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <div className="card p-6 animate-fade-in">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
