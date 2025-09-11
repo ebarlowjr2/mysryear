@@ -21,7 +21,7 @@ export default function Home() {
             The Graduation Tool<br />
             <span className="text-white/70">for the Modern Student</span>
           </h2>
-          <p className="text-lg text-white/80 mb-12 max-w-2xl mx-auto">
+          <p className="text-lg text-white/80 mb-12 max-w-5xl mx-auto">
             Navigate your path to graduation with confidence. Track academics, 
             manage college applications, find scholarships, and log community service 
             all in one place.
@@ -41,12 +41,12 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Why My Senior Year?
               </h2>
-              <p className="text-xl text-white/80 max-w-3xl mx-auto">
+              <p className="text-xl text-white/80 max-w-5xl mx-auto">
                 A comprehensive platform designed specifically for high school students navigating their path to graduation
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
               <div className="card p-8 text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-3xl">🎯</span>
@@ -93,12 +93,12 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Proven Results
               </h2>
-              <p className="text-xl text-white/80 max-w-3xl mx-auto">
+              <p className="text-xl text-white/80 max-w-5xl mx-auto">
                 Students using My Senior Year see measurable improvements in their graduation readiness
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
               <div className="card p-6 text-center">
                 <div className="text-4xl font-bold gradient-text mb-2">94%</div>
                 <div className="text-white font-semibold mb-2">On-Time Graduation</div>
@@ -120,7 +120,7 @@ export default function Home() {
           </div>
 
           <div className="mb-20">
-            <div className="card p-8 max-w-4xl mx-auto">
+            <div className="card p-8 max-w-5xl mx-auto">
               <div className="text-center">
                 <div className="text-6xl mb-6">💬</div>
                 <blockquote className="text-xl text-white/90 mb-6 italic">
@@ -143,7 +143,7 @@ export default function Home() {
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
               Everything You Need in One Place
             </h2>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+            <p className="text-lg text-white/80 max-w-5xl mx-auto">
               Comprehensive tools to manage every aspect of your senior year journey
             </p>
           </div>
