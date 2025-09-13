@@ -1,188 +1,107 @@
+import Section from "@/components/Section";
+import FeatureCard from "@/components/FeatureCard";
+import Timeline from "@/components/Timeline";
+import { GraduationCap, CalendarClock, ClipboardList, Layers, FileText, Search } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  const timeline = [
+    { month: "August–September", items: ["Finalize senior schedule", "List target schools or trade paths", "Create Common App / state app accounts"] },
+    { month: "October", items: ["Complete FAFSA® (when open)", "Request recommendation letters", "Book ACT/SAT (if needed)"] },
+    { month: "November–December", items: ["Early Action/Decision deadlines", "Scholarship application sprints", "Audit resume & activities list"] },
+    { month: "January–March", items: ["Regular decision apps", "Compare aid letters", "Visit campuses or programs"] },
+    { month: "April–May", items: ["Make your choice", "Submit housing & deposits", "Celebrate next steps"] },
+  ];
+
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-900/50 to-slate-900"></div>
-      
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-0 right-1/4 w-60 h-60 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-6xl md:text-7xl font-bold mb-6">
-            <span className="gradient-text">My Senior Year</span>
-          </h1>
-          <h2 className="text-2xl md:text-3xl font-semibold text-white/90 mb-8">
-            The Graduation Tool<br />
-            <span className="text-white/70">for the Modern Student</span>
-          </h2>
-          <p className="text-lg text-white/80 mb-12 max-w-5xl mx-auto">
-            Navigate your path to graduation with confidence. Track academics, 
-            manage college applications, find scholarships, and log community service 
-            all in one place.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
-            <Link href="/signup" className="btn-gradient px-8 py-4 rounded-lg font-semibold text-lg min-w-[160px]">
-              Get Started
-            </Link>
-            <Link href="/login" className="glass px-8 py-4 rounded-lg font-semibold text-lg text-white hover:bg-white/10 transition-all duration-300 min-w-[160px]">
-              Sign In
-            </Link>
-          </div>
-
-          <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Why My Senior Year?
-              </h2>
-              <p className="text-xl text-white/80 max-w-5xl mx-auto">
-                A comprehensive platform designed specifically for high school students navigating their path to graduation
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-              <div className="card p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-3xl">🎯</span>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-4">Stay On Track</h3>
-                <p className="text-gray-400 mb-4">
-                  Never miss important deadlines with smart notifications and personalized reminders for college applications, scholarships, and graduation requirements.
-                </p>
-                <Link href="/dashboard/notifications" className="text-purple-400 hover:text-purple-300 font-medium">
-                  Learn More →
-                </Link>
-              </div>
-              
-              <div className="card p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-3xl">📊</span>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-4">Track Your Progress</h3>
-                <p className="text-gray-400 mb-4">
-                  Visualize your academic journey with comprehensive tracking of grades, credits, GPA, and graduation requirements all in one place.
-                </p>
-                <Link href="/dashboard/academics" className="text-purple-400 hover:text-purple-300 font-medium">
-                  Learn More →
-                </Link>
-              </div>
-              
-              <div className="card p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-3xl">🚀</span>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-4">Unlock Opportunities</h3>
-                <p className="text-gray-400 mb-4">
-                  Discover scholarships, college programs, and career paths tailored to your interests and achievements with our smart matching system.
-                </p>
-                <Link href="/dashboard/scholarships" className="text-purple-400 hover:text-purple-300 font-medium">
-                  Learn More →
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Proven Results
-              </h2>
-              <p className="text-xl text-white/80 max-w-5xl mx-auto">
-                Students using My Senior Year see measurable improvements in their graduation readiness
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-              <div className="card p-6 text-center">
-                <div className="text-4xl font-bold gradient-text mb-2">94%</div>
-                <div className="text-white font-semibold mb-2">On-Time Graduation</div>
-                <div className="text-gray-400 text-sm">Students complete requirements on schedule</div>
-              </div>
-              
-              <div className="card p-6 text-center">
-                <div className="text-4xl font-bold gradient-text mb-2">87%</div>
-                <div className="text-white font-semibold mb-2">College Acceptance</div>
-                <div className="text-gray-400 text-sm">Students accepted to their top choice schools</div>
-              </div>
-              
-              <div className="card p-6 text-center">
-                <div className="text-4xl font-bold gradient-text mb-2">$12K</div>
-                <div className="text-white font-semibold mb-2">Average Scholarships</div>
-                <div className="text-gray-400 text-sm">In scholarship awards secured per student</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-20">
-            <div className="card p-8 max-w-5xl mx-auto">
-              <div className="text-center">
-                <div className="text-6xl mb-6">💬</div>
-                <blockquote className="text-xl text-white/90 mb-6 italic">
-                  &ldquo;My Senior Year helped me stay organized and on track throughout my entire senior year. I discovered scholarships I never would have found on my own and graduated with confidence knowing I had completed everything I needed for college.&rdquo;
-                </blockquote>
-                <div className="flex items-center justify-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">JS</span>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-white font-semibold">Jessica Smith</div>
-                    <div className="text-gray-400 text-sm">Class of 2024, Now at UC Berkeley</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Everything You Need in One Place
-            </h2>
-            <p className="text-lg text-white/80 max-w-5xl mx-auto">
-              Comprehensive tools to manage every aspect of your senior year journey
+    <>
+      {/* Hero */}
+      <section className="container-prose pt-14 pb-10">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <div className="badge mb-4">Built for Students & Parents</div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
+              Your senior year,<br className="hidden sm:block" /> organized and stress‑less.
+            </h1>
+            <p className="mt-4 text-lg text-slate-700">
+              My SR Year is a launchpad to manage applications, track scholarships, and plan life after high school—college, trades, military, or entrepreneurship.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/dashboard" className="btn-primary">Open Dashboard</Link>
+              <Link href="/how-it-works" className="btn-secondary">How it Works</Link>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">No account required to explore. Sign in to save progress.</p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="card p-6 animate-fade-in">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-2xl">🎓</span>
+          <div className="relative">
+            <div className="card p-6">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="card p-4">
+                  <div className="text-sm font-semibold text-slate-600">Next Deadline</div>
+                  <div className="text-2xl font-black mt-1">FAFSA® opens</div>
+                  <p className="mt-2 text-sm text-slate-600">Add a reminder and checklist.</p>
+                </div>
+                <div className="card p-4">
+                  <div className="text-sm font-semibold text-slate-600">Scholarships</div>
+                  <div className="text-2xl font-black mt-1">12 matches</div>
+                  <p className="mt-2 text-sm text-slate-600">Filtered by GPA, state, and interests.</p>
+                </div>
+                <div className="card p-4">
+                  <div className="text-sm font-semibold text-slate-600">Applications</div>
+                  <div className="text-2xl font-black mt-1">3 in progress</div>
+                  <p className="mt-2 text-sm text-slate-600">Keep essays, docs, and due dates together.</p>
+                </div>
+                <div className="card p-4">
+                  <div className="text-sm font-semibold text-slate-600">Parent View</div>
+                  <div className="text-2xl font-black mt-1">On track</div>
+                  <p className="mt-2 text-sm text-slate-600">Weekly summary emails and check-ins.</p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Academic Progress</h3>
-              <p className="text-gray-400">Track courses, grades, and graduation requirements</p>
-            </div>
-            
-            <div className="card p-6 animate-fade-in" style={{animationDelay: '0.1s'}}>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-2xl">🏫</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">College Readiness</h3>
-              <p className="text-gray-400">Manage applications, essays, and recommendations</p>
-            </div>
-            
-            <div className="card p-6 animate-fade-in" style={{animationDelay: '0.2s'}}>
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-2xl">💰</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Scholarships</h3>
-              <p className="text-gray-400">Discover and track scholarship opportunities</p>
-            </div>
-            
-            <div className="card p-6 animate-fade-in" style={{animationDelay: '0.3s'}}>
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
-                <span className="text-2xl">🤝</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Service Hours</h3>
-              <p className="text-gray-400">Log community service and extracurriculars</p>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* Features */}
+      <Section title="Everything in one place" subtitle="Replace sticky notes and scattered tabs with a simple dashboard.">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <FeatureCard icon={<GraduationCap />} title="Scholarship Finder" desc="Curated and scraped sources with filters for GPA, state, major, identity, and deadlines." href="/scholarships" />
+          <FeatureCard icon={<CalendarClock />} title="Senior Year Timeline" desc="Auto‑generated milestones you can customize for your state and goals." href="/planner" />
+          <FeatureCard icon={<ClipboardList />} title="Application Tracker" desc="Track each school or program with tasks, essays, and required documents." href="/applications" />
+          <FeatureCard icon={<FileText />} title="Essay & Resume Vault" desc="Keep drafts, feedback, and activity lists tidy. Export when ready." href="/resources" />
+          <FeatureCard icon={<Search />} title="Post‑HS Paths" desc="Compare college, trades, military, gap year, and entrepreneurship with real steps." href="/resources" />
+          <FeatureCard icon={<Layers />} title="Parent & Counselor View" desc="Optional shared view with weekly summaries (no student surveillance)." href="/dashboard" />
+        </div>
+      </Section>
+
+      {/* Timeline */}
+      <Section id="timeline" title="A clear path from August to May" subtitle="Use ours or make your own.">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <Timeline data={timeline} />
+          <div className="card p-6">
+            <h3 className="text-xl font-bold">Why it works</h3>
+            <ul className="mt-3 list-disc ml-5 space-y-2 text-slate-700">
+              <li>Structured weekly checklists prevent last‑minute scrambles.</li>
+              <li>Scholarship feeds reduce busywork and save money.</li>
+              <li>Parent view keeps adults looped in without micromanaging.</li>
+            </ul>
+            <div className="mt-6 flex gap-3">
+              <a href="/how-it-works" className="btn-primary">See the flow</a>
+              <a href="/dashboard" className="btn-secondary">Try the demo</a>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* CTA */}
+      <section className="container-prose pb-24">
+        <div className="card p-8 text-center">
+          <h3 className="text-2xl sm:text-3xl font-black">Ready to get organized?</h3>
+          <p className="mt-2 text-slate-700">Start with the dashboard, then connect a parent/counselor if you want help.</p>
+          <div className="mt-4">
+            <a className="btn-primary" href="/dashboard">Open the Dashboard</a>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
