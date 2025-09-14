@@ -2,13 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth0 } from "./lib/auth0";
 
 export async function middleware(request: NextRequest) {
-  const authResponse = await auth0.middleware(request);
-  
-  if (request.nextUrl.pathname.startsWith("/auth")) {
-    return authResponse;
-  }
-  
-  return authResponse;
+  return await auth0.middleware(request);
 }
 
 export const config = {
