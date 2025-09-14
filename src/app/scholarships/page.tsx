@@ -1,13 +1,38 @@
-import React from "react";
+'use client'
+
+import React, { useEffect, useState } from "react";
 import ScholarshipCard, { type Scholarship } from "@/components/ScholarshipCard";
 
-async function getScholarships(): Promise<Scholarship[]> {
-  const res = await fetch("/api/scholarships", { cache: "no-store" });
-  return res.json();
-}
+export default function Scholarships() {
+  const [items, setItems] = useState<Scholarship[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function Scholarships() {
-  const items = await getScholarships();
+  useEffect(() => {
+    async function getScholarships() {
+      try {
+        const res = await fetch("/api/scholarships", { cache: "no-store" });
+        const data = await res.json();
+        setItems(data);
+      } catch (error) {
+        console.error("Failed to fetch scholarships:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getScholarships();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container-prose py-14 md:py-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading scholarships...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-prose py-14 md:py-16">
       <h1 className="text-4xl font-black tracking-tight">Scholarships</h1>
