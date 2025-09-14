@@ -1,37 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { User } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
 import Link from 'next/link'
 import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-react'
 
-export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+function Dashboard() {
+  const { user, isLoading } = useUser()
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      setUser(user)
-      setLoading(false)
-    }
-
-    getUser()
-  }, [router])
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -49,12 +25,12 @@ export default function Dashboard() {
           <h1 className="text-4xl font-black tracking-tight">Dashboard</h1>
           <p className="text-slate-700 mt-2">Welcome back, {user?.email}</p>
         </div>
-        <button
-          onClick={handleSignOut}
+        <a
+          href="/auth/logout"
           className="btn-secondary"
         >
           Sign Out
-        </button>
+        </a>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -111,3 +87,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+export default withPageAuthRequired(Dashboard)
