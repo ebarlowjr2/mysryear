@@ -1,7 +1,6 @@
-import { NextRequest } from 'next/server';
 import { auth0 } from '../../../../../lib/auth0';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return auth0.startInteractiveLogin({
     returnTo: '/dashboard'
   });
