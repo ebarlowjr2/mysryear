@@ -33,12 +33,12 @@ export default function Navbar() {
             user ? (
               <>
                 <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-                <a href="/auth/logout" className="btn-primary">Sign Out</a>
+                <a href="/api/auth/logout" className="btn-primary">Sign Out</a>
               </>
             ) : (
               <>
-                <a href="/auth/login" className="btn-secondary">Dashboard</a>
-                <a href="/auth/login" className="btn-primary">Sign In</a>
+                <a href="/api/auth/login" className="btn-secondary">Dashboard</a>
+                <a href="/api/auth/login" className="btn-primary">Sign In</a>
               </>
             )
           )}
