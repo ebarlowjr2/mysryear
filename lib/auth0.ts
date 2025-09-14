@@ -8,5 +8,10 @@ export const auth0 = new Auth0Client({
   appBaseUrl: process.env.APP_BASE_URL || '',
   authorizationParameters: {
     scope: 'openid profile email'
+  },
+  routes: {
+    callback: '/api/auth/callback',
+    login: '/api/auth/login',
+    logout: '/api/auth/logout'
   }
 });
