@@ -39,9 +39,9 @@ export default function ClientArea({ initialDiscover }:{ initialDiscover: Row[] 
     return matchesQ && matchesAmt && matchesState && matchesDeadline;
   });
 
-  const filteredDiscover = useMemo(()=>filterFn(initialDiscover), [initialDiscover, filters]);
-  const filteredTodo = useMemo(()=>filterFn(todo), [todo, filters]);
-  const filteredApplied = useMemo(()=>filterFn(applied), [applied, filters]);
+  const filteredDiscover = useMemo(()=>filterFn(initialDiscover), [initialDiscover, filterFn]);
+  const filteredTodo = useMemo(()=>filterFn(todo), [todo, filterFn]);
+  const filteredApplied = useMemo(()=>filterFn(applied), [applied, filterFn]);
 
   return (
     <div className="mt-6">

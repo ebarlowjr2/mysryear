@@ -228,6 +228,28 @@ CREATE INDEX IF NOT EXISTS idx_service_hours_journey_id ON service_hours(journey
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
 
+CREATE TABLE IF NOT EXISTS scraped_scholarships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  amount TEXT,
+  deadline TEXT NOT NULL,
+  link TEXT NOT NULL,
+  state TEXT,
+  tags TEXT[],
+  source TEXT NOT NULL,
+  scraped_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE scraped_scholarships ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view scraped scholarships" ON scraped_scholarships
+  FOR SELECT USING (is_active = true);
+
+CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_source ON scraped_scholarships(source);
+CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_active ON scraped_scholarships(is_active);
+
 INSERT INTO scholarships (title, deadline, eligibility, link) VALUES
 ('National Merit Scholarship', '2025-10-15', '{"gpa_min": 3.5, "grade_level": "senior"}', 'https://www.nationalmerit.org/'),
 ('Gates Millennium Scholars Program', '2025-01-15', '{"gpa_min": 3.3, "financial_need": true}', 'https://www.gmsp.org/'),
