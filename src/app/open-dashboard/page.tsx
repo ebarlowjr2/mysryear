@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import StatTile from "@/components/StatTile";
 import DocUpload from "@/components/DocUpload";
 
+export const dynamic = "force-dynamic";
+
 export default async function OpenDashboard() {
   const session = await getSession();
   if (!session) {
