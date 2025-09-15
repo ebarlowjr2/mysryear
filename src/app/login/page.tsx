@@ -44,7 +44,7 @@ export default function Login() {
         <div className="card p-8">
           <div className="space-y-6">
             <a
-              href="/api/auth/login"
+              href="/auth/login"
               className="btn-primary w-full py-3 px-4 rounded-lg font-semibold text-center block"
             >
               Sign in with Auth0
@@ -54,7 +54,7 @@ export default function Login() {
               <p className="text-sm text-slate-600">
                 New to My Senior Year?{' '}
                 <a
-                  href="/api/auth/login?screen_hint=signup"
+                  href="/auth/login?screen_hint=signup"
                   className="font-medium text-brand-600 hover:text-brand-700 transition-colors"
                 >
                   Create an account

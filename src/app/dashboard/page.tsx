@@ -26,7 +26,7 @@ function Dashboard() {
           <p className="text-slate-700 mt-2">Welcome back, {user?.email}</p>
         </div>
         <a
-          href="/api/auth/logout"
+          href="/auth/logout"
           className="btn-secondary"
         >
           Sign Out
