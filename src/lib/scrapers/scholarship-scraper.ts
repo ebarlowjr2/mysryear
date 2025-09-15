@@ -17,17 +17,32 @@ export class ScholarshipScraper {
   async initDriver(): Promise<void> {
     const options = new chrome.Options();
     options.addArguments(
-      '--headless',
+      '--headless=new',
       '--no-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--disable-extensions',
+      '--disable-setuid-sandbox',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-field-trial-config',
+      '--disable-ipc-flooding-protection',
       '--window-size=1920,1080',
-      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      '--user-data-dir=/tmp/chrome-user-data',
+      '--data-path=/tmp/chrome-data',
+      '--disk-cache-dir=/tmp/chrome-cache',
+      '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
+    const service = new chrome.ServiceBuilder('/usr/bin/chromedriver');
+    
     this.driver = await new Builder()
       .forBrowser('chrome')
       .setChromeOptions(options)
+      .setChromeService(service)
       .build();
   }
 
