@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 async function fetchDiscover() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://mysryear.vercel.app');
   const res = await fetch(`${base}/api/scholarships`, { cache: "no-store" });
   return res.json();
 }
