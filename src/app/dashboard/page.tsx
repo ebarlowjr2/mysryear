@@ -85,6 +85,12 @@ export default function Dashboard() {
           <h3 className="text-lg font-bold mb-2">Resources</h3>
           <p className="text-slate-600 text-sm">Essays, resumes, and guides</p>
         </Link>
+        
+        <Link href="/open-dashboard/scholarships" className="card p-6 hover:shadow-lg transition">
+          <GraduationCap className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Enhanced Scholarships</h3>
+          <p className="text-slate-600 text-sm">Advanced filtering and tracking</p>
+        </Link>
       </div>
     </div>
   )
