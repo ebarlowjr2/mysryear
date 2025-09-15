@@ -1,0 +1,6 @@
+{
+  "crons": [{
+    "path": "/api/cron/scrape-scholarships",
+    "schedule": "0 6 * * *"
+  }]
+}
