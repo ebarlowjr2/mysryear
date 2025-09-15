@@ -33,14 +33,11 @@ export default function Navbar() {
             user ? (
               <>
                 <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a href="/auth/logout" className="btn-primary">Sign Out</a>
               </>
             ) : (
               <>
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a href="/auth/login" className="btn-secondary">Dashboard</a>
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a href="/auth/login" className="btn-primary">Sign In</a>
               </>
             )

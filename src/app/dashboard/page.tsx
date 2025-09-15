@@ -25,7 +25,6 @@ function Dashboard() {
           <h1 className="text-4xl font-black tracking-tight">Dashboard</h1>
           <p className="text-slate-700 mt-2">Welcome back, {user?.email}</p>
         </div>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/auth/logout"
           className="btn-secondary"
