@@ -1,62 +1,64 @@
 'use client'
 
-import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0'
 import Link from 'next/link'
 import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-react'
+import StatTile from '@/components/StatTile'
+import DocUpload from '@/components/DocUpload'
 
-function Dashboard() {
-  const { user, isLoading } = useUser()
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading dashboard...</p>
-        </div>
-      </div>
-    )
-  }
+export default function Dashboard() {
+  const upcomingDates = [
+    { date: 'Oct 15', event: 'FAFSA opens' },
+    { date: 'Nov 1', event: 'Early Action deadline' },
+    { date: 'Nov 15', event: 'Scholarship applications due' },
+    { date: 'Dec 1', event: 'Regular decision apps open' },
+  ];
 
   return (
     <div className="container-prose py-14">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-black tracking-tight">Dashboard</h1>
-          <p className="text-slate-700 mt-2">Welcome back, {user?.email}</p>
+          <p className="text-slate-700 mt-2">Your senior year, organized and stress-less</p>
         </div>
-        <a
-          href="/auth/logout"
-          className="btn-secondary"
-        >
-          Sign Out
-        </a>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatTile 
+          label="Scholarships" 
+          value="12 matches" 
+          desc="Filtered by GPA, state, and interests" 
+        />
+        <StatTile 
+          label="Admissions Deadlines" 
+          value="4 upcoming" 
+          desc="Early Action and Regular Decision" 
+        />
+        <StatTile 
+          label="Application Tasks" 
+          value="7 pending" 
+          desc="Essays, recommendations, transcripts" 
+        />
+        <StatTile 
+          label="Checklist Items" 
+          value="15 completed" 
+          desc="Senior year milestones on track" 
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="card p-6">
-          <div className="text-sm font-semibold text-slate-600">Applications</div>
-          <div className="text-2xl font-black mt-1">3 in progress</div>
-          <p className="mt-2 text-sm text-slate-600">Track your college applications</p>
+          <h3 className="text-lg font-bold mb-4">Upcoming Dates</h3>
+          <div className="space-y-3">
+            {upcomingDates.map((item, i) => (
+              <div key={i} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                <span className="font-medium">{item.event}</span>
+                <span className="text-sm text-slate-600">{item.date}</span>
+              </div>
+            ))}
+          </div>
         </div>
         
-        <div className="card p-6">
-          <div className="text-sm font-semibold text-slate-600">Scholarships</div>
-          <div className="text-2xl font-black mt-1">12 matches</div>
-          <p className="mt-2 text-sm text-slate-600">Filtered by your profile</p>
-        </div>
-        
-        <div className="card p-6">
-          <div className="text-sm font-semibold text-slate-600">Timeline</div>
-          <div className="text-2xl font-black mt-1">On track</div>
-          <p className="mt-2 text-sm text-slate-600">Senior year milestones</p>
-        </div>
-        
-        <div className="card p-6">
-          <div className="text-sm font-semibold text-slate-600">Resources</div>
-          <div className="text-2xl font-black mt-1">5 saved</div>
-          <p className="mt-2 text-sm text-slate-600">Essays and documents</p>
-        </div>
+        <DocUpload />
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -87,5 +89,3 @@ function Dashboard() {
     </div>
   )
 }
-
-export default withPageAuthRequired(Dashboard)

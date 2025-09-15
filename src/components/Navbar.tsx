@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import Logo from "./Logo";
 import { usePathname } from "next/navigation";
-import { useUser } from '@auth0/nextjs-auth0';
 import { cn } from "../lib/utils";
 
 const links = [
@@ -15,7 +14,6 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, isLoading } = useUser();
   
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-slate-200">
@@ -29,19 +27,8 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          {!isLoading && (
-            user ? (
-              <>
-                <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-                <a href="/auth/logout" className="btn-primary">Sign Out</a>
-              </>
-            ) : (
-              <>
-                <a href="/auth/login" className="btn-secondary">Dashboard</a>
-                <a href="/auth/login" className="btn-primary">Sign In</a>
-              </>
-            )
-          )}
+          <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
+          <Link href="/dashboard" className="btn-primary">Open Dashboard</Link>
         </div>
       </div>
     </header>
