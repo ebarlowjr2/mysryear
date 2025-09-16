@@ -1,6 +1,3 @@
-import { Builder, By, WebDriver, until } from 'selenium-webdriver';
-import chrome from 'selenium-webdriver/chrome';
-
 export interface ScrapedScholarship {
   name: string;
   amount: string;
@@ -12,45 +9,34 @@ export interface ScrapedScholarship {
 }
 
 export class ScholarshipScraper {
-  private driver: WebDriver | null = null;
+  private apiKey: string;
+  private baseUrl = 'https://app.scrapingbee.com/api/v1/';
 
-  async initDriver(): Promise<void> {
-    const options = new chrome.Options();
-    options.addArguments(
-      '--headless=new',
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor',
-      '--disable-extensions',
-      '--disable-setuid-sandbox',
-      '--disable-background-timer-throttling',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-      '--disable-field-trial-config',
-      '--disable-ipc-flooding-protection',
-      '--window-size=1920,1080',
-      '--user-data-dir=/tmp/chrome-user-data',
-      '--data-path=/tmp/chrome-data',
-      '--disk-cache-dir=/tmp/chrome-cache',
-      '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-
-    const service = new chrome.ServiceBuilder('/usr/bin/chromedriver');
-    
-    this.driver = await new Builder()
-      .forBrowser('chrome')
-      .setChromeOptions(options)
-      .setChromeService(service)
-      .build();
+  constructor() {
+    this.apiKey = process.env.SCRAPINGBEE_API_KEY || '';
+    if (!this.apiKey) {
+      console.warn('SCRAPINGBEE_API_KEY not found, scraping will fail');
+    }
   }
 
-  async closeDriver(): Promise<void> {
-    if (this.driver) {
-      await this.driver.quit();
-      this.driver = null;
+  private async makeRequest(url: string, options: Record<string, string> = {}): Promise<string> {
+    const params = new URLSearchParams({
+      api_key: this.apiKey,
+      url: url,
+      render_js: 'true',
+      wait: '3000',
+      premium_proxy: 'true',
+      country_code: 'us',
+      ...options
+    });
+
+    const response = await fetch(`${this.baseUrl}?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`ScrapingBee API error: ${response.status} ${response.statusText}`);
     }
+    
+    return await response.text();
   }
 
   private async randomDelay(min: number = 2000, max: number = 5000): Promise<void> {
@@ -83,42 +69,26 @@ export class ScholarshipScraper {
   }
 
   async scrapeFastweb(): Promise<ScrapedScholarship[]> {
-    if (!this.driver) throw new Error('Driver not initialized');
-    
     const scholarships: ScrapedScholarship[] = [];
     
     try {
-      await this.driver.get('https://www.fastweb.com/college-scholarships');
+      console.log('Scraping Fastweb...');
+      const html = await this.makeRequest('https://www.fastweb.com/college-scholarships');
       
-      await this.driver.wait(until.titleContains('Scholarships'), 30000);
-      await this.randomDelay(3000, 6000);
+      await this.randomDelay(2000, 4000);
       
-      const scholarshipElements = await this.driver.findElements(By.css('.scholarship-item, .result-item, .search-result'));
+      const scholarshipMatches = this.extractScholarshipsFromHTML(html);
       
-      for (const element of scholarshipElements.slice(0, 20)) {
-        try {
-          const nameEl = await element.findElement(By.css('.title, h3, .scholarship-title')).catch(() => null);
-          const amountEl = await element.findElement(By.css('.amount, .award, .scholarship-amount')).catch(() => null);
-          const deadlineEl = await element.findElement(By.css('.deadline, .due-date, .scholarship-deadline')).catch(() => null);
-          const linkEl = await element.findElement(By.css('a')).catch(() => null);
-          
-          if (nameEl && linkEl) {
-            const name = await nameEl.getText();
-            const amount = amountEl ? await amountEl.getText() : '$0';
-            const deadline = deadlineEl ? await deadlineEl.getText() : 'TBD';
-            const link = await linkEl.getAttribute('href');
-            
-            scholarships.push({
-              name: name.trim(),
-              amount: this.parseAmount(amount),
-              deadline: this.parseDeadline(deadline),
-              link: link,
-              source: 'fastweb',
-              tags: this.extractTags(name + ' ' + amount)
-            });
-          }
-        } catch (err) {
-          console.warn('Failed to parse scholarship element:', err);
+      for (const match of scholarshipMatches.slice(0, 15)) {
+        if (match.name && match.link) {
+          scholarships.push({
+            name: match.name.trim(),
+            amount: this.parseAmount(match.amount || '$0'),
+            deadline: this.parseDeadline(match.deadline || 'TBD'),
+            link: this.normalizeUrl(match.link, 'https://www.fastweb.com'),
+            source: 'fastweb',
+            tags: this.extractTags(match.name + ' ' + (match.amount || ''))
+          });
         }
       }
     } catch (error) {
@@ -129,42 +99,26 @@ export class ScholarshipScraper {
   }
 
   async scrapeScholarshipsCom(): Promise<ScrapedScholarship[]> {
-    if (!this.driver) throw new Error('Driver not initialized');
-    
     const scholarships: ScrapedScholarship[] = [];
     
     try {
-      await this.driver.get('https://www.scholarships.com/financial-aid/college-scholarships');
+      console.log('Scraping Scholarships.com...');
+      const html = await this.makeRequest('https://www.scholarships.com/financial-aid/college-scholarships');
       
-      await this.driver.wait(until.titleContains('Scholarships'), 30000);
-      await this.randomDelay(3000, 6000);
+      await this.randomDelay(2000, 4000);
       
-      const scholarshipElements = await this.driver.findElements(By.css('.scholarship-item, .result-item, .search-result'));
+      const scholarshipMatches = this.extractScholarshipsFromHTML(html);
       
-      for (const element of scholarshipElements.slice(0, 20)) {
-        try {
-          const nameEl = await element.findElement(By.css('.title, h3, .scholarship-title')).catch(() => null);
-          const amountEl = await element.findElement(By.css('.amount, .award, .scholarship-amount')).catch(() => null);
-          const deadlineEl = await element.findElement(By.css('.deadline, .due-date, .scholarship-deadline')).catch(() => null);
-          const linkEl = await element.findElement(By.css('a')).catch(() => null);
-          
-          if (nameEl && linkEl) {
-            const name = await nameEl.getText();
-            const amount = amountEl ? await amountEl.getText() : '$0';
-            const deadline = deadlineEl ? await deadlineEl.getText() : 'TBD';
-            const link = await linkEl.getAttribute('href');
-            
-            scholarships.push({
-              name: name.trim(),
-              amount: this.parseAmount(amount),
-              deadline: this.parseDeadline(deadline),
-              link: link,
-              source: 'scholarships.com',
-              tags: this.extractTags(name + ' ' + amount)
-            });
-          }
-        } catch (err) {
-          console.warn('Failed to parse scholarship element:', err);
+      for (const match of scholarshipMatches.slice(0, 15)) {
+        if (match.name && match.link) {
+          scholarships.push({
+            name: match.name.trim(),
+            amount: this.parseAmount(match.amount || '$0'),
+            deadline: this.parseDeadline(match.deadline || 'TBD'),
+            link: this.normalizeUrl(match.link, 'https://www.scholarships.com'),
+            source: 'scholarships.com',
+            tags: this.extractTags(match.name + ' ' + (match.amount || ''))
+          });
         }
       }
     } catch (error) {
@@ -174,8 +128,51 @@ export class ScholarshipScraper {
     return scholarships;
   }
 
+  private extractScholarshipsFromHTML(html: string): Array<{name: string; amount: string | null; deadline: string | null; link: string | null}> {
+    const scholarships: Array<{name: string; amount: string | null; deadline: string | null; link: string | null}> = [];
+    
+    try {
+      const titleRegex = /<[^>]*class="[^"]*(?:title|scholarship-title|scholarship-name)[^"]*"[^>]*>([^<]+)</gi;
+      const amountRegex = /\$[\d,]+(?:\.\d{2})?/g;
+      const linkRegex = /<a[^>]*href="([^"]*(?:scholarship|apply)[^"]*)"[^>]*>/gi;
+      
+      let titleMatch;
+      while ((titleMatch = titleRegex.exec(html)) !== null) {
+        const name = titleMatch[1].trim();
+        if (name && name.length > 5) {
+          const contextStart = Math.max(0, titleMatch.index - 500);
+          const contextEnd = Math.min(html.length, titleMatch.index + 500);
+          const context = html.slice(contextStart, contextEnd);
+          
+          const amountMatch = context.match(amountRegex);
+          const linkMatch = linkRegex.exec(context);
+          
+          scholarships.push({
+            name,
+            amount: amountMatch ? amountMatch[0] : null,
+            deadline: null,
+            link: linkMatch ? linkMatch[1] : null
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Error parsing HTML:', error);
+    }
+    
+    return scholarships;
+  }
+
+  private normalizeUrl(url: string, baseUrl: string): string {
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return baseUrl + url;
+    return baseUrl + '/' + url;
+  }
+
   async scrapeAll(): Promise<ScrapedScholarship[]> {
-    await this.initDriver();
+    if (!this.apiKey) {
+      console.warn('ScrapingBee API key not configured, skipping scraping');
+      return [];
+    }
     
     try {
       const fastwebData = await this.scrapeFastweb();
@@ -183,9 +180,13 @@ export class ScholarshipScraper {
       
       const scholarshipsComData = await this.scrapeScholarshipsCom();
       
-      return [...fastwebData, ...scholarshipsComData];
-    } finally {
-      await this.closeDriver();
+      const allScholarships = [...fastwebData, ...scholarshipsComData];
+      console.log(`Successfully scraped ${allScholarships.length} scholarships`);
+      
+      return allScholarships;
+    } catch (error) {
+      console.error('Error in scrapeAll:', error);
+      return [];
     }
   }
 }
