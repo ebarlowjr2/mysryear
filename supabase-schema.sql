@@ -247,6 +247,9 @@ ALTER TABLE scraped_scholarships ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view scraped scholarships" ON scraped_scholarships
   FOR SELECT USING (is_active = true);
 
+CREATE POLICY "System can insert scraped scholarships" ON scraped_scholarships
+  FOR INSERT WITH CHECK (true);
+
 CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_source ON scraped_scholarships(source);
 CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_active ON scraped_scholarships(is_active);
 
