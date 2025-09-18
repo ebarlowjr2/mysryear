@@ -230,7 +230,7 @@ export class ScholarshipScraper {
     
     try {
       console.log('Scraping College Board...');
-      const html = await this.makeRequest('https://bigfuture.collegeboard.org/scholarships-and-grants');
+      const html = await this.makeRequest('https://bigfuture.collegeboard.org/scholarship-search');
       
       await this.randomDelay(2000, 4000);
       
@@ -260,7 +260,7 @@ export class ScholarshipScraper {
     
     try {
       console.log('Scraping ScholarshipOwl...');
-      const html = await this.makeRequest('https://scholarshipowl.com/awards');
+      const html = await this.makeRequest('https://scholarshipowl.com/scholarships');
       
       await this.randomDelay(2000, 4000);
       
@@ -350,7 +350,7 @@ export class ScholarshipScraper {
     
     try {
       console.log('Scraping Capital One Scholarships...');
-      const html = await this.makeRequest('https://www.capitalone.com/about/community/scholarships/');
+      const html = await this.makeRequest('https://www.capitalone.com/about/corporate-citizenship/education/');
       
       await this.randomDelay(2000, 4000);
       
