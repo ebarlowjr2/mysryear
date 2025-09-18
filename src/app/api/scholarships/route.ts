@@ -23,7 +23,8 @@ export async function GET() {
         deadline: item.deadline,
         link: item.link,
         state: item.state,
-        tags: item.tags || []
+        tags: item.tags || [],
+        source: item.source
       }));
       
       return NextResponse.json([...transformedData, ...ENHANCED_MOCK_DATA]);
