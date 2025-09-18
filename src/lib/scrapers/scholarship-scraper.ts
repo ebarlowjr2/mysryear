@@ -375,6 +375,66 @@ export class ScholarshipScraper {
     return scholarships;
   }
 
+  async scrapeScholarshipAmerica(): Promise<ScrapedScholarship[]> {
+    const scholarships: ScrapedScholarship[] = [];
+    
+    try {
+      console.log('Scraping Scholarship America...');
+      const html = await this.makeRequest('https://scholarshipamerica.org/students/browse-scholarships/');
+      
+      await this.randomDelay(2000, 4000);
+      
+      const scholarshipMatches = this.extractScholarshipsFromHTML(html);
+      
+      for (const match of scholarshipMatches.slice(0, 8)) {
+        if (match.name && match.link) {
+          scholarships.push({
+            name: match.name.trim(),
+            amount: this.parseAmount(match.amount || '$0'),
+            deadline: this.parseDeadline(match.deadline || 'TBD'),
+            link: this.normalizeUrl(match.link, 'https://scholarshipamerica.org'),
+            source: 'scholarshipamerica',
+            tags: this.extractTags(match.name + ' ' + (match.amount || ''))
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error scraping Scholarship America:', error);
+    }
+    
+    return scholarships;
+  }
+
+  async scrapeScholarshipPoints(): Promise<ScrapedScholarship[]> {
+    const scholarships: ScrapedScholarship[] = [];
+    
+    try {
+      console.log('Scraping ScholarshipPoints...');
+      const html = await this.makeRequest('https://www.scholarshippoints.com/scholarships/');
+      
+      await this.randomDelay(2000, 4000);
+      
+      const scholarshipMatches = this.extractScholarshipsFromHTML(html);
+      
+      for (const match of scholarshipMatches.slice(0, 8)) {
+        if (match.name && match.link) {
+          scholarships.push({
+            name: match.name.trim(),
+            amount: this.parseAmount(match.amount || '$0'),
+            deadline: this.parseDeadline(match.deadline || 'TBD'),
+            link: this.normalizeUrl(match.link, 'https://www.scholarshippoints.com'),
+            source: 'scholarshippoints',
+            tags: this.extractTags(match.name + ' ' + (match.amount || ''))
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error scraping ScholarshipPoints:', error);
+    }
+    
+    return scholarships;
+  }
+
   async scrapeAll(): Promise<ScrapedScholarship[]> {
     if (!this.apiKey) {
       console.warn('ScrapingBee API key not configured, skipping scraping');
@@ -403,6 +463,12 @@ export class ScholarshipScraper {
       await this.randomDelay();
       
       const capitalOneData = await this.scrapeCapitalOne();
+      await this.randomDelay();
+      
+      const scholarshipAmericaData = await this.scrapeScholarshipAmerica();
+      await this.randomDelay();
+      
+      const scholarshipPointsData = await this.scrapeScholarshipPoints();
       
       const allScholarships = [
         ...fastwebData,
@@ -411,10 +477,12 @@ export class ScholarshipScraper {
         ...scholarshipOwlData,
         ...unigoData,
         ...nicheData,
-        ...capitalOneData
+        ...capitalOneData,
+        ...scholarshipAmericaData,
+        ...scholarshipPointsData
       ];
       
-      console.log(`Successfully scraped ${allScholarships.length} scholarships from ${7} sources`);
+      console.log(`Successfully scraped ${allScholarships.length} scholarships from ${9} sources`);
       console.log(`Source breakdown:`, {
         fastweb: fastwebData.length,
         scholarshipsCom: scholarshipsComData.length,
@@ -422,7 +490,9 @@ export class ScholarshipScraper {
         scholarshipOwl: scholarshipOwlData.length,
         unigo: unigoData.length,
         niche: nicheData.length,
-        capitalOne: capitalOneData.length
+        capitalOne: capitalOneData.length,
+        scholarshipAmerica: scholarshipAmericaData.length,
+        scholarshipPoints: scholarshipPointsData.length
       });
       
       return allScholarships;
