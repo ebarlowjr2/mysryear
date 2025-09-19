@@ -66,7 +66,7 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <FeatureCard icon={<GraduationCap />} title="Scholarship Finder" desc="Curated and scraped sources with filters for GPA, state, major, identity, and deadlines." href="/scholarships" />
           <FeatureCard icon={<CalendarClock />} title="Senior Year Timeline" desc="Auto‑generated milestones you can customize for your state and goals." href="/planner" />
-          <FeatureCard icon={<ClipboardList />} title="Application Tracker" desc="Track each school or program with tasks, essays, and required documents." href="/applications" />
+          <FeatureCard icon={<ClipboardList />} title="Application Tracker" desc="Track each school or program with tasks, essays, and required documents." href="/open-dashboard/applications" />
           <FeatureCard icon={<FileText />} title="Essay & Resume Vault" desc="Keep drafts, feedback, and activity lists tidy. Export when ready." href="/resources" />
           <FeatureCard icon={<Search />} title="Post‑HS Paths" desc="Compare college, trades, military, gap year, and entrepreneurship with real steps." href="/resources" />
           <FeatureCard icon={<Layers />} title="Parent & Counselor View" desc="Optional shared view with weekly summaries (no student surveillance)." href="/dashboard" />
