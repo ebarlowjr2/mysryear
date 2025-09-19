@@ -62,7 +62,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Link href="/applications" className="card p-6 hover:shadow-lg transition">
+        <Link href="/open-dashboard/applications" className="card p-6 hover:shadow-lg transition">
           <ClipboardList className="w-8 h-8 text-brand-600 mb-4" />
           <h3 className="text-lg font-bold mb-2">Applications</h3>
           <p className="text-slate-600 text-sm">Track college and program applications</p>
