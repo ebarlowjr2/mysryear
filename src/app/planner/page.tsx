@@ -1,84 +1,28 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  saveProfile,
+  loadProfile,
+  saveTasks,
+  loadTasks,
+  saveDocuments,
+  loadDocuments,
+  saveRecommenders,
+  loadRecommenders,
+  saveVisits,
+  loadVisits,
+  type Profile,
+  type Task,
+  type DocKit,
+  type Recommender,
+  type Visit,
+  type Path,
+  type Category,
+  type Status
+} from "@/lib/planner-storage";
 
-type Path =
-  | "College"
-  | "Trade/Apprenticeship"
-  | "Military"
-  | "Gap Year"
-  | "Workforce"
-  | "Entrepreneurship";
 
-type Category =
-  | "Applications"
-  | "Essays"
-  | "Testing"
-  | "Scholarships"
-  | "Financial Aid"
-  | "Campus Visits"
-  | "Housing"
-  | "Enrollment"
-  | "Documents"
-  | "Admin/Other";
-
-type Status = "todo" | "doing" | "done";
-
-type Profile = {
-  state: string;
-  path: Path;
-  testing: "SAT" | "ACT" | "Both" | "None";
-  earlyAction: boolean;
-};
-
-type Task = {
-  id: string;
-  title: string;
-  category: Category;
-  status: Status;
-  month: string;
-  due?: string;
-  notes?: string;
-  pinned?: boolean;
-};
-
-type DocKit = {
-  idCard: boolean;
-  ssnReady: boolean;
-  fsaId: boolean;
-  taxDocs: boolean;
-  transcript: boolean;
-  testScores: boolean;
-  resume: boolean;
-  activitiesList: boolean;
-  essays: boolean;
-  recLetters: boolean;
-  portfolio: boolean;
-};
-
-type Recommender = {
-  id: string;
-  name: string;
-  email?: string;
-  role?: string;
-  requested?: string;
-  submitted?: string;
-  notes?: string;
-};
-
-type Visit = {
-  id: string;
-  name: string;
-  date?: string;
-  rating?: number;
-  notes?: string;
-};
-
-const LS_PROFILE = "msy_planner_profile_v1";
-const LS_TASKS = "msy_planner_tasks_v1";
-const LS_DOCS = "msy_planner_docs_v1";
-const LS_RECS = "msy_planner_recs_v1";
-const LS_VISITS = "msy_planner_visits_v1";
 
 const MONTHS = ["Aug–Sep", "Oct", "Nov–Dec", "Jan–Mar", "Apr–May", "Summer"];
 
@@ -211,40 +155,75 @@ function download(filename: string, content: string, mime = "text/plain"){
 }
 
 export default function PlannerPage(){
-  const [profile, setProfile] = useState<Profile>(() => {
-    if (typeof window === 'undefined') return { state: "", path: "College", testing: "None", earlyAction: true };
-    try { const raw = localStorage.getItem(LS_PROFILE); if (raw) return JSON.parse(raw); } catch {}
-    return { state: "", path: "College", testing: "None", earlyAction: true };
-  });
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(LS_PROFILE, JSON.stringify(profile)); }, [profile]);
+  const [profile, setProfile] = useState<Profile>({ state: "", path: "College", testing: "None", earlyAction: true });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [docs, setDocs] = useState<DocKit>({ idCard:false, ssnReady:false, fsaId:false, taxDocs:false, transcript:false, testScores:false, resume:false, activitiesList:false, essays:false, recLetters:false, portfolio:false });
+  const [recs, setRecs] = useState<Recommender[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    if (typeof window === 'undefined') return baseTasks({ state: "", path: "College", testing: "None", earlyAction: true });
-    try { const raw = localStorage.getItem(LS_TASKS); if (raw) return JSON.parse(raw); } catch {}
-    return baseTasks({ state: "", path: "College", testing: "None", earlyAction: true });
-  });
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); }, [tasks]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        
+        const savedProfile = await loadProfile();
+        if (savedProfile) {
+          setProfile(savedProfile);
+        }
 
-  const [docs, setDocs] = useState<DocKit>(() => {
-    if (typeof window === 'undefined') return { idCard:false, ssnReady:false, fsaId:false, taxDocs:false, transcript:false, testScores:false, resume:false, activitiesList:false, essays:false, recLetters:false, portfolio:false };
-    try { const raw = localStorage.getItem(LS_DOCS); if (raw) return JSON.parse(raw); } catch {}
-    return { idCard:false, ssnReady:false, fsaId:false, taxDocs:false, transcript:false, testScores:false, resume:false, activitiesList:false, essays:false, recLetters:false, portfolio:false };
-  });
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(LS_DOCS, JSON.stringify(docs)); }, [docs]);
+        const savedTasks = await loadTasks();
+        if (savedTasks.length > 0) {
+          setTasks(savedTasks);
+        } else {
+          const defaultTasks = baseTasks(savedProfile || profile);
+          setTasks(defaultTasks);
+          await saveTasks(defaultTasks);
+        }
 
-  const [recs, setRecs] = useState<Recommender[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try { const raw = localStorage.getItem(LS_RECS); if (raw) return JSON.parse(raw); } catch {}
-    return [];
-  });
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(LS_RECS, JSON.stringify(recs)); }, [recs]);
+        const [savedDocs, savedRecs, savedVisits] = await Promise.all([
+          loadDocuments(),
+          loadRecommenders(),
+          loadVisits()
+        ]);
+        
+        setDocs(savedDocs);
+        setRecs(savedRecs);
+        setVisits(savedVisits);
+      } catch (error) {
+        console.error("Failed to load planner data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const [visits, setVisits] = useState<Visit[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try { const raw = localStorage.getItem(LS_VISITS); if (raw) return JSON.parse(raw); } catch {}
-    return [];
-  });
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem(LS_VISITS, JSON.stringify(visits)); }, [visits]);
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    saveProfile(profile).catch(console.error);
+  }, [profile, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    saveTasks(tasks).catch(console.error);
+  }, [tasks, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    saveDocuments(docs).catch(console.error);
+  }, [docs, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    saveRecommenders(recs).catch(console.error);
+  }, [recs, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    saveVisits(visits).catch(console.error);
+  }, [visits, loading]);
 
   function regenerateBaseline(replaceAll: boolean){
     const base = baseTasks(profile);
@@ -302,18 +281,44 @@ export default function PlannerPage(){
   }
   function importJSON(file: File){
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const data = JSON.parse(String(reader.result));
+        
         if (data.profile) setProfile(data.profile);
         if (data.tasks) setTasks(data.tasks);
         if (data.docs) setDocs(data.docs);
         if (data.recs) setRecs(data.recs);
         if (data.visits) setVisits(data.visits);
+        
+        await Promise.all([
+          data.profile && saveProfile(data.profile),
+          data.tasks && saveTasks(data.tasks),
+          data.docs && saveDocuments(data.docs),
+          data.recs && saveRecommenders(data.recs),
+          data.visits && saveVisits(data.visits)
+        ].filter(Boolean));
+        
         alert("Planner imported!");
-      } catch { alert("Invalid file"); }
+      } catch (error) {
+        console.error("Import error:", error);
+        alert("Invalid file");
+      }
     };
     reader.readAsText(file);
+  }
+
+  if (loading) {
+    return (
+      <div className="container-prose py-10">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your planner...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

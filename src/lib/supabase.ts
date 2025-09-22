@@ -191,6 +191,175 @@ export type Database = {
           updated_at?: string
         }
       }
+      user_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          state: string | null
+          path: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          testing: 'SAT' | 'ACT' | 'Both' | 'None' | null
+          early_action: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          state?: string | null
+          path?: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          testing?: 'SAT' | 'ACT' | 'Both' | 'None' | null
+          early_action?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          state?: string | null
+          path?: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          testing?: 'SAT' | 'ACT' | 'Both' | 'None' | null
+          early_action?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_tasks: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          category: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          status: 'todo' | 'doing' | 'done'
+          month: string
+          due_date: string | null
+          notes: string | null
+          pinned: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          category: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          status?: 'todo' | 'doing' | 'done'
+          month: string
+          due_date?: string | null
+          notes?: string | null
+          pinned?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          category?: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          status?: 'todo' | 'doing' | 'done'
+          month?: string
+          due_date?: string | null
+          notes?: string | null
+          pinned?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_documents: {
+        Row: {
+          id: string
+          user_id: string
+          document_type: string
+          completed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          document_type: string
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          document_type?: string
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_recommenders: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          email: string | null
+          role: string | null
+          requested_date: string | null
+          submitted_date: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          email?: string | null
+          role?: string | null
+          requested_date?: string | null
+          submitted_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          email?: string | null
+          role?: string | null
+          requested_date?: string | null
+          submitted_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_visits: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          visit_date: string | null
+          rating: number | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          visit_date?: string | null
+          rating?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          visit_date?: string | null
+          rating?: number | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

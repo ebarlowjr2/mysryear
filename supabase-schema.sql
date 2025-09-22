@@ -253,6 +253,93 @@ CREATE POLICY "System can insert scraped scholarships" ON scraped_scholarships
 CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_source ON scraped_scholarships(source);
 CREATE INDEX IF NOT EXISTS idx_scraped_scholarships_active ON scraped_scholarships(is_active);
 
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  state TEXT,
+  path TEXT CHECK (path IN ('College', 'Trade/Apprenticeship', 'Military', 'Gap Year', 'Workforce', 'Entrepreneurship')),
+  testing TEXT CHECK (testing IN ('SAT', 'ACT', 'Both', 'None')),
+  early_action BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category TEXT CHECK (category IN ('Applications', 'Essays', 'Testing', 'Scholarships', 'Financial Aid', 'Campus Visits', 'Housing', 'Enrollment', 'Documents', 'Admin/Other')),
+  status TEXT CHECK (status IN ('todo', 'doing', 'done')) DEFAULT 'todo',
+  month TEXT NOT NULL,
+  due_date DATE,
+  notes TEXT,
+  pinned BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  document_type TEXT NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, document_type)
+);
+
+CREATE TABLE IF NOT EXISTS user_recommenders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT,
+  role TEXT,
+  requested_date DATE,
+  submitted_date DATE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  visit_date DATE,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_recommenders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_visits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own profile" ON user_profiles
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own tasks" ON user_tasks
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own documents" ON user_documents
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own recommenders" ON user_recommenders
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own visits" ON user_visits
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_tasks_user_id ON user_tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_documents_user_id ON user_documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_recommenders_user_id ON user_recommenders(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_visits_user_id ON user_visits(user_id);
+
 INSERT INTO scholarships (title, deadline, eligibility, link) VALUES
 ('National Merit Scholarship', '2025-10-15', '{"gpa_min": 3.5, "grade_level": "senior"}', 'https://www.nationalmerit.org/'),
 ('Gates Millennium Scholars Program', '2025-01-15', '{"gpa_min": 3.3, "financial_need": true}', 'https://www.gmsp.org/'),
