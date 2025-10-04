@@ -2,8 +2,9 @@
 import React from "react";
 import Link from "next/link";
 import Logo from "./Logo";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../lib/utils";
+import { createClient } from "../lib/supabase";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -14,7 +15,15 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-slate-200">
       <div className="container-prose flex h-16 items-center justify-between">
@@ -28,7 +37,13 @@ export default function Navbar() {
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-          <Link href="/dashboard" className="btn-primary">Open Dashboard</Link>
+          <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
+          <button 
+            onClick={handleSignOut}
+            className="btn-secondary"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     </header>

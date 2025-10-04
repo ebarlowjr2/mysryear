@@ -13,8 +13,7 @@ export default async function OpenDashboard() {
         <div className="max-w-xl mx-auto card p-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Open Dashboard</h1>
           <p className="mt-3 text-slate-700">Please sign in to access your dashboard, track scholarships, deadlines, and store documents.</p>
-          <div className="mt-6 flex justify-center"><a href="/auth" className="btn-primary">Sign in</a></div>
-          <p className="mt-3 text-xs text-slate-500">Hook this to Auth0 or Supabase Auth by replacing <code>getSession()</code>.</p>
+          <div className="mt-6 flex justify-center"><a href="/login" className="btn-primary">Sign in</a></div>
         </div>
       </div>
     );

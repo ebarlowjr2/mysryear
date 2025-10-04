@@ -1,43 +1,119 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { createClient } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function Login() {
   const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleLogin = () => {
-    router.push('/dashboard')
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else if (data.user) {
+        router.push('/dashboard')
+        router.refresh()
+      }
+    } catch {
+      setError('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-900/50 to-slate-900"></div>
+      
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 -left-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-black text-slate-900">
-            Welcome to My Senior Year
+          <h2 className="mt-6 text-3xl font-extrabold gradient-text">
+            Welcome back
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Manage your graduation journey
+          <p className="mt-2 text-sm text-gray-400">
+            Sign in to your account
           </p>
         </div>
-        
-        <div className="card p-8">
-          <div className="space-y-6">
-            <button
-              onClick={handleLogin}
-              className="btn-primary w-full py-3 px-4 rounded-lg font-semibold text-center block"
-            >
-              Open Dashboard
-            </button>
-
-            <div className="text-center">
-              <p className="text-sm text-slate-600">
-                No account required to explore. Start organizing your senior year today!
-              </p>
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="input w-full px-4 py-3 rounded-lg"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="input w-full px-4 py-3 rounded-lg"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           </div>
-        </div>
+
+          {error && (
+            <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-900/20 border border-red-500/20">{error}</div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-gradient w-full py-3 px-4 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+
+          <div className="text-center">
+            <a
+              href="/signup"
+              className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              Don&apos;t have an account? Sign up
+            </a>
+          </div>
+        </form>
       </div>
     </div>
   )
