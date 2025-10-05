@@ -1,10 +1,11 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../lib/utils";
 import { createClient } from "../lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -16,10 +17,28 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const supabase = createClient();
+    
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    setUser(null);
     router.push('/login');
     router.refresh();
   };
@@ -38,12 +57,20 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
           <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
-          <button 
-            onClick={handleSignOut}
-            className="btn-secondary"
-          >
-            Sign Out
-          </button>
+          {!loading && (
+            user ? (
+              <button 
+                onClick={handleSignOut}
+                className="btn-secondary"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link href="/login" className="btn-secondary">
+                Sign In
+              </Link>
+            )
+          )}
         </div>
       </div>
     </header>

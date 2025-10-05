@@ -3,8 +3,18 @@ import FeatureCard from "@/components/FeatureCard";
 import Timeline from "@/components/Timeline";
 import { GraduationCap, CalendarClock, ClipboardList, Layers, FileText, Search } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string; error?: string }> }) {
+  const params = await searchParams;
+  
+  if (params.code) {
+    redirect(`/auth/callback?code=${params.code}`);
+  }
+  
+  if (params.error) {
+    redirect(`/login?error=${params.error}`);
+  }
   const timeline = [
     { month: "August–September", items: ["Finalize senior schedule", "List target schools or trade paths", "Create Common App / state app accounts"] },
     { month: "October", items: ["Complete FAFSA® (when open)", "Request recommendation letters", "Book ACT/SAT (if needed)"] },
