@@ -16,7 +16,6 @@ export async function POST() {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
             response.cookies.set(name, value, options)
           })
         },
@@ -25,6 +24,18 @@ export async function POST() {
   )
 
   await supabase.auth.signOut()
+
+  const allCookies = cookieStore.getAll()
+  allCookies.forEach((cookie) => {
+    if (cookie.name.includes('sb-') || cookie.name.includes('supabase')) {
+      response.cookies.set(cookie.name, '', {
+        maxAge: 0,
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      })
+    }
+  })
 
   return response
 }
