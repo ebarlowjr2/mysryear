@@ -36,9 +36,14 @@ export default function Navbar() {
   
   const handleSignOut = async () => {
     try {
+      const supabase = createClient();
+      
       await fetch('/api/auth/signout', {
         method: 'POST',
       });
+      
+      await supabase.auth.signOut();
+      
       window.location.href = '/login';
     } catch (error) {
       console.error('Error signing out:', error);
