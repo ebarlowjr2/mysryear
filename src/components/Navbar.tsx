@@ -36,7 +36,9 @@ export default function Navbar() {
   }, []);
   
   const handleSignOut = async () => {
-    await signOut()
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    await signOut();
   };
 
   return (
