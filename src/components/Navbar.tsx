@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import { createClient } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { signOut } from "../app/actions/auth";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -35,19 +36,7 @@ export default function Navbar() {
   }, []);
   
   const handleSignOut = async () => {
-    try {
-      const supabase = createClient();
-      
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-      });
-      
-      await supabase.auth.signOut();
-      
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    await signOut()
   };
 
   return (
