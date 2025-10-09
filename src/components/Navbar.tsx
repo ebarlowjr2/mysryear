@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import { createClient } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { signOut } from "../app/actions/auth";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -16,7 +17,6 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -36,11 +36,7 @@ export default function Navbar() {
   }, []);
   
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/login');
-    router.refresh();
+    await signOut();
   };
 
   return (
