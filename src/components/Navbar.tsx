@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import { createClient } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -16,7 +16,6 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -40,9 +39,7 @@ export default function Navbar() {
       await fetch('/api/auth/signout', {
         method: 'POST',
       });
-      setUser(null);
-      router.push('/login');
-      router.refresh();
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error signing out:', error);
     }
