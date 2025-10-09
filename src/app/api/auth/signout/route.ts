@@ -6,6 +6,11 @@ export async function POST() {
   const cookieStore = await cookies()
   const response = NextResponse.json({ success: true })
 
+  const allCookies = cookieStore.getAll()
+  const supabaseCookies = allCookies.filter(cookie => 
+    cookie.name.includes('sb-') || cookie.name.includes('supabase')
+  )
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -16,6 +21,7 @@ export async function POST() {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
             response.cookies.set(name, value, options)
           })
         },
@@ -25,16 +31,8 @@ export async function POST() {
 
   await supabase.auth.signOut()
 
-  const allCookies = cookieStore.getAll()
-  allCookies.forEach((cookie) => {
-    if (cookie.name.includes('sb-') || cookie.name.includes('supabase')) {
-      response.cookies.set(cookie.name, '', {
-        maxAge: 0,
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      })
-    }
+  supabaseCookies.forEach((cookie) => {
+    response.cookies.delete(cookie.name)
   })
 
   return response
