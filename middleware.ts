@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+const PROTECTED_PREFIXES = ['/dashboard', '/open-dashboard', '/planner']
+
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +30,11 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && (request.nextUrl.pathname.startsWith('/open-dashboard') || request.nextUrl.pathname.startsWith('/planner'))) {
+  const isProtected = PROTECTED_PREFIXES.some(prefix => 
+    request.nextUrl.pathname.startsWith(prefix)
+  )
+
+  if (isProtected && !user) {
     const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -33,5 +43,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/open-dashboard/:path*', '/open-dashboard', '/planner/:path*', '/planner']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*|api|auth).*)']
 }

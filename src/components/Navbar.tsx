@@ -1,12 +1,8 @@
-"use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Logo from "./Logo";
-import { usePathname } from "next/navigation";
-import { cn } from "../lib/utils";
-import { createClient } from "../lib/supabase";
-import type { User } from "@supabase/supabase-js";
-import { signOut } from "../app/actions/auth";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -15,31 +11,27 @@ const links = [
   { href: "/resources", label: "Resources" },
 ];
 
-export default function Navbar() {
-  const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export default async function Navbar() {
+  const cookieStore = await cookies();
   
-  useEffect(() => {
-    const supabase = createClient();
-    
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
-    });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-  
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    await signOut();
-  };
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-slate-200">
@@ -49,25 +41,22 @@ export default function Navbar() {
         </Link>
         <nav className="hidden md:flex items-center gap-6">
           {links.map(l => (
-            <Link key={l.href} href={l.href} className={cn("text-sm font-medium hover:text-brand-700", pathname === l.href && "text-brand-700")}>{l.label}</Link>
+            <Link key={l.href} href={l.href} className="text-sm font-medium hover:text-brand-700">{l.label}</Link>
           ))}
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
           <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
-          {!loading && (
-            user ? (
-              <button 
-                onClick={handleSignOut}
-                className="btn-secondary"
-              >
+          {user ? (
+            <form action="/api/auth/signout" method="post">
+              <button type="submit" className="btn-secondary">
                 Sign Out
               </button>
-            ) : (
-              <Link href="/login" className="btn-secondary">
-                Sign In
-              </Link>
-            )
+            </form>
+          ) : (
+            <Link href="/login" className="btn-secondary">
+              Sign In
+            </Link>
           )}
         </div>
       </div>

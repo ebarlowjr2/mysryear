@@ -1,8 +1,8 @@
+import { NextResponse, NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
@@ -24,5 +24,5 @@ export async function POST() {
 
   await supabase.auth.signOut()
 
-  return NextResponse.json({ success: true })
+  return NextResponse.redirect(new URL('/login', req.url))
 }
