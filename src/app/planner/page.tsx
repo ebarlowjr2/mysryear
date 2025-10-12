@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase";
 import {
   saveProfile,
   loadProfile,
@@ -155,6 +156,7 @@ function download(filename: string, content: string, mime = "text/plain"){
 }
 
 export default function PlannerPage(){
+  const supabase = createClient();
   const [profile, setProfile] = useState<Profile>({ state: "", path: "College", testing: "None", earlyAction: true });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [docs, setDocs] = useState<DocKit>({ idCard:false, ssnReady:false, fsaId:false, taxDocs:false, transcript:false, testScores:false, resume:false, activitiesList:false, essays:false, recLetters:false, portfolio:false });
@@ -167,24 +169,24 @@ export default function PlannerPage(){
       try {
         setLoading(true);
         
-        const savedProfile = await loadProfile();
+        const savedProfile = await loadProfile(supabase);
         if (savedProfile) {
           setProfile(savedProfile);
         }
 
-        const savedTasks = await loadTasks();
+        const savedTasks = await loadTasks(supabase);
         if (savedTasks.length > 0) {
           setTasks(savedTasks);
         } else {
           const defaultTasks = baseTasks(savedProfile || profile);
           setTasks(defaultTasks);
-          await saveTasks(defaultTasks);
+          await saveTasks(supabase, defaultTasks);
         }
 
         const [savedDocs, savedRecs, savedVisits] = await Promise.all([
-          loadDocuments(),
-          loadRecommenders(),
-          loadVisits()
+          loadDocuments(supabase),
+          loadRecommenders(supabase),
+          loadVisits(supabase)
         ]);
         
         setDocs(savedDocs);
@@ -202,28 +204,28 @@ export default function PlannerPage(){
 
   useEffect(() => {
     if (loading) return;
-    saveProfile(profile).catch(console.error);
-  }, [profile, loading]);
+    saveProfile(supabase, profile).catch(console.error);
+  }, [profile, loading, supabase]);
 
   useEffect(() => {
     if (loading) return;
-    saveTasks(tasks).catch(console.error);
-  }, [tasks, loading]);
+    saveTasks(supabase, tasks).catch(console.error);
+  }, [tasks, loading, supabase]);
 
   useEffect(() => {
     if (loading) return;
-    saveDocuments(docs).catch(console.error);
-  }, [docs, loading]);
+    saveDocuments(supabase, docs).catch(console.error);
+  }, [docs, loading, supabase]);
 
   useEffect(() => {
     if (loading) return;
-    saveRecommenders(recs).catch(console.error);
-  }, [recs, loading]);
+    saveRecommenders(supabase, recs).catch(console.error);
+  }, [recs, loading, supabase]);
 
   useEffect(() => {
     if (loading) return;
-    saveVisits(visits).catch(console.error);
-  }, [visits, loading]);
+    saveVisits(supabase, visits).catch(console.error);
+  }, [visits, loading, supabase]);
 
   function regenerateBaseline(replaceAll: boolean){
     const base = baseTasks(profile);
@@ -292,11 +294,11 @@ export default function PlannerPage(){
         if (data.visits) setVisits(data.visits);
         
         await Promise.all([
-          data.profile && saveProfile(data.profile),
-          data.tasks && saveTasks(data.tasks),
-          data.docs && saveDocuments(data.docs),
-          data.recs && saveRecommenders(data.recs),
-          data.visits && saveVisits(data.visits)
+          data.profile && saveProfile(supabase, data.profile),
+          data.tasks && saveTasks(supabase, data.tasks),
+          data.docs && saveDocuments(supabase, data.docs),
+          data.recs && saveRecommenders(supabase, data.recs),
+          data.visits && saveVisits(supabase, data.visits)
         ].filter(Boolean));
         
         alert("Planner imported!");
