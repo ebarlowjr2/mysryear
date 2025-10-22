@@ -1,9 +1,10 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../lib/utils";
+import { createClient } from "@/lib/supabase";
 
 const links = [
   { href: "/planner", label: "Planner" },
@@ -14,6 +15,31 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    const supabase = createClient();
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-slate-200">
@@ -27,8 +53,18 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-          <Link href="/dashboard" className="btn-primary">Open Dashboard</Link>
+          {isAuthenticated ? (
+            <>
+              <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
+              <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
+              <button onClick={handleLogout} className="btn-secondary">Logout</button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="btn-secondary">Login</Link>
+              <Link href="/signup" className="btn-primary">Sign Up</Link>
+            </>
+          )}
         </div>
       </div>
     </header>

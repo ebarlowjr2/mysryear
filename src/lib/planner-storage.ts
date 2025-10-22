@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createServerSupabaseClient } from './supabase'
 import { getSession } from './auth'
 
 export type Path = "College" | "Trade/Apprenticeship" | "Military" | "Gap Year" | "Workforce" | "Entrepreneurship";
@@ -59,6 +59,7 @@ export async function saveProfile(profile: Profile): Promise<void> {
   const session = await getSession();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
+  const supabase = await createServerSupabaseClient();
   const { error } = await supabase
     .from('user_profiles')
     .upsert({
@@ -77,6 +78,7 @@ export async function loadProfile(): Promise<Profile | null> {
   const session = await getSession();
   if (!session?.user?.id) return null;
 
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -98,6 +100,7 @@ export async function saveTasks(tasks: Task[]): Promise<void> {
   const session = await getSession();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
+  const supabase = await createServerSupabaseClient();
   await supabase
     .from('user_tasks')
     .delete()
@@ -126,6 +129,7 @@ export async function loadTasks(): Promise<Task[]> {
   const session = await getSession();
   if (!session?.user?.id) return [];
 
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('user_tasks')
     .select('*')
@@ -156,6 +160,7 @@ export async function saveDocuments(docs: DocKit): Promise<void> {
     completed: completed as boolean
   }));
 
+  const supabase = await createServerSupabaseClient();
   await supabase
     .from('user_documents')
     .delete()
@@ -178,6 +183,7 @@ export async function loadDocuments(): Promise<DocKit> {
     };
   }
 
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('user_documents')
     .select('*')
@@ -204,6 +210,7 @@ export async function saveRecommenders(recommenders: Recommender[]): Promise<voi
   const session = await getSession();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
+  const supabase = await createServerSupabaseClient();
   await supabase
     .from('user_recommenders')
     .delete()
@@ -231,6 +238,7 @@ export async function loadRecommenders(): Promise<Recommender[]> {
   const session = await getSession();
   if (!session?.user?.id) return [];
 
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('user_recommenders')
     .select('*')
@@ -254,6 +262,7 @@ export async function saveVisits(visits: Visit[]): Promise<void> {
   const session = await getSession();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
+  const supabase = await createServerSupabaseClient();
   await supabase
     .from('user_visits')
     .delete()
@@ -279,6 +288,7 @@ export async function loadVisits(): Promise<Visit[]> {
   const session = await getSession();
   if (!session?.user?.id) return [];
 
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from('user_visits')
     .select('*')
