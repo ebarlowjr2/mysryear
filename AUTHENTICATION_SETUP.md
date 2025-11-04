@@ -40,12 +40,37 @@ This document explains how to configure Supabase authentication for the MySRYear
 
 ### 4. Configure Supabase Authentication
 
+#### Email Authentication
+
 1. In your Supabase dashboard, go to Authentication > Providers
 2. Enable Email provider (enabled by default)
 3. Configure email templates if desired
-4. Set up redirect URLs:
-   - Add your local development URL: `http://localhost:3000/**`
-   - Add your production URL when deploying
+
+#### Google OAuth Authentication
+
+1. In your Supabase dashboard, go to Authentication > Providers
+2. Find "Google" in the list of providers and click to configure
+3. Enable the Google provider
+4. You'll need to create a Google OAuth application:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Navigate to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Web application" as the application type
+   - Add authorized JavaScript origins:
+     - `http://localhost:3000` (for local development)
+     - Your production domain (e.g., `https://yourdomain.com`)
+   - Add authorized redirect URIs:
+     - Copy the callback URL from your Supabase dashboard (it will look like `https://your-project.supabase.co/auth/v1/callback`)
+   - Click "Create" and copy the Client ID and Client Secret
+5. Back in Supabase, paste your Google Client ID and Client Secret
+6. Click "Save"
+
+#### Redirect URLs
+
+Set up redirect URLs in Supabase Authentication settings:
+- Add your local development URL: `http://localhost:3000/**`
+- Add your production URL when deploying: `https://yourdomain.com/**`
 
 ### 5. Test Authentication
 
@@ -60,6 +85,15 @@ This document explains how to configure Supabase authentication for the MySRYear
 5. After confirming, log in at http://localhost:3000/login
 
 ## Authentication Flow
+
+### Authentication Methods
+
+The application supports two authentication methods:
+
+1. **Email/Password Authentication**: Traditional email and password sign-up and login
+2. **Google OAuth**: Sign in with your Google account for faster authentication
+
+When users sign in with Google for the first time, a user profile is automatically created with the default role of "student". Users can manage their role through their profile settings.
 
 ### User Roles
 
