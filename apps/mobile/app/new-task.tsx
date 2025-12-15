@@ -7,8 +7,10 @@ import {
   TouchableOpacity, 
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform
 } from 'react-native'
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { useRouter } from 'expo-router'
 import { useSession } from '../src/hooks/useSession'
 import { createTask, CATEGORIES, Category } from '../src/data/planner'
@@ -18,36 +20,60 @@ export default function NewTaskScreen() {
   const { user } = useSession()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<Category>('Admin/Other')
-  const [dueDate, setDueDate] = useState('')
+  const [dueDate, setDueDate] = useState<Date | null>(null)
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'Title is required')
-      return
+    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (Platform.OS === 'android') {
+        setShowDatePicker(false)
+      }
+      if (event.type === 'set' && selectedDate) {
+        setDueDate(selectedDate)
+      }
     }
 
-    if (!user?.id) {
-      Alert.alert('Error', 'Not authenticated')
-      return
+    const formatDateForDisplay = (date: Date | null) => {
+      if (!date) return 'Select a date'
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
 
-    setSaving(true)
-    try {
-      await createTask(user.id, {
-        title: title.trim(),
-        category,
-        dueDate: dueDate || undefined,
-        notes: notes.trim() || undefined
-      })
-      router.back()
-    } catch (err) {
-      Alert.alert('Error', 'Failed to create task')
-    } finally {
-      setSaving(false)
+    const formatDateForAPI = (date: Date | null) => {
+      if (!date) return undefined
+      return date.toISOString().split('T')[0]
     }
-  }
+
+    const clearDate = () => {
+      setDueDate(null)
+    }
+
+    const handleSave = async () => {
+      if (!title.trim()) {
+        Alert.alert('Error', 'Title is required')
+        return
+      }
+
+      if (!user?.id) {
+        Alert.alert('Error', 'Not authenticated')
+        return
+      }
+
+      setSaving(true)
+      try {
+        await createTask(user.id, {
+          title: title.trim(),
+          category,
+          dueDate: formatDateForAPI(dueDate),
+          notes: notes.trim() || undefined
+        })
+        router.back()
+      } catch (err) {
+        Alert.alert('Error', 'Failed to create task')
+      } finally {
+        setSaving(false)
+      }
+    }
 
   return (
     <View style={styles.container}>
@@ -94,17 +120,44 @@ export default function NewTaskScreen() {
           </ScrollView>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Due Date (optional)</Text>
-          <TextInput
-            style={styles.input}
-            value={dueDate}
-            onChangeText={setDueDate}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor="#64748b"
-          />
-          <Text style={styles.hint}>Format: 2025-01-15</Text>
-        </View>
+                <View style={styles.field}>
+                  <Text style={styles.label}>Due Date (optional)</Text>
+                  <View style={styles.dateRow}>
+                    <TouchableOpacity 
+                      style={styles.dateButton} 
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Text style={[styles.dateButtonText, !dueDate && styles.dateButtonPlaceholder]}>
+                        {formatDateForDisplay(dueDate)}
+                      </Text>
+                    </TouchableOpacity>
+                    {dueDate && (
+                      <TouchableOpacity style={styles.clearButton} onPress={clearDate}>
+                        <Text style={styles.clearButtonText}>Clear</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {showDatePicker && (
+                    <View style={styles.datePickerContainer}>
+                      <DateTimePicker
+                        value={dueDate || new Date()}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={handleDateChange}
+                        minimumDate={new Date()}
+                        textColor="#fff"
+                      />
+                      {Platform.OS === 'ios' && (
+                        <TouchableOpacity 
+                          style={styles.datePickerDone} 
+                          onPress={() => setShowDatePicker(false)}
+                        >
+                          <Text style={styles.datePickerDoneText}>Done</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
 
         <View style={styles.field}>
           <Text style={styles.label}>Notes (optional)</Text>
@@ -199,5 +252,48 @@ const styles = StyleSheet.create({
   },
   categoryChipTextSelected: {
     color: '#fff',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dateButton: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  dateButtonPlaceholder: {
+    color: '#64748b',
+  },
+  clearButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: '#ef4444',
+  },
+  datePickerContainer: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  datePickerDone: {
+    alignItems: 'center',
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  datePickerDoneText: {
+    fontSize: 16,
+    color: '#3b82f6',
+    fontWeight: '600',
   },
 })
