@@ -15,26 +15,39 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please enter both email and password')
-      return
+    const handleLogin = async () => {
+      if (!email || !password) {
+        setError('Please enter both email and password')
+        return
+      }
+
+      setLoading(true)
+      setError('')
+
+      const { error } = await signIn(email, password)
+
+      if (error) {
+        setError(error.message || 'Invalid email or password')
+      }
+
+      setLoading(false)
     }
 
-    setLoading(true)
-    setError('')
+    const handleGoogleLogin = async () => {
+      setGoogleLoading(true)
+      setError('')
 
-    const { error } = await signIn(email, password)
+      const { error } = await signInWithGoogle()
 
-    if (error) {
-      setError(error.message || 'Invalid email or password')
+      if (error) {
+        setError(error.message || 'Failed to sign in with Google')
+        setGoogleLoading(false)
+      }
     }
-
-    setLoading(false)
-  }
 
   return (
     <KeyboardAvoidingView
@@ -69,18 +82,36 @@ export default function LoginScreen() {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+                  <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Sign In</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+                    onPress={handleGoogleLogin}
+                    disabled={googleLoading}
+                  >
+                    {googleLoading ? (
+                      <ActivityIndicator color="#333" />
+                    ) : (
+                      <Text style={styles.googleButtonText}>Continue with Google</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
       </View>
     </KeyboardAvoidingView>
   )
@@ -140,5 +171,31 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 14,
     textAlign: 'center',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#334155',
+  },
+  dividerText: {
+    color: '#64748b',
+    paddingHorizontal: 16,
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  googleButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
   },
 })
