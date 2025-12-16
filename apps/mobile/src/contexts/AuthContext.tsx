@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { Alert } from 'react-native'
 import type { Session, User } from '@supabase/supabase-js'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
@@ -47,11 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error | null }
     }
 
-        const signInWithGoogle = async () => {
-          try {
-            const redirectUrl = Linking.createURL('auth/callback')
+                const signInWithGoogle = async () => {
+                  try {
+                    const redirectUrl = Linking.createURL('auth/callback')
+                    console.log('=== GOOGLE OAUTH DEBUG ===')
+                    console.log('Redirect URL:', redirectUrl)
+                    console.log('Add this EXACT URL to Supabase → Authentication → URL Configuration → Redirect URLs')
+                    console.log('===========================')
         
-            const { data, error } = await supabase.auth.signInWithOAuth({
+                    const { data, error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
                 redirectTo: redirectUrl,
