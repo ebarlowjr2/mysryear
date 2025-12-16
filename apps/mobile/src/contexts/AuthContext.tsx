@@ -48,15 +48,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error | null }
     }
 
-                const signInWithGoogle = async () => {
-                  try {
-                    const redirectUrl = Linking.createURL('auth/callback')
-                    console.log('=== GOOGLE OAUTH DEBUG ===')
-                    console.log('Redirect URL:', redirectUrl)
-                    console.log('Add this EXACT URL to Supabase → Authentication → URL Configuration → Redirect URLs')
-                    console.log('===========================')
-        
-                    const { data, error } = await supabase.auth.signInWithOAuth({
+                                const signInWithGoogle = async () => {
+                          try {
+                            const redirectUrl = Linking.createURL('auth/callback')
+                            console.log('=== GOOGLE OAUTH DEBUG ===')
+                            console.log('Redirect URL:', redirectUrl)
+                            console.log('===========================')
+            
+                            Alert.alert(
+                              'Add this URL to Supabase',
+                              redirectUrl,
+                              [
+                                { text: 'Copy & Continue', onPress: () => {} }
+                              ]
+                            )
+    
+                            const { data, error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
                 redirectTo: redirectUrl,
