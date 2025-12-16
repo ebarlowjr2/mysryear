@@ -37,17 +37,22 @@ export default function LoginScreen() {
       setLoading(false)
     }
 
-    const handleGoogleLogin = async () => {
-      setGoogleLoading(true)
-      setError('')
+        const handleGoogleLogin = async () => {
+          setGoogleLoading(true)
+          setError('')
 
-      const { error } = await signInWithGoogle()
+          try {
+            const { error } = await signInWithGoogle()
 
-      if (error) {
-        setError(error.message || 'Failed to sign in with Google')
-        setGoogleLoading(false)
-      }
-    }
+            if (error) {
+              setError(error.message || 'Failed to sign in with Google')
+            }
+          } catch (err) {
+            setError('An unexpected error occurred')
+          } finally {
+            setGoogleLoading(false)
+          }
+        }
 
   return (
     <KeyboardAvoidingView

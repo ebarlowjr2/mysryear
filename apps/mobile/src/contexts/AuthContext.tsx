@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { Alert } from 'react-native'
 import type { Session, User } from '@supabase/supabase-js'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
@@ -48,58 +47,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error | null }
     }
 
-                                const signInWithGoogle = async () => {
-                          try {
-                            const redirectUrl = Linking.createURL('auth/callback')
-                            console.log('=== GOOGLE OAUTH DEBUG ===')
-                            console.log('Redirect URL:', redirectUrl)
-                            console.log('===========================')
-            
-                            Alert.alert(
-                              'Add this URL to Supabase',
-                              redirectUrl,
-                              [
-                                { text: 'Copy & Continue', onPress: () => {} }
-                              ]
-                            )
-    
-                            const { data, error } = await supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: {
-                redirectTo: redirectUrl,
-                skipBrowserRedirect: true
-              }
-            })
+                                        const signInWithGoogle = async () => {
+              try {
+                const redirectUrl = Linking.createURL('auth/callback')
+        
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: redirectUrl,
+                    skipBrowserRedirect: true
+                  }
+                })
 
-            if (error) {
-              return { error: error as Error }
-            }
-
-            if (!data.url) {
-              return { error: new Error('No OAuth URL returned') }
-            }
-
-            const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
-
-            if (result.type === 'success' && result.url) {
-              const params = new URL(result.url)
-              const code = params.searchParams.get('code')
-          
-              if (code) {
-                const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-                if (exchangeError) {
-                  return { error: exchangeError as Error }
+                if (error) {
+                  return { error: error as Error }
                 }
-              }
-            } else if (result.type === 'cancel') {
-              return { error: new Error('Sign in was cancelled') }
-            }
 
-            return { error: null }
-          } catch (err) {
-            return { error: err as Error }
-          }
-        }
+                if (!data.url) {
+                  return { error: new Error('No OAuth URL returned') }
+                }
+
+                const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
+
+                if (result.type === 'success' && result.url) {
+                  const parsedUrl = Linking.parse(result.url)
+                  const code = parsedUrl.queryParams?.code as string | undefined
+      
+                  if (code) {
+                    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+                    if (exchangeError) {
+                      return { error: exchangeError as Error }
+                    }
+            
+                    const { data: sessionData } = await supabase.auth.getSession()
+                    if (!sessionData.session) {
+                      return { error: new Error('Failed to establish session') }
+                    }
+                  } else {
+                    return { error: new Error('No authorization code received') }
+                  }
+                } else if (result.type === 'cancel') {
+                  return { error: new Error('Sign in was cancelled') }
+                } else {
+                  return { error: new Error('Authentication failed') }
+                }
+
+                return { error: null }
+              } catch (err) {
+                return { error: err as Error }
+              }
+            }
 
     const signOut = async () => {
       await supabase.auth.signOut()
