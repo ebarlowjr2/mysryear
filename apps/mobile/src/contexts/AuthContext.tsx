@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import * as WebBrowser from 'expo-web-browser'
+import * as Linking from 'expo-linking'
 import { supabase } from '../lib/supabase'
 
 type AuthContextType = {
@@ -45,15 +47,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error | null }
     }
 
-    const signInWithGoogle = async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'mysryear://auth/callback'
+        const signInWithGoogle = async () => {
+          try {
+            const redirectUrl = Linking.createURL('auth/callback')
+        
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: redirectUrl,
+                skipBrowserRedirect: true
+              }
+            })
+
+            if (error) {
+              return { error: error as Error }
+            }
+
+            if (!data.url) {
+              return { error: new Error('No OAuth URL returned') }
+            }
+
+            const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
+
+            if (result.type === 'success' && result.url) {
+              const params = new URL(result.url)
+              const code = params.searchParams.get('code')
+          
+              if (code) {
+                const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+                if (exchangeError) {
+                  return { error: exchangeError as Error }
+                }
+              }
+            } else if (result.type === 'cancel') {
+              return { error: new Error('Sign in was cancelled') }
+            }
+
+            return { error: null }
+          } catch (err) {
+            return { error: err as Error }
+          }
         }
-      })
-      return { error: error as Error | null }
-    }
 
     const signOut = async () => {
       await supabase.auth.signOut()
