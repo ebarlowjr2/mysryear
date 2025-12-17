@@ -26,12 +26,10 @@ export default function PlannerScreen() {
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchTasks = useCallback(async () => {
-    if (!user?.id) return
-
+  const fetchTasks = useCallback(async (userId: string) => {
     try {
       setError(null)
-      const data = await getTasks(user.id)
+      const data = await getTasks(userId)
       setTasks(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tasks')
@@ -39,18 +37,22 @@ export default function PlannerScreen() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
-    if (!sessionLoading && user?.id) {
-      fetchTasks()
+    if (sessionLoading) return
+    if (!user?.id) {
+      setLoading(false)
+      return
     }
+    fetchTasks(user.id)
   }, [sessionLoading, user?.id, fetchTasks])
 
   const onRefresh = useCallback(() => {
+    if (!user?.id) return
     setRefreshing(true)
-    fetchTasks()
-  }, [fetchTasks])
+    fetchTasks(user.id)
+  }, [fetchTasks, user?.id])
 
   const handleToggleComplete = async (task: Task) => {
     try {

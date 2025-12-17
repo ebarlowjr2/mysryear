@@ -11,14 +11,12 @@ export default function DashboardScreen() {
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchData = useCallback(async () => {
-    if (!user?.id) return
-
+  const fetchData = useCallback(async (userId: string) => {
     try {
       setError(null)
       const [metricsData, deadlineData] = await Promise.all([
-        getDashboardMetrics(user.id),
-        getNextDeadline(user.id)
+        getDashboardMetrics(userId),
+        getNextDeadline(userId)
       ])
       setMetrics(metricsData)
       setNextDeadline(deadlineData)
@@ -28,18 +26,22 @@ export default function DashboardScreen() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
-    if (!sessionLoading && user?.id) {
-      fetchData()
+    if (sessionLoading) return
+    if (!user?.id) {
+      setLoading(false)
+      return
     }
+    fetchData(user.id)
   }, [sessionLoading, user?.id, fetchData])
 
   const onRefresh = useCallback(() => {
+    if (!user?.id) return
     setRefreshing(true)
-    fetchData()
-  }, [fetchData])
+    fetchData(user.id)
+  }, [fetchData, user?.id])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

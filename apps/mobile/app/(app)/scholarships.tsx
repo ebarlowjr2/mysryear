@@ -27,7 +27,7 @@ type Tab = 'all' | 'saved'
 
 export default function ScholarshipsScreen() {
   const router = useRouter()
-  const { user } = useSession()
+  const { user, loading: sessionLoading } = useSession()
   const [scholarships, setScholarships] = useState<Scholarship[]>([])
   const [savedIds, setSavedIds] = useState<Map<string, 'saved' | 'applied'>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -36,14 +36,12 @@ export default function ScholarshipsScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<Tab>('all')
 
-  const loadData = useCallback(async () => {
-    if (!user?.id) return
-
+  const loadData = useCallback(async (userId: string) => {
     try {
       setError(null)
       const [scholarshipsData, savedData] = await Promise.all([
         getScholarships(),
-        getSavedScholarshipIds(user.id)
+        getSavedScholarshipIds(userId)
       ])
       setScholarships(sortByDeadline(scholarshipsData))
       setSavedIds(savedData)
@@ -54,16 +52,22 @@ export default function ScholarshipsScreen() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    if (sessionLoading) return
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+    loadData(user.id)
+  }, [sessionLoading, user?.id, loadData])
 
   const handleRefresh = useCallback(() => {
+    if (!user?.id) return
     setRefreshing(true)
-    loadData()
-  }, [loadData])
+    loadData(user.id)
+  }, [loadData, user?.id])
 
   const handleSaveToggle = useCallback(async (scholarshipId: string) => {
     if (!user?.id) return
@@ -172,7 +176,7 @@ export default function ScholarshipsScreen() {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
