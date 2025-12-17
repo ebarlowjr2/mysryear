@@ -9,6 +9,8 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native'
+import { Link } from 'expo-router'
+import type { Href } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
 
 export default function LoginScreen() {
@@ -116,6 +118,15 @@ export default function LoginScreen() {
                       <Text style={styles.googleButtonText}>Continue with Google</Text>
                     )}
                   </TouchableOpacity>
+
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>Don't have an account? </Text>
+                    <Link href={'/(auth)/signup' as Href} asChild>
+                      <TouchableOpacity>
+                        <Text style={styles.linkText}>Sign Up</Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </View>
                 </View>
       </View>
     </KeyboardAvoidingView>
@@ -201,6 +212,20 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: '#333',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  footerText: {
+    color: '#94a3b8',
+    fontSize: 14,
+  },
+  linkText: {
+    color: '#3b82f6',
+    fontSize: 14,
     fontWeight: '600',
   },
 })

@@ -2,6 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { DarkTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
 import { Slot, useRouter, useSegments } from 'expo-router'
+import type { Href } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
@@ -16,7 +17,7 @@ export {
 SplashScreen.preventAutoHideAsync()
 
 function AuthGate() {
-  const { session, loading } = useAuth()
+  const { session, profile, loading } = useAuth()
   const segments = useSegments()
   const router = useRouter()
 
@@ -24,13 +25,20 @@ function AuthGate() {
     if (loading) return
 
     const inAuthGroup = segments[0] === '(auth)'
+    const inOnboarding = segments[0] === 'onboarding'
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (session && inAuthGroup) {
-      router.replace('/(app)')
+      if (profile && !profile.onboarding_complete) {
+        router.replace('/onboarding' as Href)
+      } else {
+        router.replace('/(app)')
+      }
+    } else if (session && !inOnboarding && profile && !profile.onboarding_complete) {
+      router.replace('/onboarding' as Href)
     }
-  }, [session, loading, segments])
+  }, [session, profile, loading, segments])
 
   if (loading) {
     return (

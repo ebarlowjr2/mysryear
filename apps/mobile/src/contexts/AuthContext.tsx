@@ -3,15 +3,18 @@ import type { Session, User } from '@supabase/supabase-js'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
 import { supabase } from '../lib/supabase'
+import { ensureProfile, getProfile, type Profile } from '../data/profile'
 
 type AuthContextType = {
   session: Session | null
   user: User | null
+  profile: Profile | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>
   signInWithGoogle: () => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,18 +22,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const loadProfile = async (userId: string, email?: string) => {
+    const { profile: userProfile } = await ensureProfile(userId, email)
+    setProfile(userProfile)
+  }
+
+  const refreshProfile = async () => {
+    if (user) {
+      const userProfile = await getProfile(user.id)
+      setProfile(userProfile)
+    }
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
+      if (session?.user) {
+        await loadProfile(session.user.id, session.user.email)
+      }
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      if (session?.user) {
+        await loadProfile(session.user.id, session.user.email)
+      } else {
+        setProfile(null)
+      }
       setLoading(false)
     })
 
@@ -121,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-      <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signInWithGoogle, signOut }}>
+      <AuthContext.Provider value={{ session, user, profile, loading, signIn, signUp, signInWithGoogle, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
