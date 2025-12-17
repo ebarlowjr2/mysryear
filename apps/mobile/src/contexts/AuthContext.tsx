@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session)
         setUser(session?.user ?? null)
         if (session?.user) {
-          await loadProfile(session.user.id, session.user.email)
+          loadProfile(session.user.id, session.user.email)
         }
       } catch (err) {
         console.warn('Failed to get session:', err)
@@ -64,19 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      setLoading(false)
       if (session?.user) {
-        try {
-          await loadProfile(session.user.id, session.user.email)
-        } catch (err) {
-          console.warn('Failed to load profile on auth change:', err)
-        }
+        loadProfile(session.user.id, session.user.email)
       } else {
         setProfile(null)
       }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
