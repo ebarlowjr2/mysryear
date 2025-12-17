@@ -26,32 +26,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const loadProfile = async (userId: string, email?: string) => {
-    const { profile: userProfile } = await ensureProfile(userId, email)
-    setProfile(userProfile)
+    try {
+      const { profile: userProfile } = await ensureProfile(userId, email)
+      setProfile(userProfile)
+    } catch (err) {
+      console.warn('Failed to load profile:', err)
+      setProfile(null)
+    }
   }
 
   const refreshProfile = async () => {
     if (user) {
-      const userProfile = await getProfile(user.id)
-      setProfile(userProfile)
+      try {
+        const userProfile = await getProfile(user.id)
+        setProfile(userProfile)
+      } catch (err) {
+        console.warn('Failed to refresh profile:', err)
+      }
     }
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        await loadProfile(session.user.id, session.user.email)
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await loadProfile(session.user.id, session.user.email)
+        }
+      } catch (err) {
+        console.warn('Failed to get session:', err)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    initSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        await loadProfile(session.user.id, session.user.email)
+        try {
+          await loadProfile(session.user.id, session.user.email)
+        } catch (err) {
+          console.warn('Failed to load profile on auth change:', err)
+        }
       } else {
         setProfile(null)
       }
