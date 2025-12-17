@@ -47,56 +47,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error | null }
     }
 
-                                        const signInWithGoogle = async () => {
-              try {
-                const redirectUrl = Linking.createURL('auth/callback')
+                                                    const signInWithGoogle = async () => {
+                  try {
+                    const redirectUrl = Linking.createURL('auth/callback')
         
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                  provider: 'google',
-                  options: {
-                    redirectTo: redirectUrl,
-                    skipBrowserRedirect: true
-                  }
-                })
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                      provider: 'google',
+                      options: {
+                        redirectTo: redirectUrl,
+                        skipBrowserRedirect: true
+                      }
+                    })
 
-                if (error) {
-                  return { error: error as Error }
-                }
-
-                if (!data.url) {
-                  return { error: new Error('No OAuth URL returned') }
-                }
-
-                const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
-
-                if (result.type === 'success' && result.url) {
-                  const parsedUrl = Linking.parse(result.url)
-                  const code = parsedUrl.queryParams?.code as string | undefined
-      
-                  if (code) {
-                    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-                    if (exchangeError) {
-                      return { error: exchangeError as Error }
+                    if (error) {
+                      return { error: error as Error }
                     }
+
+                    if (!data.url) {
+                      return { error: new Error('No OAuth URL returned') }
+                    }
+
+                    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
+
+                    if (result.type === 'success' && result.url) {
+                      const parsedUrl = Linking.parse(result.url)
+                      const code = parsedUrl.queryParams?.code as string | undefined
+          
+                      if (code) {
+                        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+                        if (exchangeError) {
+                          return { error: exchangeError as Error }
+                        }
+                      } else {
+                        const accessToken = parsedUrl.queryParams?.access_token as string | undefined
+                        const refreshToken = parsedUrl.queryParams?.refresh_token as string | undefined
             
-                    const { data: sessionData } = await supabase.auth.getSession()
-                    if (!sessionData.session) {
-                      return { error: new Error('Failed to establish session') }
+                        if (accessToken && refreshToken) {
+                          const { error: setSessionError } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                          })
+                          if (setSessionError) {
+                            return { error: setSessionError as Error }
+                          }
+                        } else {
+                          const errorDesc = parsedUrl.queryParams?.error_description as string | undefined
+                          const errorMsg = parsedUrl.queryParams?.error as string | undefined
+                          if (errorDesc || errorMsg) {
+                            return { error: new Error(errorDesc || errorMsg || 'OAuth error') }
+                          }
+                          return { error: new Error('No authorization code or tokens received') }
+                        }
+                      }
+          
+                      const { data: sessionData } = await supabase.auth.getSession()
+                      if (!sessionData.session) {
+                        return { error: new Error('Failed to establish session') }
+                      }
+                    } else if (result.type === 'cancel') {
+                      return { error: new Error('Sign in was cancelled') }
+                    } else {
+                      return { error: new Error('Authentication failed') }
                     }
-                  } else {
-                    return { error: new Error('No authorization code received') }
-                  }
-                } else if (result.type === 'cancel') {
-                  return { error: new Error('Sign in was cancelled') }
-                } else {
-                  return { error: new Error('Authentication failed') }
-                }
 
-                return { error: null }
-              } catch (err) {
-                return { error: err as Error }
-              }
-            }
+                    return { error: null }
+                  } catch (err) {
+                    return { error: err as Error }
+                  }
+                }
 
     const signOut = async () => {
       await supabase.auth.signOut()
