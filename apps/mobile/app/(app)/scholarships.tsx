@@ -22,6 +22,7 @@ import {
   formatDeadline,
   Scholarship
 } from '../../src/data/scholarships'
+import { colors, ui, radius, shadow } from '../../src/theme'
 
 type Tab = 'all' | 'saved'
 
@@ -166,7 +167,7 @@ export default function ScholarshipsScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={ui.primary} />
         <Text style={styles.loadingText}>Loading scholarships...</Text>
       </View>
     )
@@ -194,7 +195,7 @@ export default function ScholarshipsScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Search scholarships..."
-          placeholderTextColor="#64748b"
+          placeholderTextColor={ui.inputPlaceholder}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -228,7 +229,7 @@ export default function ScholarshipsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
+            tintColor={ui.primary}
           />
         }
         ListEmptyComponent={
@@ -248,22 +249,22 @@ export default function ScholarshipsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 12,
     fontSize: 16,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 16,
     textAlign: 'center',
   },
@@ -271,26 +272,26 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    backgroundColor: ui.primary,
+    borderRadius: radius.sm,
   },
   retryButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
   header: {
     padding: 16,
-    paddingTop: 60,
+    paddingTop: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.text,
   },
   subtitle: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 4,
   },
   searchContainer: {
@@ -298,11 +299,13 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   searchInput: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
     padding: 14,
     fontSize: 16,
-    color: '#fff',
+    color: ui.inputText,
+    borderWidth: 1,
+    borderColor: ui.inputBorder,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -313,30 +316,36 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#1e293b',
+    borderRadius: radius.sm,
+    backgroundColor: ui.backgroundSecondary,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   tabActive: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
+    borderColor: ui.primary,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   tabTextActive: {
-    color: '#fff',
+    color: colors.white,
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
   },
   scholarshipCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -348,24 +357,27 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
   },
   saveButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: '#334155',
+    backgroundColor: ui.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   saveButtonActive: {
-    backgroundColor: '#22c55e',
+    backgroundColor: colors.success,
+    borderColor: colors.success,
   },
   saveButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   saveButtonTextActive: {
-    color: '#fff',
+    color: colors.white,
   },
   cardDetails: {
     marginTop: 12,
@@ -377,11 +389,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 13,
-    color: '#64748b',
+    color: ui.textMuted,
   },
   detailValue: {
     fontSize: 13,
-    color: '#fff',
+    color: ui.text,
     fontWeight: '500',
   },
   tagsContainer: {
@@ -391,14 +403,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   tag: {
-    backgroundColor: '#334155',
+    backgroundColor: ui.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
   tagText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: ui.primaryText,
   },
   cardActions: {
     flexDirection: 'row',
@@ -409,13 +421,13 @@ const styles = StyleSheet.create({
   applyButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    backgroundColor: ui.primary,
+    borderRadius: radius.sm,
   },
   applyButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.white,
   },
   emptyContainer: {
     padding: 32,
@@ -423,7 +435,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#64748b',
+    color: ui.textMuted,
     textAlign: 'center',
     lineHeight: 22,
   },

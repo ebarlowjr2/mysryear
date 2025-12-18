@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../src/lib/supabase'
+import { colors, ui } from '../../src/theme'
 
 export default function AuthCallbackScreen() {
   const router = useRouter()
@@ -47,7 +48,7 @@ export default function AuthCallbackScreen() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#3b82f6" />
+      <ActivityIndicator size="large" color={ui.primary} />
       <Text style={styles.loadingText}>Completing sign in...</Text>
     </View>
   )
@@ -56,30 +57,30 @@ export default function AuthCallbackScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 16,
     fontSize: 16,
   },
   errorTitle: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
   },
   errorText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 24,
   },
   backLink: {
-    color: '#3b82f6',
+    color: ui.primary,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -12,6 +12,7 @@ import {
 } from 'react-native'
 import { Link } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
+import { colors, ui, radius } from '../../src/theme'
 
 function validateEmail(email: string): string | null {
   if (!email) return 'Email is required'
@@ -144,7 +145,7 @@ export default function SignupScreen() {
               <TextInput
                 style={[styles.input, fieldErrors.email && styles.inputError]}
                 placeholder="Email"
-                placeholderTextColor="#666"
+                placeholderTextColor={ui.inputPlaceholder}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text)
@@ -161,7 +162,7 @@ export default function SignupScreen() {
               <TextInput
                 style={[styles.input, fieldErrors.password && styles.inputError]}
                 placeholder="Password (min 6 characters)"
-                placeholderTextColor="#666"
+                placeholderTextColor={ui.inputPlaceholder}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text)
@@ -177,7 +178,7 @@ export default function SignupScreen() {
               <TextInput
                 style={[styles.input, fieldErrors.confirmPassword && styles.inputError]}
                 placeholder="Confirm Password"
-                placeholderTextColor="#666"
+                placeholderTextColor={ui.inputPlaceholder}
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text)
@@ -239,7 +240,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -253,19 +254,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#94a3b8',
+    color: ui.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
   },
   successText: {
     fontSize: 16,
-    color: '#94a3b8',
+    color: ui.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
@@ -274,20 +275,20 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
+    color: ui.inputText,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: ui.inputBorder,
   },
   inputError: {
-    borderColor: '#ef4444',
+    borderColor: colors.error,
   },
   button: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 12,
+    backgroundColor: ui.primary,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
@@ -296,17 +297,17 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
   error: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center',
   },
   fieldError: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
@@ -319,21 +320,23 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#334155',
+    backgroundColor: ui.border,
   },
   dividerText: {
-    color: '#64748b',
+    color: ui.textMuted,
     paddingHorizontal: 16,
     fontSize: 14,
   },
   googleButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   googleButtonText: {
-    color: '#333',
+    color: ui.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -343,11 +346,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   footerText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     fontSize: 14,
   },
   linkText: {
-    color: '#3b82f6',
+    color: ui.primary,
     fontSize: 14,
     fontWeight: '600',
   },

@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome'
-import { DarkTheme, ThemeProvider } from '@react-navigation/native'
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
 import { Slot, useRouter, useSegments } from 'expo-router'
 import type { Href } from 'expo-router'
@@ -9,6 +9,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native'
 import 'react-native-reanimated'
 
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext'
+import { ui } from '../src/theme'
 
 export {
   ErrorBoundary,
@@ -43,7 +44,7 @@ function AuthGate() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={ui.primary} />
       </View>
     )
   }
@@ -73,7 +74,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={DarkTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <AuthGate />
       </ThemeProvider>
     </AuthProvider>
@@ -85,6 +86,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
 })

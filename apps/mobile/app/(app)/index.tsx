@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useSession } from '../../src/hooks/useSession'
 import { getDashboardMetrics, getNextDeadline, DashboardMetrics, NextDeadline } from '../../src/data/dashboard'
+import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
+  const router = useRouter()
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [nextDeadline, setNextDeadline] = useState<NextDeadline>(null)
   const [loading, setLoading] = useState(true)
@@ -51,7 +55,7 @@ export default function DashboardScreen() {
   if (sessionLoading || loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={ui.primary} />
         <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     )
@@ -61,7 +65,9 @@ export default function DashboardScreen() {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>Error: {error}</Text>
-        <Text style={styles.retryText} onPress={onRefresh}>Tap to retry</Text>
+        <TouchableOpacity onPress={onRefresh}>
+          <Text style={styles.retryText}>Tap to retry</Text>
+        </TouchableOpacity>
       </View>
     )
   }
@@ -69,59 +75,98 @@ export default function DashboardScreen() {
   return (
     <ScrollView 
       style={styles.container}
+      contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#3b82f6"
-          colors={['#3b82f6']}
+          tintColor={ui.primary}
+          colors={[ui.primary]}
         />
       }
     >
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome back!</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+      <View style={styles.hero}>
+        <Text style={styles.badge}>Built for Students & Parents</Text>
+        <Text style={styles.heroTitle}>Your senior year, organized and stress-less.</Text>
+        <Text style={styles.heroSubtitle}>
+          Manage applications, track scholarships, and plan life after high school.
+        </Text>
       </View>
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{metrics?.scholarshipsCount ?? 0}</Text>
+          <Text style={styles.statLabel}>Next Deadline</Text>
+          <Text style={styles.statValue}>
+            {nextDeadline ? nextDeadline.title.substring(0, 20) + (nextDeadline.title.length > 20 ? '...' : '') : 'None'}
+          </Text>
+          <Text style={styles.statDesc}>
+            {nextDeadline ? formatDate(nextDeadline.dueDate) : 'Add tasks to see deadlines'}
+          </Text>
+        </View>
+        <View style={styles.statCard}>
           <Text style={styles.statLabel}>Scholarships</Text>
-          <Text style={styles.statDesc}>available</Text>
+          <Text style={styles.statValue}>{metrics?.scholarshipsCount ?? 0} available</Text>
+          <Text style={styles.statDesc}>Filtered by your profile</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{metrics?.upcomingDeadlines ?? 0}</Text>
-          <Text style={styles.statLabel}>Deadlines</Text>
-          <Text style={styles.statDesc}>upcoming</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{metrics?.pendingTasks ?? 0}</Text>
           <Text style={styles.statLabel}>Tasks</Text>
-          <Text style={styles.statDesc}>pending</Text>
+          <Text style={styles.statValue}>{metrics?.pendingTasks ?? 0} pending</Text>
+          <Text style={styles.statDesc}>{metrics?.completedTasks ?? 0} completed</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{metrics?.completedTasks ?? 0}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
-          <Text style={styles.statDesc}>tasks</Text>
+          <Text style={styles.statLabel}>Deadlines</Text>
+          <Text style={styles.statValue}>{metrics?.upcomingDeadlines ?? 0} upcoming</Text>
+          <Text style={styles.statDesc}>This month</Text>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Next Deadline</Text>
-        {nextDeadline ? (
-          <View style={styles.deadlineCard}>
-            <View style={styles.deadlineHeader}>
-              <Text style={styles.deadlineTitle}>{nextDeadline.title}</Text>
-              <Text style={styles.deadlineDate}>{formatDate(nextDeadline.dueDate)}</Text>
+        <Text style={styles.sectionTitle}>Everything in one place</Text>
+        <Text style={styles.sectionSubtitle}>Replace sticky notes and scattered tabs with a simple dashboard.</Text>
+        
+        <View style={styles.featureGrid}>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/(app)/scholarships')}
+          >
+            <View style={styles.featureIcon}>
+              <Ionicons name="school-outline" size={24} color={ui.primary} />
             </View>
-            <Text style={styles.deadlineCategory}>{nextDeadline.category}</Text>
+            <Text style={styles.featureTitle}>Scholarship Finder</Text>
+            <Text style={styles.featureDesc}>Curated sources with filters for GPA, state, major, and deadlines.</Text>
+            <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/(app)/planner')}
+          >
+            <View style={styles.featureIcon}>
+              <Ionicons name="calendar-outline" size={24} color={ui.primary} />
+            </View>
+            <Text style={styles.featureTitle}>Senior Year Timeline</Text>
+            <Text style={styles.featureDesc}>Milestones you can customize for your state and goals.</Text>
+            <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
+
+          <View style={[styles.featureCard, styles.featureCardDisabled]}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="document-text-outline" size={24} color={ui.textMuted} />
+            </View>
+            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>Application Tracker</Text>
+            <Text style={styles.featureDesc}>Track each school with tasks, essays, and documents.</Text>
+            <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
-        ) : (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No upcoming deadlines</Text>
-            <Text style={styles.emptySubtext}>Add tasks in the Planner to see them here</Text>
+
+          <View style={[styles.featureCard, styles.featureCardDisabled]}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="folder-outline" size={24} color={ui.textMuted} />
+            </View>
+            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>Essay & Resume Vault</Text>
+            <Text style={styles.featureDesc}>Keep drafts, feedback, and activity lists tidy.</Text>
+            <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
-        )}
+        </View>
       </View>
     </ScrollView>
   )
@@ -130,43 +175,61 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
+  },
+  contentContainer: {
+    paddingBottom: 32,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 12,
     fontSize: 16,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 16,
     textAlign: 'center',
   },
   retryText: {
-    color: '#3b82f6',
+    color: ui.primary,
     fontSize: 16,
     marginTop: 12,
+    fontWeight: '600',
   },
-  header: {
+  hero: {
     padding: 24,
     paddingTop: 16,
   },
-  greeting: {
+  badge: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: ui.primaryText,
+    backgroundColor: ui.primaryLight,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  heroTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.text,
+    lineHeight: 36,
   },
-  email: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginTop: 4,
+  heroSubtitle: {
+    fontSize: 16,
+    color: ui.textSecondary,
+    marginTop: 8,
+    lineHeight: 24,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -175,78 +238,92 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
     padding: 16,
     width: '47%',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3b82f6',
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
   },
   statLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '500',
+    color: ui.textSecondary,
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: ui.text,
   },
   statDesc: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: ui.textMuted,
+    marginTop: 2,
   },
   section: {
     padding: 24,
+    paddingTop: 32,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
+    color: ui.text,
   },
-  deadlineCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3b82f6',
-  },
-  deadlineHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  deadlineTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-    marginRight: 12,
-  },
-  deadlineDate: {
+  sectionSubtitle: {
     fontSize: 14,
-    color: '#3b82f6',
-    fontWeight: '600',
-  },
-  deadlineCategory: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 8,
-  },
-  emptyCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#94a3b8',
-  },
-  emptySubtext: {
-    fontSize: 12,
-    color: '#64748b',
+    color: ui.textSecondary,
     marginTop: 4,
-    textAlign: 'center',
+    marginBottom: 20,
+  },
+  featureGrid: {
+    gap: 12,
+  },
+  featureCard: {
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
+  },
+  featureCardDisabled: {
+    opacity: 0.7,
+  },
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    backgroundColor: ui.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 4,
+  },
+  featureTextDisabled: {
+    color: ui.textMuted,
+  },
+  featureDesc: {
+    fontSize: 14,
+    color: ui.textSecondary,
+    lineHeight: 20,
+  },
+  featureLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: ui.primary,
+    marginTop: 12,
+  },
+  comingSoon: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: ui.textMuted,
+    marginTop: 12,
   },
 })

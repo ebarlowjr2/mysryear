@@ -17,6 +17,7 @@ import {
   deleteTask,
   Task 
 } from '../../src/data/planner'
+import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function PlannerScreen() {
   const router = useRouter()
@@ -97,7 +98,7 @@ export default function PlannerScreen() {
   if (sessionLoading || loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={ui.primary} />
         <Text style={styles.loadingText}>Loading tasks...</Text>
       </View>
     )
@@ -120,8 +121,8 @@ export default function PlannerScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={ui.primary}
+            colors={[ui.primary]}
           />
         }
       >
@@ -231,30 +232,30 @@ function TaskRow({ task, onToggle, onEdit, onDelete, formatDate }: TaskRowProps)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   scrollView: {
     flex: 1,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 12,
     fontSize: 16,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 16,
     textAlign: 'center',
   },
   retryText: {
-    color: '#3b82f6',
+    color: ui.primary,
     fontSize: 16,
     marginTop: 12,
   },
@@ -265,11 +266,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.text,
   },
   subtitle: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 4,
   },
   section: {
@@ -285,30 +286,35 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
   },
   emptyCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
     padding: 24,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
   },
   emptyText: {
     fontSize: 16,
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   emptySubtext: {
     fontSize: 12,
-    color: '#64748b',
+    color: ui.textMuted,
     marginTop: 4,
   },
   taskCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
     padding: 16,
     marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
   },
   checkbox: {
     marginRight: 12,
@@ -319,15 +325,15 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#3b82f6',
+    borderColor: ui.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
   },
   checkmark: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -337,11 +343,11 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
   },
   taskTitleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#64748b',
+    color: ui.textMuted,
   },
   taskMeta: {
     flexDirection: 'row',
@@ -350,15 +356,15 @@ const styles = StyleSheet.create({
   },
   taskCategory: {
     fontSize: 12,
-    color: '#3b82f6',
+    color: ui.primary,
   },
   taskDue: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   taskNotes: {
     fontSize: 12,
-    color: '#64748b',
+    color: ui.textMuted,
     marginTop: 4,
   },
   bottomPadding: {
@@ -371,18 +377,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    ...shadow.soft,
   },
   fabText: {
     fontSize: 32,
-    color: '#fff',
+    color: colors.white,
     lineHeight: 32,
   },
 })

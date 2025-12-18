@@ -14,6 +14,7 @@ import {
 import { router } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
 import { updateProfile, completeOnboarding } from '../../src/data/profile'
+import { colors, ui, radius } from '../../src/theme'
 
 type OnboardingStep = 1 | 2 | 3
 
@@ -101,7 +102,7 @@ export default function OnboardingScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter your full name"
-          placeholderTextColor="#666"
+          placeholderTextColor={ui.inputPlaceholder}
           value={fullName}
           onChangeText={setFullName}
           autoCapitalize="words"
@@ -139,7 +140,7 @@ export default function OnboardingScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter your school name"
-          placeholderTextColor="#666"
+          placeholderTextColor={ui.inputPlaceholder}
           value={school}
           onChangeText={setSchool}
           autoCapitalize="words"
@@ -151,7 +152,7 @@ export default function OnboardingScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g., 2025"
-          placeholderTextColor="#666"
+          placeholderTextColor={ui.inputPlaceholder}
           value={graduationYear}
           onChangeText={setGraduationYear}
           keyboardType="number-pad"
@@ -230,7 +231,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   keyboardView: {
     flex: 1,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   skipText: {
-    color: '#64748b',
+    color: ui.textMuted,
     fontSize: 16,
   },
   progressContainer: {
@@ -259,14 +260,14 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#334155',
+    backgroundColor: ui.border,
   },
   progressDotActive: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
     width: 24,
   },
   progressDotCompleted: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
   },
   stepContent: {
     flex: 1,
@@ -275,13 +276,13 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   stepDescription: {
     fontSize: 16,
-    color: '#94a3b8',
+    color: ui.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
@@ -299,17 +300,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
+    color: ui.inputText,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: ui.inputBorder,
   },
   roleButtons: {
     flexDirection: 'row',
@@ -317,24 +318,24 @@ const styles = StyleSheet.create({
   },
   roleButton: {
     flex: 1,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: ui.border,
   },
   roleButtonActive: {
-    backgroundColor: '#1e3a5f',
-    borderColor: '#3b82f6',
+    backgroundColor: ui.primaryLight,
+    borderColor: ui.primary,
   },
   roleButtonText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
   roleButtonTextActive: {
-    color: '#3b82f6',
+    color: ui.primary,
   },
   footer: {
     flexDirection: 'row',
@@ -343,20 +344,22 @@ const styles = StyleSheet.create({
   },
   backButton: {
     flex: 1,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   backButtonText: {
-    color: '#fff',
+    color: ui.text,
     fontSize: 16,
     fontWeight: '600',
   },
   nextButton: {
     flex: 2,
-    backgroundColor: '#3b82f6',
-    borderRadius: 12,
+    backgroundColor: ui.primary,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
   },
@@ -364,7 +367,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nextButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },

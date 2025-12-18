@@ -14,6 +14,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useRouter } from 'expo-router'
 import { useSession } from '../src/hooks/useSession'
 import { createTask, CATEGORIES, Category } from '../src/data/planner'
+import { colors, ui, radius } from '../src/theme'
 
 export default function NewTaskScreen() {
   const router = useRouter()
@@ -84,7 +85,7 @@ export default function NewTaskScreen() {
         <Text style={styles.headerTitle}>New Task</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving}>
           {saving ? (
-            <ActivityIndicator size="small" color="#3b82f6" />
+            <ActivityIndicator size="small" color={ui.primary} />
           ) : (
             <Text style={styles.saveButton}>Save</Text>
           )}
@@ -99,7 +100,7 @@ export default function NewTaskScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="Enter task title"
-            placeholderTextColor="#64748b"
+            placeholderTextColor={ui.inputPlaceholder}
           />
         </View>
 
@@ -166,7 +167,7 @@ export default function NewTaskScreen() {
             value={notes}
             onChangeText={setNotes}
             placeholder="Add any notes..."
-            placeholderTextColor="#64748b"
+            placeholderTextColor={ui.inputPlaceholder}
             multiline
             numberOfLines={4}
           />
@@ -179,7 +180,7 @@ export default function NewTaskScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   header: {
     flexDirection: 'row',
@@ -188,20 +189,20 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: ui.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
   },
   cancelButton: {
     fontSize: 16,
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   saveButton: {
     fontSize: 16,
-    color: '#3b82f6',
+    color: ui.primary,
     fontWeight: '600',
   },
   form: {
@@ -214,15 +215,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
+    color: ui.inputText,
+    borderWidth: 1,
+    borderColor: ui.inputBorder,
   },
   textArea: {
     height: 100,
@@ -230,28 +233,31 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: '#64748b',
+    color: ui.textMuted,
     marginTop: 4,
   },
   categoryScroll: {
     flexDirection: 'row',
   },
   categoryChip: {
-    backgroundColor: '#1e293b',
+    backgroundColor: ui.backgroundSecondary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   categoryChipSelected: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
+    borderColor: ui.primary,
   },
   categoryChipText: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   categoryChipTextSelected: {
-    color: '#fff',
+    color: colors.white,
   },
   dateRow: {
     flexDirection: 'row',
@@ -260,16 +266,18 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     flex: 1,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
     padding: 16,
+    borderWidth: 1,
+    borderColor: ui.inputBorder,
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: ui.text,
   },
   dateButtonPlaceholder: {
-    color: '#64748b',
+    color: ui.inputPlaceholder,
   },
   clearButton: {
     paddingHorizontal: 16,
@@ -277,23 +285,25 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: 14,
-    color: '#ef4444',
+    color: colors.error,
   },
   datePickerContainer: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
     marginTop: 8,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   datePickerDone: {
     alignItems: 'center',
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: '#334155',
+    borderTopColor: ui.border,
   },
   datePickerDoneText: {
     fontSize: 16,
-    color: '#3b82f6',
+    color: ui.primary,
     fontWeight: '600',
   },
 })

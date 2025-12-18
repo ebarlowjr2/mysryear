@@ -21,6 +21,7 @@ import {
   Scholarship
 } from '../../src/data/scholarships'
 import { createTask } from '../../src/data/planner'
+import { colors, ui, radius } from '../../src/theme'
 
 export default function ScholarshipDetailScreen() {
   const router = useRouter()
@@ -120,7 +121,7 @@ export default function ScholarshipDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={ui.primary} />
         <Text style={styles.loadingText}>Loading scholarship...</Text>
       </View>
     )
@@ -206,11 +207,11 @@ export default function ScholarshipDetailScreen() {
             onPress={handleAddToPlanner}
             disabled={addingToPlanner}
           >
-            {addingToPlanner ? (
-              <ActivityIndicator size="small" color="#3b82f6" />
-            ) : (
-              <Text style={styles.secondaryButtonText}>Add to Planner</Text>
-            )}
+              {addingToPlanner ? (
+                <ActivityIndicator size="small" color={ui.primary} />
+              ) : (
+                <Text style={styles.secondaryButtonText}>Add to Planner</Text>
+              )}
           </TouchableOpacity>
 
           <View style={styles.buttonRow}>
@@ -250,22 +251,22 @@ function normalizeDeadline(d: string): string | null {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: ui.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#94a3b8',
+    color: ui.textSecondary,
     marginTop: 12,
     fontSize: 16,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.error,
     fontSize: 16,
     textAlign: 'center',
   },
@@ -273,11 +274,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    backgroundColor: ui.primary,
+    borderRadius: radius.sm,
   },
   backButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -285,11 +286,11 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: ui.border,
   },
   backLink: {
     fontSize: 16,
-    color: '#3b82f6',
+    color: ui.primary,
   },
   content: {
     flex: 1,
@@ -300,27 +301,31 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: ui.text,
     marginBottom: 12,
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#334155',
+    backgroundColor: ui.backgroundSecondary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   detailsCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
     padding: 16,
     gap: 12,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
   },
   detailRow: {
     flexDirection: 'row',
@@ -329,11 +334,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#64748b',
+    color: ui.textMuted,
   },
   detailValue: {
     fontSize: 14,
-    color: '#fff',
+    color: ui.text,
     fontWeight: '600',
   },
   tagsSection: {
@@ -342,7 +347,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: ui.text,
     marginBottom: 12,
   },
   tagsContainer: {
@@ -351,42 +356,44 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#334155',
+    backgroundColor: ui.backgroundSecondary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   tagText: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   actionsSection: {
     marginTop: 24,
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: ui.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.white,
   },
   secondaryButton: {
-    backgroundColor: '#1e293b',
+    backgroundColor: ui.card,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#3b82f6',
+    borderColor: ui.primary,
   },
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3b82f6',
+    color: ui.primary,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -397,20 +404,23 @@ const styles = StyleSheet.create({
   },
   halfButton: {
     flex: 1,
-    backgroundColor: '#334155',
+    backgroundColor: ui.backgroundSecondary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   halfButtonActive: {
-    backgroundColor: '#22c55e',
+    backgroundColor: colors.success,
+    borderColor: colors.success,
   },
   halfButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: ui.textSecondary,
   },
   halfButtonTextActive: {
-    color: '#fff',
+    color: colors.white,
   },
 })
