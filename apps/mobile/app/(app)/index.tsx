@@ -158,6 +158,18 @@ export default function DashboardScreen() {
             <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
 
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/test-prep')}
+          >
+            <View style={styles.featureIcon}>
+              <Ionicons name="school-outline" size={24} color={ui.primary} />
+            </View>
+            <Text style={styles.featureTitle}>Test Prep</Text>
+            <Text style={styles.featureDesc}>Prepare for SAT, ACT, AP exams, and more standardized tests.</Text>
+            <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
+
           <View style={[styles.featureCard, styles.featureCardDisabled]}>
             <View style={styles.featureIcon}>
               <Ionicons name="folder-outline" size={24} color={ui.textMuted} />
