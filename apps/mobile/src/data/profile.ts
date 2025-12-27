@@ -1,10 +1,12 @@
 import { supabase } from '../lib/supabase'
 
+export type UserRole = 'student' | 'parent' | 'teacher' | 'business'
+
 export type Profile = {
   id: string
   user_id: string
   full_name: string | null
-  role: string | null
+  role: UserRole | null
   school: string | null
   graduation_year: number | null
   onboarding_complete: boolean

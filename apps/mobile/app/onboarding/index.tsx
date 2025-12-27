@@ -11,12 +11,47 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
-import { updateProfile, completeOnboarding } from '../../src/data/profile'
+import { updateProfile, completeOnboarding, type UserRole } from '../../src/data/profile'
 import { colors, ui, radius } from '../../src/theme'
 
 type OnboardingStep = 1 | 2 | 3
+
+type RoleOption = {
+  value: UserRole
+  label: string
+  description: string
+  icon: keyof typeof Ionicons.glyphMap
+}
+
+const ROLE_OPTIONS: RoleOption[] = [
+  {
+    value: 'student',
+    label: 'Student',
+    description: 'Track scholarships, deadlines, and college prep',
+    icon: 'school-outline',
+  },
+  {
+    value: 'parent',
+    label: 'Parent',
+    description: 'Monitor and support your student\'s journey',
+    icon: 'people-outline',
+  },
+  {
+    value: 'teacher',
+    label: 'Teacher / Staff',
+    description: 'Connect with students and share opportunities',
+    icon: 'briefcase-outline',
+  },
+  {
+    value: 'business',
+    label: 'Business',
+    description: 'Post internships, webinars, and opportunities',
+    icon: 'business-outline',
+  },
+]
 
 export default function OnboardingScreen() {
   const { user, refreshProfile } = useAuth()
@@ -26,7 +61,7 @@ export default function OnboardingScreen() {
   const [fullName, setFullName] = useState('')
   const [school, setSchool] = useState('')
   const [graduationYear, setGraduationYear] = useState('')
-  const [role, setRole] = useState<'student' | 'parent' | 'counselor' | ''>('')
+  const [role, setRole] = useState<UserRole | null>(null)
 
   const handleNext = () => {
     if (step < 3) {
@@ -92,38 +127,36 @@ export default function OnboardingScreen() {
 
   const renderStep2 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Tell us about yourself</Text>
+      <Text style={styles.stepTitle}>Choose your account type</Text>
       <Text style={styles.stepDescription}>
-        This helps us customize your dashboard and recommendations.
+        This helps us customize your experience.
       </Text>
       
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Your Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your full name"
-          placeholderTextColor={ui.inputPlaceholder}
-          value={fullName}
-          onChangeText={setFullName}
-          autoCapitalize="words"
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>I am a...</Text>
-        <View style={styles.roleButtons}>
-          {(['student', 'parent', 'counselor'] as const).map((r) => (
-            <TouchableOpacity
-              key={r}
-              style={[styles.roleButton, role === r && styles.roleButtonActive]}
-              onPress={() => setRole(r)}
-            >
-              <Text style={[styles.roleButtonText, role === r && styles.roleButtonTextActive]}>
-                {r.charAt(0).toUpperCase() + r.slice(1)}
+      <View style={styles.roleCardsContainer}>
+        {ROLE_OPTIONS.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            style={[styles.roleCard, role === option.value && styles.roleCardActive]}
+            onPress={() => setRole(option.value)}
+          >
+            <View style={[styles.roleIconContainer, role === option.value && styles.roleIconContainerActive]}>
+              <Ionicons 
+                name={option.icon} 
+                size={24} 
+                color={role === option.value ? ui.primary : ui.textSecondary} 
+              />
+            </View>
+            <View style={styles.roleCardContent}>
+              <Text style={[styles.roleCardTitle, role === option.value && styles.roleCardTitleActive]}>
+                {option.label}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <Text style={styles.roleCardDescription}>{option.description}</Text>
+            </View>
+            {role === option.value && (
+              <Ionicons name="checkmark-circle" size={24} color={ui.primary} />
+            )}
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   )
@@ -312,30 +345,50 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ui.inputBorder,
   },
-  roleButtons: {
-    flexDirection: 'row',
+  roleCardsContainer: {
     gap: 12,
   },
-  roleButton: {
-    flex: 1,
+  roleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: ui.backgroundSecondary,
     borderRadius: radius.md,
     padding: 16,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: ui.border,
+    gap: 12,
   },
-  roleButtonActive: {
+  roleCardActive: {
     backgroundColor: ui.primaryLight,
     borderColor: ui.primary,
   },
-  roleButtonText: {
-    color: ui.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
+  roleIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: ui.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  roleButtonTextActive: {
+  roleIconContainerActive: {
+    backgroundColor: colors.white,
+  },
+  roleCardContent: {
+    flex: 1,
+  },
+  roleCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 2,
+  },
+  roleCardTitleActive: {
     color: ui.primary,
+  },
+  roleCardDescription: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    lineHeight: 18,
   },
   footer: {
     flexDirection: 'row',
