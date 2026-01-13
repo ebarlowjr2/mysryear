@@ -347,3 +347,132 @@ INSERT INTO scholarships (title, deadline, eligibility, link) VALUES
 ('Dell Scholars Program', '2024-12-01', '{"gpa_min": 2.4, "financial_need": true}', 'https://www.dellscholars.org/'),
 ('Jack Kent Cooke Foundation Scholarship', '2024-11-14', '{"gpa_min": 3.5, "financial_need": true}', 'https://www.jkcf.org/')
 ON CONFLICT DO NOTHING;
+
+-- Sprint 4: Profile Enhancements
+
+-- Update users table to support new roles (business, teacher)
+-- Note: Run this ALTER separately if the constraint already exists
+-- ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+-- ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('student', 'parent', 'counselor', 'business', 'teacher'));
+
+-- Parent-Student Links table
+CREATE TABLE IF NOT EXISTS parent_student_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  student_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+  requested_by TEXT NOT NULL DEFAULT 'parent' CHECK (requested_by IN ('parent', 'student')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(parent_user_id, student_user_id)
+);
+
+ALTER TABLE parent_student_links ENABLE ROW LEVEL SECURITY;
+
+-- Parent or student can view their own links
+CREATE POLICY "Users can view their own links" ON parent_student_links
+  FOR SELECT USING (
+    auth.uid() = parent_user_id OR auth.uid() = student_user_id
+  );
+
+-- Parent can create link requests
+CREATE POLICY "Parents can create link requests" ON parent_student_links
+  FOR INSERT WITH CHECK (
+    auth.uid() = parent_user_id AND
+    EXISTS (
+      SELECT 1 FROM users 
+      WHERE users.id = auth.uid() 
+      AND users.role = 'parent'
+    )
+  );
+
+-- Student can update status (accept/decline), Parent can update their own links
+CREATE POLICY "Users can update their links" ON parent_student_links
+  FOR UPDATE USING (
+    auth.uid() = student_user_id OR auth.uid() = parent_user_id
+  ) WITH CHECK (
+    auth.uid() = student_user_id OR auth.uid() = parent_user_id
+  );
+
+-- Parent can delete/remove links
+CREATE POLICY "Parents can delete links" ON parent_student_links
+  FOR DELETE USING (
+    auth.uid() = parent_user_id
+  );
+
+CREATE INDEX IF NOT EXISTS idx_parent_student_links_parent ON parent_student_links(parent_user_id);
+CREATE INDEX IF NOT EXISTS idx_parent_student_links_student ON parent_student_links(student_user_id);
+CREATE INDEX IF NOT EXISTS idx_parent_student_links_status ON parent_student_links(status);
+
+-- Business Profiles table
+CREATE TABLE IF NOT EXISTS business_profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  org_name TEXT,
+  org_website TEXT,
+  org_email TEXT,
+  phone TEXT,
+  industry TEXT,
+  hq_state TEXT,
+  hq_county TEXT,
+  verification_status TEXT NOT NULL DEFAULT 'unverified' CHECK (verification_status IN ('unverified', 'pending', 'verified', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Business users can manage their own profile
+CREATE POLICY "Business users can view their own profile" ON business_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Business users can insert their own profile" ON business_profiles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Business users can update their own profile" ON business_profiles
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_business_profiles_verification ON business_profiles(verification_status);
+
+-- Schools table (for teacher profiles)
+CREATE TABLE IF NOT EXISTS schools (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  district TEXT,
+  city TEXT,
+  state TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can view schools
+CREATE POLICY "Anyone can view schools" ON schools
+  FOR SELECT USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_schools_state ON schools(state);
+
+-- Teacher Profiles table
+CREATE TABLE IF NOT EXISTS teacher_profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT,
+  school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
+  verification_status TEXT NOT NULL DEFAULT 'unverified' CHECK (verification_status IN ('unverified', 'pending', 'verified', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE teacher_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Teacher users can manage their own profile
+CREATE POLICY "Teacher users can view their own profile" ON teacher_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Teacher users can insert their own profile" ON teacher_profiles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Teacher users can update their own profile" ON teacher_profiles
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_profiles_school ON teacher_profiles(school_id);
+CREATE INDEX IF NOT EXISTS idx_teacher_profiles_verification ON teacher_profiles(verification_status);

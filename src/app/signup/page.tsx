@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'student' | 'parent' | 'counselor'>('student')
+  const [role, setRole] = useState<'student' | 'parent' | 'counselor' | 'business' | 'teacher'>('student')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -117,12 +117,14 @@ export default function Signup() {
                 name="role"
                 className="input w-full px-4 py-3 rounded-lg"
                 value={role}
-                onChange={(e) => setRole(e.target.value as 'student' | 'parent' | 'counselor')}
-              >
-                <option value="student">Student</option>
-                <option value="parent">Parent</option>
-                <option value="counselor">Counselor</option>
-              </select>
+                              onChange={(e) => setRole(e.target.value as 'student' | 'parent' | 'counselor' | 'business' | 'teacher')}
+                            >
+                              <option value="student">Student</option>
+                              <option value="parent">Parent</option>
+                              <option value="counselor">Counselor</option>
+                              <option value="business">Business</option>
+                              <option value="teacher">Teacher</option>
+                            </select>
             </div>
           </div>
 

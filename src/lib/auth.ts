@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from './supabase'
+import { createServerSupabaseClient, UserRole } from './supabase'
 
 export type Session = { 
   user: { 
@@ -6,7 +6,7 @@ export type Session = {
     name?: string | null
     email?: string | null
     image?: string | null
-    role?: 'student' | 'parent' | 'counselor'
+    role?: UserRole
   } 
 }
 

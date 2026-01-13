@@ -40,21 +40,21 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: 'student' | 'parent' | 'counselor'
+          role: 'student' | 'parent' | 'counselor' | 'business' | 'teacher'
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           email: string
-          role: 'student' | 'parent' | 'counselor'
+          role: 'student' | 'parent' | 'counselor' | 'business' | 'teacher'
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           email?: string
-          role?: 'student' | 'parent' | 'counselor'
+          role?: 'student' | 'parent' | 'counselor' | 'business' | 'teacher'
           created_at?: string
           updated_at?: string
         }
@@ -388,6 +388,135 @@ export type Database = {
           updated_at?: string
         }
       }
+      parent_student_links: {
+        Row: {
+          id: string
+          parent_user_id: string
+          student_user_id: string
+          status: 'pending' | 'accepted' | 'declined'
+          requested_by: 'parent' | 'student'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          parent_user_id: string
+          student_user_id: string
+          status?: 'pending' | 'accepted' | 'declined'
+          requested_by?: 'parent' | 'student'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          parent_user_id?: string
+          student_user_id?: string
+          status?: 'pending' | 'accepted' | 'declined'
+          requested_by?: 'parent' | 'student'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      business_profiles: {
+        Row: {
+          user_id: string
+          org_name: string | null
+          org_website: string | null
+          org_email: string | null
+          phone: string | null
+          industry: string | null
+          hq_state: string | null
+          hq_county: string | null
+          verification_status: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          org_name?: string | null
+          org_website?: string | null
+          org_email?: string | null
+          phone?: string | null
+          industry?: string | null
+          hq_state?: string | null
+          hq_county?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          org_name?: string | null
+          org_website?: string | null
+          org_email?: string | null
+          phone?: string | null
+          industry?: string | null
+          hq_state?: string | null
+          hq_county?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      schools: {
+        Row: {
+          id: string
+          name: string
+          district: string | null
+          city: string | null
+          state: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          district?: string | null
+          city?: string | null
+          state?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          district?: string | null
+          city?: string | null
+          state?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      teacher_profiles: {
+        Row: {
+          user_id: string
+          title: string | null
+          school_id: string | null
+          verification_status: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          title?: string | null
+          school_id?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          title?: string | null
+          school_id?: string | null
+          verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
+
+export type UserRole = 'student' | 'parent' | 'counselor' | 'business' | 'teacher'
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
+export type LinkStatus = 'pending' | 'accepted' | 'declined'

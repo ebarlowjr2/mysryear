@@ -53,13 +53,14 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          {isAuthenticated ? (
-            <>
-              <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
-              <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
-              <button onClick={handleLogout} className="btn-secondary">Logout</button>
-            </>
-          ) : (
+                    {isAuthenticated ? (
+                      <>
+                        <Link href="/dashboard" className="btn-secondary">Dashboard</Link>
+                        <Link href="/profile" className="btn-secondary">Profile</Link>
+                        <Link href="/open-dashboard" className="btn-primary">Open Dashboard</Link>
+                        <button onClick={handleLogout} className="btn-secondary">Logout</button>
+                      </>
+                    ): (
             <>
               <Link href="/login" className="btn-secondary">Login</Link>
               <Link href="/signup" className="btn-primary">Sign Up</Link>
