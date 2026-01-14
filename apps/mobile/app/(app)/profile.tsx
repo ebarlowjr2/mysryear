@@ -554,13 +554,21 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Linked Students</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => setShowAddStudentModal(true)}
-            >
-              <Ionicons name="add" size={20} color={colors.white} />
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: ui.backgroundSecondary }]}
+                onPress={() => router.push('/profile/linked-students')}
+              >
+                <Text style={[styles.addButtonText, { color: ui.text }]}>View All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowAddStudentModal(true)}
+              >
+                <Ionicons name="add" size={20} color={colors.white} />
+                <Text style={styles.addButtonText}>Add</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           
           {linkedStudents.length === 0 ? (
@@ -594,7 +602,15 @@ export default function ProfileScreen() {
       {/* Sprint 4: Parent Requests Section for Students */}
       {profile?.role === 'student' && parentRequests.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Parent Link Requests</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Parent Link Requests</Text>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: ui.backgroundSecondary }]}
+              onPress={() => router.push('/profile/parent-requests')}
+            >
+              <Text style={[styles.addButtonText, { color: ui.text }]}>View All</Text>
+            </TouchableOpacity>
+          </View>
           
           {parentRequests.map((request) => (
             <View key={request.id} style={styles.parentRequestRow}>

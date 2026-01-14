@@ -10,6 +10,7 @@ import {
   Alert
 } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useSession } from '../../src/hooks/useSession'
 import { 
   getScholarshipById, 
@@ -141,8 +142,14 @@ export default function ScholarshipDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)')}>
           <Text style={styles.backLink}>← Back</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.homeButton}
+          onPress={() => router.replace('/(app)')}
+        >
+          <Ionicons name="home" size={20} color={ui.primary} />
         </TouchableOpacity>
       </View>
 
@@ -283,6 +290,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
@@ -291,6 +301,9 @@ const styles = StyleSheet.create({
   backLink: {
     fontSize: 16,
     color: ui.primary,
+  },
+  homeButton: {
+    padding: 8,
   },
   content: {
     flex: 1,

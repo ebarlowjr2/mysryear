@@ -137,7 +137,19 @@ export default function TestDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Stack.Screen options={{ title: test.name }} />
+      <Stack.Screen 
+        options={{ 
+          title: test.name,
+          headerRight: () => (
+            <TouchableOpacity 
+              style={styles.homeButton}
+              onPress={() => router.replace('/(app)')}
+            >
+              <Ionicons name="home" size={20} color={ui.primary} />
+            </TouchableOpacity>
+          ),
+        }} 
+      />
       
       <View style={styles.heroSection}>
         <View style={[styles.heroIcon, { backgroundColor: test.bgColor }]}>
@@ -212,6 +224,9 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  homeButton: {
+    padding: 8,
   },
   heroSection: {
     alignItems: 'center',

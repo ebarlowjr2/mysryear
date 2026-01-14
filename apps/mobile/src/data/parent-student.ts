@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { linkStudent, cancelLinkRequest } from '../api/edge'
 
 export type ParentStudentLink = {
   id: string
@@ -71,80 +72,35 @@ export async function getPendingLinkRequests(studentUserId: string): Promise<Par
 }
 
 export async function sendLinkRequest(
-  parentUserId: string,
+  _parentUserId: string,
   studentEmail: string,
-  relationship?: string
+  _relationship?: string
 ): Promise<{ success: boolean; error: string | null }> {
-  const { data: studentProfile, error: profileError } = await supabase
-    .from('profiles')
-    .select('user_id, role')
-    .eq('user_id', (
-      await supabase.auth.admin.listUsers()
-    ).data?.users?.find(u => u.email === studentEmail)?.id ?? '')
-    .single()
-
-  if (profileError || !studentProfile) {
-    const { data: authUser } = await supabase
-      .rpc('get_user_id_by_email', { email_input: studentEmail })
-
-    if (!authUser) {
-      return { success: false, error: 'No student found with that email address' }
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_id, role')
-      .eq('user_id', authUser)
-      .single()
-
-    if (!profile) {
-      return { success: false, error: 'No student found with that email address' }
-    }
-
-    if (profile.role !== 'student') {
-      return { success: false, error: 'That account is not a student account' }
-    }
-
-    const { error: insertError } = await supabase
-      .from('parent_student_links')
-      .insert({
-        parent_user_id: parentUserId,
-        student_user_id: profile.user_id,
-        relationship: relationship || null,
-        status: 'pending',
-      })
-
-    if (insertError) {
-      if (insertError.code === '23505') {
-        return { success: false, error: 'You have already sent a link request to this student' }
-      }
-      return { success: false, error: insertError.message }
-    }
-
+  // Use Edge Function for secure server-side email lookup and role verification
+  // The Edge Function handles:
+  // - Verifying caller is a parent
+  // - Looking up student by email (server-side, not exposed to client)
+  // - Verifying target is a student role
+  // - Preventing duplicate requests
+  // - Creating the pending link request
+  try {
+    await linkStudent(studentEmail)
     return { success: true, error: null }
-  }
-
-  if (studentProfile.role !== 'student') {
-    return { success: false, error: 'That account is not a student account' }
-  }
-
-  const { error: insertError } = await supabase
-    .from('parent_student_links')
-    .insert({
-      parent_user_id: parentUserId,
-      student_user_id: studentProfile.user_id,
-      relationship: relationship || null,
-      status: 'pending',
-    })
-
-  if (insertError) {
-    if (insertError.code === '23505') {
+  } catch (err) {
+    const error = err as { message?: string }
+    // Map Edge Function error messages to user-friendly messages
+    const message = error.message || 'Failed to send link request'
+    if (message.includes('Student account not found')) {
+      return { success: false, error: 'No student found with that email address' }
+    }
+    if (message.includes('Only parent accounts')) {
+      return { success: false, error: 'Only parent accounts can link students' }
+    }
+    if (message.includes('Link already exists')) {
       return { success: false, error: 'You have already sent a link request to this student' }
     }
-    return { success: false, error: insertError.message }
+    return { success: false, error: message }
   }
-
-  return { success: true, error: null }
 }
 
 export async function respondToLinkRequest(
@@ -163,7 +119,23 @@ export async function respondToLinkRequest(
   return { success: true, error: null }
 }
 
-export async function removeLinkRequest(linkId: string): Promise<{ success: boolean; error: string | null }> {
+export async function removeLinkRequest(
+  linkId: string,
+  status?: 'pending' | 'accepted' | 'declined'
+): Promise<{ success: boolean; error: string | null }> {
+  // For pending requests, use Edge Function (more secure, validates parent ownership)
+  // For accepted/declined links, use RLS-protected delete
+  if (status === 'pending') {
+    try {
+      await cancelLinkRequest(linkId)
+      return { success: true, error: null }
+    } catch (err) {
+      const error = err as { message?: string }
+      return { success: false, error: error.message || 'Failed to cancel request' }
+    }
+  }
+
+  // For accepted/declined links, use direct delete (RLS protects this)
   const { error } = await supabase
     .from('parent_student_links')
     .delete()

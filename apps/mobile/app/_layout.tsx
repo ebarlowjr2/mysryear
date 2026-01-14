@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
-import { Slot, useRouter, useSegments } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 import type { Href } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from 'react'
@@ -49,7 +49,31 @@ function AuthGate() {
     )
   }
 
-  return <Slot />
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: ui.headerBackground },
+        headerTintColor: ui.headerText,
+        headerShadowVisible: false,
+      }}
+    >
+      {/* Tab screens - hide header since tabs have their own */}
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      
+      {/* Detail screens outside tabs - show header with back button */}
+      <Stack.Screen name="scholarship/[id]" options={{ title: 'Scholarship Details' }} />
+      <Stack.Screen name="test-prep/index" options={{ title: 'Test Prep' }} />
+      <Stack.Screen name="test-prep/[testId]" options={{ title: 'Practice Test' }} />
+      <Stack.Screen name="new-task" options={{ title: 'New Task', presentation: 'modal' }} />
+      <Stack.Screen name="edit-task" options={{ title: 'Edit Task', presentation: 'modal' }} />
+      
+      {/* Profile subpages */}
+      <Stack.Screen name="profile/linked-students" options={{ title: 'Linked Students' }} />
+      <Stack.Screen name="profile/parent-requests" options={{ title: 'Parent Requests' }} />
+    </Stack>
+  )
 }
 
 export default function RootLayout() {
