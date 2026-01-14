@@ -25,6 +25,7 @@ import { createTask } from '../../src/data/planner'
 import { colors, ui, radius } from '../../src/theme'
 import { goTab } from '../../src/navigation/goTab'
 import { safeBack } from '../../src/navigation/safeBack'
+import { useTapGuard } from '../../src/navigation/useTapGuard'
 
 export default function ScholarshipDetailScreen() {
   const router = useRouter()
@@ -34,6 +35,10 @@ export default function ScholarshipDetailScreen() {
   const [savedStatus, setSavedStatus] = useState<'saved' | 'applied' | null>(null)
   const [loading, setLoading] = useState(true)
   const [addingToPlanner, setAddingToPlanner] = useState(false)
+  
+  // Tap guards to prevent rapid double-taps on navigation buttons
+  const guardedBack = useTapGuard(() => safeBack('scholarships'))
+  const guardedHome = useTapGuard(() => goTab('dashboard'))
 
   const loadData = useCallback(async () => {
     if (!id || !user?.id) return
@@ -143,14 +148,14 @@ export default function ScholarshipDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-                <TouchableOpacity onPress={() => safeBack('scholarships')}>
-                  <Text style={styles.backLink}>← Back</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.homeButton}
-                  onPress={() => goTab('dashboard')}
-                >
+            <View style={styles.header}>
+                      <TouchableOpacity onPress={guardedBack}>
+                        <Text style={styles.backLink}>← Back</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.homeButton}
+                        onPress={guardedHome}
+                      >
           <Ionicons name="home" size={20} color={ui.primary} />
         </TouchableOpacity>
       </View>

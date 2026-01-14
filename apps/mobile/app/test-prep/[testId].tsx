@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { colors, ui, radius, shadow } from '../../src/theme'
 import { goTab } from '../../src/navigation/goTab'
+import { useTapGuard } from '../../src/navigation/useTapGuard'
 
 type TestInfo = {
   id: string
@@ -119,6 +120,9 @@ export default function TestDetailScreen() {
   const { testId } = useLocalSearchParams<{ testId: string }>()
   const router = useRouter()
   
+  // Tap guard to prevent rapid double-taps on Home button
+  const guardedHome = useTapGuard(() => goTab('dashboard'))
+  
   const test = TESTS[testId || '']
   
   if (!test) {
@@ -138,19 +142,19 @@ export default function TestDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Stack.Screen 
-        options={{ 
-          title: test.name,
-          headerRight: () => (
-            <TouchableOpacity 
-              style={styles.homeButton}
-              onPress={() => goTab('dashboard')}
-            >
-              <Ionicons name="home" size={20} color={ui.primary} />
-            </TouchableOpacity>
-          ),
-        }} 
-      />
+            <Stack.Screen 
+              options={{ 
+                title: test.name,
+                headerRight: () => (
+                  <TouchableOpacity 
+                    style={styles.homeButton}
+                    onPress={guardedHome}
+                  >
+                    <Ionicons name="home" size={20} color={ui.primary} />
+                  </TouchableOpacity>
+                ),
+              }} 
+            />
       
       <View style={styles.heroSection}>
         <View style={[styles.heroIcon, { backgroundColor: test.bgColor }]}>

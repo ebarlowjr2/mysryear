@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import type { Href } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
 import 'react-native-reanimated'
 
@@ -21,25 +21,40 @@ function AuthGate() {
   const { session, profile, loading } = useAuth()
   const segments = useSegments()
   const router = useRouter()
+  
+  // Prevent double navigation on cold start / auth state changes
+  const didNavigate = useRef(false)
 
   useEffect(() => {
+    // Don't navigate until auth state is fully loaded
     if (loading) return
+    
+    // Prevent double replace - only navigate once per auth state change
+    if (didNavigate.current) return
 
     const inAuthGroup = segments[0] === '(auth)'
     const inOnboarding = segments[0] === 'onboarding'
 
     if (!session && !inAuthGroup) {
+      didNavigate.current = true
       router.replace('/(auth)/login')
     } else if (session && inAuthGroup) {
+      didNavigate.current = true
       if (profile && !profile.onboarding_complete) {
         router.replace('/onboarding' as Href)
       } else {
         router.replace('/(tabs)')
       }
     } else if (session && !inOnboarding && profile && !profile.onboarding_complete) {
+      didNavigate.current = true
       router.replace('/onboarding' as Href)
     }
   }, [session, profile, loading, segments])
+  
+  // Reset didNavigate when auth state changes (allows re-navigation on logout/login)
+  useEffect(() => {
+    didNavigate.current = false
+  }, [session])
 
   if (loading) {
     return (

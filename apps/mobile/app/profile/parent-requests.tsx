@@ -21,6 +21,7 @@ import {
 import { supabase } from '../../src/lib/supabase'
 import { goTab } from '../../src/navigation/goTab'
 import { safeBack } from '../../src/navigation/safeBack'
+import { useTapGuard } from '../../src/navigation/useTapGuard'
 
 type ParentRequestWithName = ParentStudentLink & {
   parent_name?: string | null
@@ -33,6 +34,10 @@ export default function ParentRequestsScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [respondingTo, setRespondingTo] = useState<string | null>(null)
+  
+  // Tap guards to prevent rapid double-taps on navigation buttons
+  const guardedBack = useTapGuard(() => safeBack('profile'))
+  const guardedHome = useTapGuard(() => goTab('dashboard'))
 
   const fetchRequests = useCallback(async () => {
     if (!user?.id) return
@@ -95,9 +100,6 @@ export default function ParentRequestsScreen() {
     }
   }
 
-    const safeGoBack = () => {
-      safeBack('profile')
-    }
 
   if (loading) {
     return (
@@ -178,14 +180,14 @@ export default function ParentRequestsScreen() {
         )}
       </View>
 
-      {/* Home Button (escape hatch) */}
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => goTab('dashboard')}
-      >
-        <Ionicons name="home" size={20} color={ui.primary} />
-        <Text style={styles.homeButtonText}>Go to Dashboard</Text>
-      </TouchableOpacity>
+            {/* Home Button (escape hatch) */}
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={guardedHome}
+            >
+              <Ionicons name="home" size={20} color={ui.primary} />
+              <Text style={styles.homeButtonText}>Go to Dashboard</Text>
+            </TouchableOpacity>
     </ScrollView>
   )
 }

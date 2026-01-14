@@ -22,6 +22,7 @@ import {
 } from '../../src/data/parent-student'
 import { goTab } from '../../src/navigation/goTab'
 import { safeBack } from '../../src/navigation/safeBack'
+import { useTapGuard } from '../../src/navigation/useTapGuard'
 
 export default function LinkedStudentsScreen() {
   const router = useRouter()
@@ -31,6 +32,10 @@ export default function LinkedStudentsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [studentEmail, setStudentEmail] = useState('')
   const [linkingStudent, setLinkingStudent] = useState(false)
+  
+  // Tap guards to prevent rapid double-taps on navigation buttons
+  const guardedBack = useTapGuard(() => safeBack('profile'))
+  const guardedHome = useTapGuard(() => goTab('dashboard'))
 
   const fetchLinkedStudents = useCallback(async () => {
     if (!user?.id) return
@@ -111,9 +116,6 @@ export default function LinkedStudentsScreen() {
     }
   }
 
-    const safeGoBack = () => {
-      safeBack('profile')
-    }
 
   if (loading) {
     return (
@@ -214,14 +216,14 @@ export default function LinkedStudentsScreen() {
         )}
       </View>
 
-      {/* Home Button (escape hatch) */}
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => goTab('dashboard')}
-      >
-        <Ionicons name="home" size={20} color={ui.primary} />
-        <Text style={styles.homeButtonText}>Go to Dashboard</Text>
-      </TouchableOpacity>
+            {/* Home Button (escape hatch) */}
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={guardedHome}
+            >
+              <Ionicons name="home" size={20} color={ui.primary} />
+              <Text style={styles.homeButtonText}>Go to Dashboard</Text>
+            </TouchableOpacity>
     </ScrollView>
   )
 }
