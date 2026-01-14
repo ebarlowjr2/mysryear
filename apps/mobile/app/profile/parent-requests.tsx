@@ -97,7 +97,7 @@ export default function ParentRequestsScreen() {
     if (router.canGoBack()) {
       router.back()
     } else {
-      router.replace('/(app)/profile')
+      router.replace('/(tabs)/profile')
     }
   }
 
@@ -183,7 +183,7 @@ export default function ParentRequestsScreen() {
       {/* Home Button (escape hatch) */}
       <TouchableOpacity
         style={styles.homeButton}
-        onPress={() => router.replace('/(app)')}
+        onPress={() => router.replace('/(tabs)')}
       >
         <Ionicons name="home" size={20} color={ui.primary} />
         <Text style={styles.homeButtonText}>Go to Dashboard</Text>

@@ -34,7 +34,7 @@ function AuthGate() {
       if (profile && !profile.onboarding_complete) {
         router.replace('/onboarding' as Href)
       } else {
-        router.replace('/(app)')
+        router.replace('/(tabs)')
       }
     } else if (session && !inOnboarding && profile && !profile.onboarding_complete) {
       router.replace('/onboarding' as Href)
@@ -58,7 +58,7 @@ function AuthGate() {
       }}
     >
       {/* Tab screens - hide header since tabs have their own */}
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       
@@ -66,8 +66,9 @@ function AuthGate() {
       <Stack.Screen name="scholarship/[id]" options={{ title: 'Scholarship Details' }} />
       <Stack.Screen name="test-prep/index" options={{ title: 'Test Prep' }} />
       <Stack.Screen name="test-prep/[testId]" options={{ title: 'Practice Test' }} />
-      <Stack.Screen name="new-task" options={{ title: 'New Task', presentation: 'modal' }} />
-      <Stack.Screen name="edit-task" options={{ title: 'Edit Task', presentation: 'modal' }} />
+      
+      {/* Modal screens - presented as modals for clean dismiss */}
+      <Stack.Screen name="(modals)" options={{ headerShown: false }} />
       
       {/* Profile subpages */}
       <Stack.Screen name="profile/linked-students" options={{ title: 'Linked Students' }} />

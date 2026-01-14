@@ -146,7 +146,7 @@ export default function PlannerScreen() {
                 key={task.id} 
                 task={task} 
                 onToggle={() => handleToggleComplete(task)}
-                onEdit={() => router.push(`/edit-task?id=${task.id}`)}
+                onEdit={() => router.push(`/(modals)/edit-task/${task.id}`)}
                 onDelete={() => handleDelete(task)}
                 formatDate={formatDate}
               />
@@ -168,7 +168,7 @@ export default function PlannerScreen() {
                 key={task.id} 
                 task={task} 
                 onToggle={() => handleToggleComplete(task)}
-                onEdit={() => router.push(`/edit-task?id=${task.id}`)}
+                onEdit={() => router.push(`/(modals)/edit-task/${task.id}`)}
                 onDelete={() => handleDelete(task)}
                 formatDate={formatDate}
               />
@@ -181,7 +181,7 @@ export default function PlannerScreen() {
 
       <TouchableOpacity 
         style={styles.fab} 
-        onPress={() => router.push('/new-task')}
+        onPress={() => router.push('/(modals)/new-task')}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>

@@ -19,7 +19,7 @@ export default function AuthCallbackScreen() {
         }
 
         if (session) {
-          router.replace('/(app)')
+          router.replace('/(tabs)')
         } else {
           setError('Authentication failed. Please try again.')
         }

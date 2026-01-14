@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   View, 
   Text, 
@@ -11,20 +11,49 @@ import {
   Platform
 } from 'react-native'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
-import { useRouter } from 'expo-router'
-import { useSession } from '../src/hooks/useSession'
-import { createTask, CATEGORIES, Category } from '../src/data/planner'
-import { colors, ui, radius } from '../src/theme'
+import { useRouter, useLocalSearchParams } from 'expo-router'
+import { useSession } from '../../../src/hooks/useSession'
+import { getTasks, updateTask, CATEGORIES, Category, Task } from '../../../src/data/planner'
+import { colors, ui, radius } from '../../../src/theme'
 
-export default function NewTaskScreen() {
+export default function EditTaskScreen() {
   const router = useRouter()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useSession()
+  const [task, setTask] = useState<Task | null>(null)
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<Category>('Admin/Other')
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+      async function loadTask() {
+        if (!user?.id || !id) return
+
+        try {
+          const tasks = await getTasks(user.id)
+          const found = tasks.find(t => t.id === id)
+          if (found) {
+            setTask(found)
+            setTitle(found.title)
+            setCategory(found.category)
+            if (found.dueDate) {
+              setDueDate(new Date(found.dueDate + 'T00:00:00'))
+            }
+            setNotes(found.notes ?? '')
+          }
+        } catch (err) {
+          Alert.alert('Error', 'Failed to load task')
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      loadTask()
+    }, [user?.id, id])
 
     const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
       if (Platform.OS === 'android') {
@@ -55,14 +84,14 @@ export default function NewTaskScreen() {
         return
       }
 
-      if (!user?.id) {
-        Alert.alert('Error', 'Not authenticated')
+      if (!id) {
+        Alert.alert('Error', 'Task not found')
         return
       }
 
       setSaving(true)
       try {
-        await createTask(user.id, {
+        await updateTask(id, {
           title: title.trim(),
           category,
           dueDate: formatDateForAPI(dueDate),
@@ -70,11 +99,31 @@ export default function NewTaskScreen() {
         })
         router.back()
       } catch (err) {
-        Alert.alert('Error', 'Failed to create task')
+        Alert.alert('Error', 'Failed to update task')
       } finally {
         setSaving(false)
       }
     }
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={ui.primary} />
+        <Text style={styles.loadingText}>Loading task...</Text>
+      </View>
+    )
+  }
+
+  if (!task) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>Task not found</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backButton}>Go back</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -82,7 +131,7 @@ export default function NewTaskScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Task</Text>
+        <Text style={styles.headerTitle}>Edit Task</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving}>
           {saving ? (
             <ActivityIndicator size="small" color={ui.primary} />
@@ -181,6 +230,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: ui.background,
+  },
+  centerContainer: {
+    flex: 1,
+    backgroundColor: ui.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    color: ui.textSecondary,
+    marginTop: 12,
+    fontSize: 16,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  backButton: {
+    color: ui.primary,
+    fontSize: 16,
+    marginTop: 12,
   },
   header: {
     flexDirection: 'row',

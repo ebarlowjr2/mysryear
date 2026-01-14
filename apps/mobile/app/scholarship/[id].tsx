@@ -107,7 +107,7 @@ export default function ScholarshipDetailScreen() {
         'Added to Planner',
         `Task created for "${scholarship.name}" with deadline ${formatDeadline(scholarship.deadline)}`,
         [
-          { text: 'View Planner', onPress: () => router.push('/(app)/planner') },
+          { text: 'View Planner', onPress: () => router.replace('/(tabs)/planner') },
           { text: 'OK' }
         ]
       )
@@ -142,12 +142,12 @@ export default function ScholarshipDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)')}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
           <Text style={styles.backLink}>← Back</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.homeButton}
-          onPress={() => router.replace('/(app)')}
+          onPress={() => router.replace('/(tabs)')}
         >
           <Ionicons name="home" size={20} color={ui.primary} />
         </TouchableOpacity>

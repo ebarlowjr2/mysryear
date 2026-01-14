@@ -143,7 +143,7 @@ export default function TestDetailScreen() {
           headerRight: () => (
             <TouchableOpacity 
               style={styles.homeButton}
-              onPress={() => router.replace('/(app)')}
+              onPress={() => router.replace('/(tabs)')}
             >
               <Ionicons name="home" size={20} color={ui.primary} />
             </TouchableOpacity>

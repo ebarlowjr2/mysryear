@@ -956,7 +956,7 @@ export default function ProfileScreen() {
         
         <TouchableOpacity
           style={styles.changeButton}
-          onPress={() => router.push('/(app)/school')}
+          onPress={() => router.push('/(tabs)/school')}
         >
           <Text style={styles.changeButtonText}>
             {profile?.schoolMembership ? 'Change School' : 'Add School'}

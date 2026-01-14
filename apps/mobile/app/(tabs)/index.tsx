@@ -127,7 +127,7 @@ export default function DashboardScreen() {
         <View style={styles.featureGrid}>
           <TouchableOpacity 
             style={styles.featureCard}
-            onPress={() => router.push('/(app)/scholarships')}
+            onPress={() => router.replace('/(tabs)/scholarships')}
           >
             <View style={styles.featureIcon}>
               <Ionicons name="school-outline" size={24} color={ui.primary} />
@@ -139,7 +139,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity 
             style={styles.featureCard}
-            onPress={() => router.push('/(app)/planner')}
+            onPress={() => router.replace('/(tabs)/planner')}
           >
             <View style={styles.featureIcon}>
               <Ionicons name="calendar-outline" size={24} color={ui.primary} />

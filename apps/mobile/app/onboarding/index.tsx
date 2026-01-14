@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
       await completeOnboarding(user.id)
       await refreshProfile()
       
-      router.replace('/(app)')
+      router.replace('/(tabs)')
     } catch (err) {
       console.error('Failed to complete onboarding:', err)
     } finally {
@@ -105,7 +105,7 @@ export default function OnboardingScreen() {
     try {
       await completeOnboarding(user.id)
       await refreshProfile()
-      router.replace('/(app)')
+      router.replace('/(tabs)')
     } catch (err) {
       console.error('Failed to skip onboarding:', err)
     } finally {
