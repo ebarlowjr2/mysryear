@@ -19,7 +19,8 @@ import {
   ParentStudentLink,
 } from '../../src/data/parent-student'
 import { supabase } from '../../src/lib/supabase'
-import { goTab, safeBack } from '../../src/navigation/goTab'
+import { goTab } from '../../src/navigation/goTab'
+import { safeBack } from '../../src/navigation/safeBack'
 
 type ParentRequestWithName = ParentStudentLink & {
   parent_name?: string | null

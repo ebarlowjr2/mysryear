@@ -20,7 +20,8 @@ import {
   removeLinkRequest,
   LinkedStudent,
 } from '../../src/data/parent-student'
-import { goTab, safeBack } from '../../src/navigation/goTab'
+import { goTab } from '../../src/navigation/goTab'
+import { safeBack } from '../../src/navigation/safeBack'
 
 export default function LinkedStudentsScreen() {
   const router = useRouter()

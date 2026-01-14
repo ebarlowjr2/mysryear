@@ -1,23 +1,16 @@
-import { router } from 'expo-router'
+// apps/mobile/src/navigation/goTab.ts
+import { router } from "expo-router";
 
-type TabName = 'dashboard' | 'planner' | 'scholarships' | 'profile'
+export type TabKey = "dashboard" | "planner" | "scholarships" | "profile";
 
-const TAB_ROUTES: Record<TabName, string> = {
-  dashboard: '/(tabs)',
-  planner: '/(tabs)/planner',
-  scholarships: '/(tabs)/scholarships',
-  profile: '/(tabs)/profile',
-}
+export const TAB_PATHS: Record<TabKey, string> = {
+  dashboard: "/(tabs)",
+  planner: "/(tabs)/planner",
+  scholarships: "/(tabs)/scholarships",
+  profile: "/(tabs)/profile",
+} as const;
 
-export function goTab(tab: TabName): void {
-  const route = TAB_ROUTES[tab]
-  router.replace(route as any)
-}
-
-export function safeBack(fallbackTab: TabName = 'dashboard'): void {
-  if (router.canGoBack()) {
-    router.back()
-  } else {
-    goTab(fallbackTab)
-  }
+export function goTab(tab: TabKey) {
+  // single canonical replace; never push
+  router.replace(TAB_PATHS[tab]);
 }

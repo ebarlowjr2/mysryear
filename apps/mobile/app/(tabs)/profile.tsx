@@ -12,7 +12,7 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../src/contexts/AuthContext'
 import {
@@ -443,18 +443,25 @@ export default function ProfileScreen() {
     if (tp) setTeacherProfile(tp)
   }
 
-  // Sprint 4: School search handler
-  const handleSchoolSearch = async (query: string) => {
-    setSchoolSearchQuery(query)
-    if (query.length < 2) {
-      setSchoolSearchResults([])
-      return
+    // Sprint 4: School search handler
+    const handleSchoolSearch = async (query: string) => {
+      setSchoolSearchQuery(query)
+      if (query.length < 2) {
+        setSchoolSearchResults([])
+        return
+      }
+      const results = await searchSchools(query)
+      setSchoolSearchResults(results)
     }
-    const results = await searchSchools(query)
-    setSchoolSearchResults(results)
-  }
 
-  if (loading) {
+    // Logout handler with navigation trap prevention
+    const handleLogout = async () => {
+      await signOut()
+      // Use replace to prevent back-navigation into authenticated screens
+      router.replace('/(auth)/login')
+    }
+
+    if (loading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={ui.primary} />
@@ -1153,7 +1160,7 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actions</Text>
         
-        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>

@@ -23,7 +23,8 @@ import {
 } from '../../src/data/scholarships'
 import { createTask } from '../../src/data/planner'
 import { colors, ui, radius } from '../../src/theme'
-import { goTab, safeBack } from '../../src/navigation/goTab'
+import { goTab } from '../../src/navigation/goTab'
+import { safeBack } from '../../src/navigation/safeBack'
 
 export default function ScholarshipDetailScreen() {
   const router = useRouter()
@@ -143,7 +144,7 @@ export default function ScholarshipDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-                <TouchableOpacity onPress={() => safeBack('dashboard')}>
+                <TouchableOpacity onPress={() => safeBack('scholarships')}>
                   <Text style={styles.backLink}>← Back</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
