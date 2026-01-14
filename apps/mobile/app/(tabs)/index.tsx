@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSession } from '../../src/hooks/useSession'
 import { getDashboardMetrics, getNextDeadline, DashboardMetrics, NextDeadline } from '../../src/data/dashboard'
 import { colors, ui, radius, shadow } from '../../src/theme'
+import { goTab } from '../../src/navigation/goTab'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
@@ -127,7 +128,7 @@ export default function DashboardScreen() {
         <View style={styles.featureGrid}>
           <TouchableOpacity 
             style={styles.featureCard}
-            onPress={() => router.replace('/(tabs)/scholarships')}
+            onPress={() => goTab('scholarships')}
           >
             <View style={styles.featureIcon}>
               <Ionicons name="school-outline" size={24} color={ui.primary} />
@@ -139,7 +140,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity 
             style={styles.featureCard}
-            onPress={() => router.replace('/(tabs)/planner')}
+            onPress={() => goTab('planner')}
           >
             <View style={styles.featureIcon}>
               <Ionicons name="calendar-outline" size={24} color={ui.primary} />

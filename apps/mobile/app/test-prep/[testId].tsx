@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { colors, ui, radius, shadow } from '../../src/theme'
+import { goTab } from '../../src/navigation/goTab'
 
 type TestInfo = {
   id: string
@@ -143,7 +144,7 @@ export default function TestDetailScreen() {
           headerRight: () => (
             <TouchableOpacity 
               style={styles.homeButton}
-              onPress={() => router.replace('/(tabs)')}
+              onPress={() => goTab('dashboard')}
             >
               <Ionicons name="home" size={20} color={ui.primary} />
             </TouchableOpacity>

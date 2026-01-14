@@ -19,6 +19,7 @@ import {
   ParentStudentLink,
 } from '../../src/data/parent-student'
 import { supabase } from '../../src/lib/supabase'
+import { goTab, safeBack } from '../../src/navigation/goTab'
 
 type ParentRequestWithName = ParentStudentLink & {
   parent_name?: string | null
@@ -93,13 +94,9 @@ export default function ParentRequestsScreen() {
     }
   }
 
-  const safeGoBack = () => {
-    if (router.canGoBack()) {
-      router.back()
-    } else {
-      router.replace('/(tabs)/profile')
+    const safeGoBack = () => {
+      safeBack('profile')
     }
-  }
 
   if (loading) {
     return (
@@ -183,7 +180,7 @@ export default function ParentRequestsScreen() {
       {/* Home Button (escape hatch) */}
       <TouchableOpacity
         style={styles.homeButton}
-        onPress={() => router.replace('/(tabs)')}
+        onPress={() => goTab('dashboard')}
       >
         <Ionicons name="home" size={20} color={ui.primary} />
         <Text style={styles.homeButtonText}>Go to Dashboard</Text>

@@ -20,6 +20,7 @@ import {
   removeLinkRequest,
   LinkedStudent,
 } from '../../src/data/parent-student'
+import { goTab, safeBack } from '../../src/navigation/goTab'
 
 export default function LinkedStudentsScreen() {
   const router = useRouter()
@@ -109,13 +110,9 @@ export default function LinkedStudentsScreen() {
     }
   }
 
-  const safeGoBack = () => {
-    if (router.canGoBack()) {
-      router.back()
-    } else {
-      router.replace('/(tabs)/profile')
+    const safeGoBack = () => {
+      safeBack('profile')
     }
-  }
 
   if (loading) {
     return (
@@ -219,7 +216,7 @@ export default function LinkedStudentsScreen() {
       {/* Home Button (escape hatch) */}
       <TouchableOpacity
         style={styles.homeButton}
-        onPress={() => router.replace('/(tabs)')}
+        onPress={() => goTab('dashboard')}
       >
         <Ionicons name="home" size={20} color={ui.primary} />
         <Text style={styles.homeButtonText}>Go to Dashboard</Text>
