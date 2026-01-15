@@ -85,10 +85,13 @@ function AuthGate() {
       {/* Modal screens - presented as modals for clean dismiss */}
       <Stack.Screen name="(modals)" options={{ headerShown: false }} />
       
-      {/* Profile subpages */}
-      <Stack.Screen name="profile/linked-students" options={{ title: 'Linked Students' }} />
-      <Stack.Screen name="profile/parent-requests" options={{ title: 'Parent Requests' }} />
-    </Stack>
+          {/* Profile subpages */}
+          <Stack.Screen name="profile/linked-students" options={{ title: 'Linked Students' }} />
+          <Stack.Screen name="profile/parent-requests" options={{ title: 'Parent Requests' }} />
+      
+          {/* A.U.R.A. screen */}
+          <Stack.Screen name="aura/index" options={{ title: 'A.U.R.A.' }} />
+        </Stack>
   )
 }
 

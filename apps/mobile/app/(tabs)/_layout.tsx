@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { ui } from '../../src/theme'
 import { useAuth } from '../../src/contexts/AuthContext'
 import type { UserRole } from '../../src/data/profile'
+import CustomTabBar from '../../src/components/navigation/CustomTabBar'
 
 export default function AppLayout() {
   const { profile } = useAuth()
@@ -15,6 +16,7 @@ export default function AppLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: ui.tabBarActive,
         tabBarInactiveTintColor: ui.tabBarInactive,
