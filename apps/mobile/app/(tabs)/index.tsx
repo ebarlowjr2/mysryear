@@ -6,6 +6,14 @@ import { useSession } from '../../src/hooks/useSession'
 import { getDashboardMetrics, getNextDeadline, DashboardMetrics, NextDeadline } from '../../src/data/dashboard'
 import { colors, ui, radius, shadow } from '../../src/theme'
 import { goTab } from '../../src/navigation/goTab'
+import {
+  listApplications,
+  getNextDeadline as getNextAppDeadline,
+  formatDate as formatAppDate,
+  getDaysUntilDeadline,
+  getStatusInfo,
+  Application,
+} from '../../src/data/applications'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
@@ -15,16 +23,22 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [applicationsCount, setApplicationsCount] = useState(0)
+  const [nextAppDeadline, setNextAppDeadline] = useState<Application | null>(null)
 
   const fetchData = useCallback(async (userId: string) => {
     try {
       setError(null)
-      const [metricsData, deadlineData] = await Promise.all([
+      const [metricsData, deadlineData, applications, appDeadline] = await Promise.all([
         getDashboardMetrics(userId),
-        getNextDeadline(userId)
+        getNextDeadline(userId),
+        listApplications(userId).catch(() => []),
+        getNextAppDeadline(userId).catch(() => null),
       ])
       setMetrics(metricsData)
       setNextDeadline(deadlineData)
+      setApplicationsCount(applications.length)
+      setNextAppDeadline(appDeadline)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
     } finally {
@@ -95,15 +109,11 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Next Deadline</Text>
-          <Text style={styles.statValue}>
-            {nextDeadline ? nextDeadline.title.substring(0, 20) + (nextDeadline.title.length > 20 ? '...' : '') : 'None'}
-          </Text>
-          <Text style={styles.statDesc}>
-            {nextDeadline ? formatDate(nextDeadline.dueDate) : 'Add tasks to see deadlines'}
-          </Text>
-        </View>
+        <TouchableOpacity style={styles.statCard} onPress={() => router.push('/applications')}>
+          <Text style={styles.statLabel}>Applications</Text>
+          <Text style={styles.statValue}>{applicationsCount} tracked</Text>
+          <Text style={styles.statDesc}>Tap to manage</Text>
+        </TouchableOpacity>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Scholarships</Text>
           <Text style={styles.statValue}>{metrics?.scholarshipsCount ?? 0} available</Text>
@@ -120,6 +130,28 @@ export default function DashboardScreen() {
           <Text style={styles.statDesc}>This month</Text>
         </View>
       </View>
+
+      {/* Next Application Deadline Card */}
+      {nextAppDeadline && (
+        <TouchableOpacity 
+          style={styles.deadlineCard}
+          onPress={() => router.push(`/applications/${nextAppDeadline.id}`)}
+        >
+          <View style={styles.deadlineIcon}>
+            <Ionicons name="alert-circle" size={24} color={colors.warning} />
+          </View>
+          <View style={styles.deadlineInfo}>
+            <Text style={styles.deadlineLabel}>Next Application Deadline</Text>
+            <Text style={styles.deadlineCollege} numberOfLines={1}>{nextAppDeadline.college_name}</Text>
+            <Text style={styles.deadlineDate}>
+              {formatAppDate(nextAppDeadline.deadline)} 
+              {getDaysUntilDeadline(nextAppDeadline.deadline) !== null && 
+                ` (${getDaysUntilDeadline(nextAppDeadline.deadline)} days)`}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+        </TouchableOpacity>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Everything in one place</Text>
@@ -150,14 +182,17 @@ export default function DashboardScreen() {
             <Text style={styles.featureLink}>Open</Text>
           </TouchableOpacity>
 
-          <View style={[styles.featureCard, styles.featureCardDisabled]}>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/applications')}
+          >
             <View style={styles.featureIcon}>
-              <Ionicons name="document-text-outline" size={24} color={ui.textMuted} />
+              <Ionicons name="document-text-outline" size={24} color={ui.primary} />
             </View>
-            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>Application Tracker</Text>
+            <Text style={styles.featureTitle}>Application Tracker</Text>
             <Text style={styles.featureDesc}>Track each school with tasks, essays, and documents.</Text>
-            <Text style={styles.comingSoon}>Coming Soon</Text>
-          </View>
+            <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.featureCard}
@@ -273,6 +308,46 @@ const styles = StyleSheet.create({
   statDesc: {
     fontSize: 12,
     color: ui.textMuted,
+    marginTop: 2,
+  },
+  deadlineCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${colors.warning}10`,
+    borderRadius: radius.lg,
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: `${colors.warning}30`,
+  },
+  deadlineIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${colors.warning}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deadlineInfo: {
+    flex: 1,
+  },
+  deadlineLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: ui.textSecondary,
+  },
+  deadlineCollege: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.text,
+    marginTop: 2,
+  },
+  deadlineDate: {
+    fontSize: 13,
+    color: colors.warning,
+    fontWeight: '500',
     marginTop: 2,
   },
   section: {
