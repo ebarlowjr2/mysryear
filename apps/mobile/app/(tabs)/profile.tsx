@@ -93,6 +93,9 @@ export default function ProfileScreen() {
   const [county, setCounty] = useState('')
   const [notificationsTasks, setNotificationsTasks] = useState(true)
   const [notificationsDeadlines, setNotificationsDeadlines] = useState(true)
+  const [waitlistAiAura, setWaitlistAiAura] = useState(false)
+  const [waitlistDrive, setWaitlistDrive] = useState(false)
+  const [waitlistOnedrive, setWaitlistOnedrive] = useState(false)
   const [showStatePicker, setShowStatePicker] = useState(false)
   const [showYearPicker, setShowYearPicker] = useState(false)
 
@@ -146,6 +149,9 @@ export default function ProfileScreen() {
         setCounty(data.county || '')
         setNotificationsTasks(data.notifications_tasks ?? true)
         setNotificationsDeadlines(data.notifications_deadlines ?? true)
+        setWaitlistAiAura(data.waitlist_ai_aura ?? false)
+        setWaitlistDrive(data.waitlist_drive ?? false)
+        setWaitlistOnedrive(data.waitlist_onedrive ?? false)
 
         // Sprint 4: Load role-specific data
         if (data.role === 'parent') {
@@ -254,6 +260,15 @@ export default function ProfileScreen() {
     if (notificationsDeadlines !== (profile?.notifications_deadlines ?? true)) {
       updates.notifications_deadlines = notificationsDeadlines
     }
+    if (waitlistAiAura !== (profile?.waitlist_ai_aura ?? false)) {
+      updates.waitlist_ai_aura = waitlistAiAura
+    }
+    if (waitlistDrive !== (profile?.waitlist_drive ?? false)) {
+      updates.waitlist_drive = waitlistDrive
+    }
+    if (waitlistOnedrive !== (profile?.waitlist_onedrive ?? false)) {
+      updates.waitlist_onedrive = waitlistOnedrive
+    }
 
     // Only update if there are changes
     if (Object.keys(updates).length === 0) {
@@ -287,6 +302,9 @@ export default function ProfileScreen() {
       setCounty(profile.county || '')
       setNotificationsTasks(profile.notifications_tasks ?? true)
       setNotificationsDeadlines(profile.notifications_deadlines ?? true)
+      setWaitlistAiAura(profile.waitlist_ai_aura ?? false)
+      setWaitlistDrive(profile.waitlist_drive ?? false)
+      setWaitlistOnedrive(profile.waitlist_onedrive ?? false)
     }
     setIsEditing(false)
   }
@@ -1156,7 +1174,85 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* F) Actions Section */}
+      {/* F) Future Features Section (Teasers) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Future Features</Text>
+        <Text style={styles.sectionSubtitle}>Get early access to upcoming features</Text>
+        
+        <View style={styles.featureCard}>
+          <View style={styles.featureHeader}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="sparkles" size={24} color={ui.primary} />
+            </View>
+            <View style={styles.featureInfo}>
+              <Text style={styles.featureTitle}>A.U.R.A. AI Guidance Counselor</Text>
+              <Text style={styles.featureDesc}>
+                Your personal AI assistant for college and career planning
+              </Text>
+            </View>
+          </View>
+          <View style={styles.featureToggle}>
+            <Text style={styles.featureToggleLabel}>Join AI Beta</Text>
+            <Switch
+              value={waitlistAiAura}
+              onValueChange={setWaitlistAiAura}
+              disabled={!isEditing}
+              trackColor={{ false: ui.backgroundSecondary, true: ui.primaryLight }}
+              thumbColor={waitlistAiAura ? ui.primary : ui.textMuted}
+            />
+          </View>
+        </View>
+        
+        <View style={styles.featureCard}>
+          <View style={styles.featureHeader}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="cloud-upload-outline" size={24} color="#4285F4" />
+            </View>
+            <View style={styles.featureInfo}>
+              <Text style={styles.featureTitle}>Google Drive</Text>
+              <Text style={styles.featureDesc}>
+                Store and access your documents from anywhere
+              </Text>
+            </View>
+          </View>
+          <View style={styles.featureToggle}>
+            <Text style={styles.featureToggleLabel}>Notify me when available</Text>
+            <Switch
+              value={waitlistDrive}
+              onValueChange={setWaitlistDrive}
+              disabled={!isEditing}
+              trackColor={{ false: ui.backgroundSecondary, true: '#4285F4' + '40' }}
+              thumbColor={waitlistDrive ? '#4285F4' : ui.textMuted}
+            />
+          </View>
+        </View>
+        
+        <View style={styles.featureCard}>
+          <View style={styles.featureHeader}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="cloud-outline" size={24} color="#0078D4" />
+            </View>
+            <View style={styles.featureInfo}>
+              <Text style={styles.featureTitle}>OneDrive</Text>
+              <Text style={styles.featureDesc}>
+                Connect your Microsoft cloud storage
+              </Text>
+            </View>
+          </View>
+          <View style={styles.featureToggle}>
+            <Text style={styles.featureToggleLabel}>Notify me when available</Text>
+            <Switch
+              value={waitlistOnedrive}
+              onValueChange={setWaitlistOnedrive}
+              disabled={!isEditing}
+              trackColor={{ false: ui.backgroundSecondary, true: '#0078D4' + '40' }}
+              thumbColor={waitlistOnedrive ? '#0078D4' : ui.textMuted}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* G) Actions Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actions</Text>
         
@@ -1703,5 +1799,57 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 12,
     marginTop: 16,
+  },
+  // Sprint 9A: Future Features section styles
+  sectionSubtitle: {
+    fontSize: 14,
+    color: ui.textSecondary,
+    marginBottom: 16,
+  },
+  featureCard: {
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
+    padding: 16,
+    marginBottom: 12,
+  },
+  featureHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  featureIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ui.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  featureInfo: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    lineHeight: 18,
+  },
+  featureToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: ui.border,
+  },
+  featureToggleLabel: {
+    fontSize: 14,
+    color: ui.text,
   },
 })

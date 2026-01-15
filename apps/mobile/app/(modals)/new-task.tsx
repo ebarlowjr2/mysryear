@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   View, 
   Text, 
@@ -11,15 +11,23 @@ import {
   Platform
 } from 'react-native'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
-import { useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams } from 'expo-router'
 import { useSession } from '../../src/hooks/useSession'
 import { createTask, CATEGORIES, Category } from '../../src/data/planner'
 import { colors, ui, radius } from '../../src/theme'
 
 export default function NewTaskScreen() {
   const router = useRouter()
+  const { prefillTitle } = useLocalSearchParams<{ prefillTitle?: string }>()
   const { user } = useSession()
   const [title, setTitle] = useState('')
+  
+  // Prefill title from URL params (for suggested tasks)
+  useEffect(() => {
+    if (prefillTitle) {
+      setTitle(prefillTitle)
+    }
+  }, [prefillTitle])
   const [category, setCategory] = useState<Category>('Admin/Other')
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)

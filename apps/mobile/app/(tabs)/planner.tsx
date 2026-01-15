@@ -135,12 +135,41 @@ export default function PlannerScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Pending ({pendingTasks.length})</Text>
           </View>
-          {pendingTasks.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No pending tasks</Text>
-              <Text style={styles.emptySubtext}>Tap + to add a new task</Text>
-            </View>
-          ) : (
+            {pendingTasks.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyText}>No pending tasks</Text>
+                <Text style={styles.emptySubtext}>Add your first task to get started</Text>
+              
+                <TouchableOpacity 
+                  style={styles.addTaskButton}
+                  onPress={() => router.push('/(modals)/new-task')}
+                >
+                  <Text style={styles.addTaskButtonText}>Add Your First Task</Text>
+                </TouchableOpacity>
+              
+                <Text style={styles.suggestedTitle}>Suggested tasks:</Text>
+                <View style={styles.suggestedTasks}>
+                  <TouchableOpacity 
+                    style={styles.suggestedTask}
+                    onPress={() => router.push({ pathname: '/(modals)/new-task', params: { prefillTitle: 'Meet guidance counselor' } })}
+                  >
+                    <Text style={styles.suggestedTaskText}>Meet guidance counselor</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.suggestedTask}
+                    onPress={() => router.push({ pathname: '/(modals)/new-task', params: { prefillTitle: 'Create resume' } })}
+                  >
+                    <Text style={styles.suggestedTaskText}>Create resume</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.suggestedTask}
+                    onPress={() => router.push({ pathname: '/(modals)/new-task', params: { prefillTitle: 'List top 5 colleges' } })}
+                  >
+                    <Text style={styles.suggestedTaskText}>List top 5 colleges</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
             pendingTasks.map(task => (
               <TaskRow 
                 key={task.id} 
@@ -304,6 +333,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ui.textMuted,
     marginTop: 4,
+  },
+  addTaskButton: {
+    backgroundColor: ui.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    marginTop: 16,
+  },
+  addTaskButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  suggestedTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: ui.textSecondary,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  suggestedTasks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  suggestedTask: {
+    backgroundColor: ui.primaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+  },
+  suggestedTaskText: {
+    fontSize: 12,
+    color: ui.primary,
+    fontWeight: '500',
   },
   taskCard: {
     backgroundColor: ui.card,

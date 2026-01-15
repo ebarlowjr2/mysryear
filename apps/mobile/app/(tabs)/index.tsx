@@ -108,6 +108,110 @@ export default function DashboardScreen() {
         </Text>
       </View>
 
+      {/* Quick Actions Row */}
+      <View style={styles.quickActionsContainer}>
+        <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity 
+            style={styles.quickActionButton}
+            onPress={() => router.push('/(modals)/new-task')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#10B98120' }]}>
+              <Ionicons name="add-circle-outline" size={24} color="#10B981" />
+            </View>
+            <Text style={styles.quickActionLabel}>New Task</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionButton}
+            onPress={() => router.push('/(modals)/application-new')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#3B82F620' }]}>
+              <Ionicons name="document-text-outline" size={24} color="#3B82F6" />
+            </View>
+            <Text style={styles.quickActionLabel}>New App</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionButton}
+            onPress={() => goTab('scholarships')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#F59E0B20' }]}>
+              <Ionicons name="school-outline" size={24} color="#F59E0B" />
+            </View>
+            <Text style={styles.quickActionLabel}>Scholarships</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionButton}
+            onPress={() => router.push('/aura')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: ui.primaryLight }]}>
+              <Ionicons name="sparkles" size={24} color={ui.primary} />
+            </View>
+            <Text style={styles.quickActionLabel}>A.U.R.A.</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Empty State Coaching - Show when all counts are zero */}
+      {(metrics?.pendingTasks ?? 0) === 0 && 
+       (metrics?.completedTasks ?? 0) === 0 && 
+       applicationsCount === 0 && 
+       (metrics?.scholarshipsCount ?? 0) === 0 && (
+        <View style={styles.getStartedCard}>
+          <View style={styles.getStartedHeader}>
+            <Ionicons name="rocket-outline" size={28} color={ui.primary} />
+            <Text style={styles.getStartedTitle}>Get Started</Text>
+          </View>
+          <Text style={styles.getStartedDesc}>
+            Complete these 3 steps to set up your senior year dashboard
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.getStartedStep}
+            onPress={() => router.push('/(modals)/new-task')}
+          >
+            <View style={styles.getStartedStepNumber}>
+              <Text style={styles.getStartedStepNumberText}>1</Text>
+            </View>
+            <View style={styles.getStartedStepInfo}>
+              <Text style={styles.getStartedStepTitle}>Add your first deadline</Text>
+              <Text style={styles.getStartedStepDesc}>Track important dates and tasks</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.getStartedStep}
+            onPress={() => router.push('/(modals)/application-new')}
+          >
+            <View style={styles.getStartedStepNumber}>
+              <Text style={styles.getStartedStepNumberText}>2</Text>
+            </View>
+            <View style={styles.getStartedStepInfo}>
+              <Text style={styles.getStartedStepTitle}>Add a college application</Text>
+              <Text style={styles.getStartedStepDesc}>Start tracking schools you're considering</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.getStartedStep}
+            onPress={() => goTab('scholarships')}
+          >
+            <View style={styles.getStartedStepNumber}>
+              <Text style={styles.getStartedStepNumberText}>3</Text>
+            </View>
+            <View style={styles.getStartedStepInfo}>
+              <Text style={styles.getStartedStepTitle}>Save a scholarship</Text>
+              <Text style={styles.getStartedStepDesc}>Bookmark scholarships that match your profile</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.statsGrid}>
         <TouchableOpacity style={styles.statCard} onPress={() => router.push('/applications')}>
           <Text style={styles.statLabel}>Applications</Text>
@@ -413,5 +517,106 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: ui.textMuted,
     marginTop: 12,
+  },
+  // Sprint 9A: Quick Actions styles
+  quickActionsContainer: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  quickActionsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: ui.textSecondary,
+    marginBottom: 12,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  quickActionButton: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+  },
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: ui.text,
+    textAlign: 'center',
+  },
+  // Sprint 9A: Get Started card styles
+  getStartedCard: {
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
+  },
+  getStartedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  getStartedTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ui.text,
+  },
+  getStartedDesc: {
+    fontSize: 14,
+    color: ui.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  getStartedStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: ui.border,
+  },
+  getStartedStepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: ui.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  getStartedStepNumberText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: ui.primary,
+  },
+  getStartedStepInfo: {
+    flex: 1,
+  },
+  getStartedStepTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: ui.text,
+  },
+  getStartedStepDesc: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    marginTop: 2,
   },
 })

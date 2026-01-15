@@ -234,11 +234,41 @@ export default function ScholarshipsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {activeTab === 'saved' 
-                ? 'No saved scholarships yet.\nTap "Save" on any scholarship to add it here.'
-                : 'No scholarships found matching your search.'}
-            </Text>
+            {activeTab === 'saved' ? (
+              <>
+                <View style={styles.emptyIcon}>
+                  <Text style={styles.emptyIconText}>&#128278;</Text>
+                </View>
+                <Text style={styles.emptyTitle}>No saved scholarships yet</Text>
+                <Text style={styles.emptyText}>
+                  Tap the bookmark icon on any scholarship to save it here for quick access
+                </Text>
+                <TouchableOpacity 
+                  style={styles.emptyButton}
+                  onPress={() => setActiveTab('all')}
+                >
+                  <Text style={styles.emptyButtonText}>Browse Scholarships</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.emptyIcon}>
+                  <Text style={styles.emptyIconText}>&#128269;</Text>
+                </View>
+                <Text style={styles.emptyTitle}>No scholarships found</Text>
+                <Text style={styles.emptyText}>
+                  Try adjusting your search terms or browse all available scholarships
+                </Text>
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity 
+                    style={styles.emptyButton}
+                    onPress={() => setSearchQuery('')}
+                  >
+                    <Text style={styles.emptyButtonText}>Clear Search</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
           </View>
         }
       />
@@ -433,10 +463,40 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
   },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: ui.backgroundSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyIconText: {
+    fontSize: 28,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 8,
+  },
   emptyText: {
     fontSize: 14,
     color: ui.textMuted,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  emptyButton: {
+    backgroundColor: ui.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    marginTop: 16,
+  },
+  emptyButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 })

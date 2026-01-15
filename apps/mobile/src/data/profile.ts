@@ -19,6 +19,9 @@ export type Profile = {
   website: string | null
   notifications_tasks: boolean
   notifications_deadlines: boolean
+  waitlist_ai_aura: boolean
+  waitlist_drive: boolean
+  waitlist_onedrive: boolean
   onboarding_complete: boolean
   created_at: string
   updated_at: string
@@ -104,6 +107,9 @@ export type ProfileUpdate = Partial<{
   website: string | null
   notifications_tasks: boolean
   notifications_deadlines: boolean
+  waitlist_ai_aura: boolean
+  waitlist_drive: boolean
+  waitlist_onedrive: boolean
 }>
 
 export async function updateMyProfile(

@@ -204,10 +204,19 @@ export default function ApplicationsListScreen() {
                 : 'Try a different filter or add new applications'}
             </Text>
             {filter === 'all' && (
-              <TouchableOpacity style={styles.emptyButton} onPress={handleAddApplication}>
-                <Ionicons name="add" size={20} color={colors.white} />
-                <Text style={styles.emptyButtonText}>Add Application</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity style={styles.emptyButton} onPress={handleAddApplication}>
+                  <Ionicons name="add" size={20} color={colors.white} />
+                  <Text style={styles.emptyButtonText}>Add Application</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.emptySecondaryButton} 
+                  onPress={() => router.push({ pathname: '/(modals)/new-task', params: { prefillTitle: 'Research colleges' } })}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={ui.primary} />
+                  <Text style={styles.emptySecondaryButtonText}>Add to Planner: Research colleges</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         ) : (
@@ -369,6 +378,23 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  emptySecondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ui.backgroundSecondary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    marginTop: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: ui.border,
+  },
+  emptySecondaryButtonText: {
+    color: ui.primary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   applicationCard: {
     backgroundColor: ui.card,
