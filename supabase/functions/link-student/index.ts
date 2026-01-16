@@ -1,6 +1,6 @@
 // supabase/functions/link-student/index.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -38,8 +38,13 @@ serve(async (req) => {
   const email = studentEmail.trim().toLowerCase();
   if (!email.includes("@")) return json(400, { error: "Invalid email" });
 
-  // 4) Service-role client for privileged lookup
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+  // 4) Service-role client for privileged lookup (with auth config for admin methods)
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
   // 5) Confirm caller is a parent
   const { data: parentProfile, error: parentProfileErr } = await admin
@@ -51,13 +56,26 @@ serve(async (req) => {
   if (parentProfileErr) return json(500, { error: "Profile lookup failed" });
   if (parentProfile?.role !== "parent") return json(403, { error: "Only parent accounts can link students" });
 
-  // 6) Look up student by email (privileged)
-  const { data: userByEmail, error: userByEmailErr } = await admin.auth.admin.getUserByEmail(email);
-  if (userByEmailErr || !userByEmail?.user) {
-    // privacy-friendly message (avoids confirming whether email exists)
+  // 6) Look up student by email using Supabase Admin API via REST
+  const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?filter=email.eq.${encodeURIComponent(email)}`, {
+    headers: {
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      apikey: SERVICE_ROLE_KEY,
+    },
+  });
+
+  if (!authResponse.ok) {
     return json(404, { error: "Student account not found" });
   }
-  const studentUserId = userByEmail.user.id;
+
+  const authData = await authResponse.json();
+  const users = authData.users || authData;
+  const matchedUser = Array.isArray(users) ? users.find((u: { email: string }) => u.email?.toLowerCase() === email) : null;
+
+  if (!matchedUser) {
+    return json(404, { error: "Student account not found" });
+  }
+  const studentUserId = matchedUser.id;
 
   // 7) Verify target role=student
   const { data: studentProfile, error: studentProfileErr } = await admin
