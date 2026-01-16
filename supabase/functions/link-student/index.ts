@@ -105,28 +105,40 @@ serve(async (req) => {
   console.log("Found student user ID:", studentUserId);
 
   // 7) Verify target role=student
+  console.log("Looking up student profile for user_id:", studentUserId);
   const { data: studentProfile, error: studentProfileErr } = await admin
     .from("profiles")
     .select("role")
     .eq("user_id", studentUserId)
     .maybeSingle();
 
-  if (studentProfileErr) return json(500, { error: "Student profile lookup failed" });
-  if (studentProfile?.role !== "student") return json(404, { error: "Student account not found" });
+  console.log("Student profile:", studentProfile, "Error:", studentProfileErr);
+  if (studentProfileErr) {
+    console.log("Student profile lookup failed:", studentProfileErr);
+    return json(500, { error: "Student profile lookup failed" });
+  }
+  if (studentProfile?.role !== "student") {
+    console.log("User is not a student, role:", studentProfile?.role);
+    return json(404, { error: "Student account not found" });
+  }
 
   // 8) Prevent duplicates
-  const { data: existing } = await admin
+  console.log("Checking for existing link...");
+  const { data: existing, error: existingErr } = await admin
     .from("parent_student_links")
     .select("id,status")
     .eq("parent_user_id", parentUserId)
     .eq("student_user_id", studentUserId)
     .maybeSingle();
 
+  console.log("Existing link:", existing, "Error:", existingErr);
   if (existing?.id && existing.status !== "declined") {
+    console.log("Link already exists with status:", existing.status);
     return json(409, { error: "Link already exists or is pending" });
   }
 
   // 9) Insert pending link request
+  console.log("Inserting new link request...");
   const { error: insertErr } = await admin.from("parent_student_links").insert({
     parent_user_id: parentUserId,
     student_user_id: studentUserId,
@@ -134,7 +146,11 @@ serve(async (req) => {
     requested_by: "parent",
   });
 
-  if (insertErr) return json(500, { error: "Failed to create link request" });
+  if (insertErr) {
+    console.log("Insert failed:", insertErr);
+    return json(500, { error: "Failed to create link request" });
+  }
 
+  console.log("Link request created successfully!");
   return json(200, { success: true, message: "Link request sent" });
 });
