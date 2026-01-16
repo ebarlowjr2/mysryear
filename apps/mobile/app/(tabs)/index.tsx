@@ -14,10 +14,13 @@ import {
   getStatusInfo,
   Application,
 } from '../../src/data/applications'
+import { getProfile, Profile } from '../../src/data/profile'
+import ParentDashboard from '../../src/components/ParentDashboard'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
   const router = useRouter()
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [nextDeadline, setNextDeadline] = useState<NextDeadline>(null)
   const [loading, setLoading] = useState(true)
@@ -26,26 +29,28 @@ export default function DashboardScreen() {
   const [applicationsCount, setApplicationsCount] = useState(0)
   const [nextAppDeadline, setNextAppDeadline] = useState<Application | null>(null)
 
-  const fetchData = useCallback(async (userId: string) => {
-    try {
-      setError(null)
-      const [metricsData, deadlineData, applications, appDeadline] = await Promise.all([
-        getDashboardMetrics(userId),
-        getNextDeadline(userId),
-        listApplications(userId).catch(() => []),
-        getNextAppDeadline(userId).catch(() => null),
-      ])
-      setMetrics(metricsData)
-      setNextDeadline(deadlineData)
-      setApplicationsCount(applications.length)
-      setNextAppDeadline(appDeadline)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [])
+    const fetchData = useCallback(async (userId: string) => {
+      try {
+        setError(null)
+        const [profileData, metricsData, deadlineData, applications, appDeadline] = await Promise.all([
+          getProfile(userId).catch(() => null),
+          getDashboardMetrics(userId),
+          getNextDeadline(userId),
+          listApplications(userId).catch(() => []),
+          getNextAppDeadline(userId).catch(() => null),
+        ])
+        setProfile(profileData)
+        setMetrics(metricsData)
+        setNextDeadline(deadlineData)
+        setApplicationsCount(applications.length)
+        setNextAppDeadline(appDeadline)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    }, [])
 
   useEffect(() => {
     if (sessionLoading) return
@@ -76,19 +81,24 @@ export default function DashboardScreen() {
     )
   }
 
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity onPress={onRefresh}>
-          <Text style={styles.retryText}>Tap to retry</Text>
-        </TouchableOpacity>
-      </View>
-    )
-  }
+    if (error) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+          <TouchableOpacity onPress={onRefresh}>
+            <Text style={styles.retryText}>Tap to retry</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    }
 
-  return (
-    <ScrollView 
+    // Render Parent Dashboard for parent role
+    if (profile?.role === 'parent' && user?.id) {
+      return <ParentDashboard userId={user.id} />
+    }
+
+    return (
+      <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
