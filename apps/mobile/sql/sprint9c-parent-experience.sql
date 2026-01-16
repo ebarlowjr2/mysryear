@@ -13,3 +13,15 @@ CREATE INDEX IF NOT EXISTS user_tasks_assigned_by_idx ON public.user_tasks(assig
 -- 3. Add comment for documentation
 COMMENT ON COLUMN public.user_tasks.assigned_by_user_id IS 'User ID of the person who assigned this task (e.g., parent)';
 COMMENT ON COLUMN public.user_tasks.assigned_by_role IS 'Role of the person who assigned this task (e.g., parent, teacher)';
+
+-- 4. Add RLS policy to allow parents to view profiles of linked students
+-- This is needed so parents can see student names/details in their linked students list
+CREATE POLICY "Parents can view linked student profiles" ON public.profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_student_links
+      WHERE parent_user_id = auth.uid()
+        AND student_user_id = profiles.user_id
+        AND status = 'accepted'
+    )
+  );
