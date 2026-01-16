@@ -21,36 +21,42 @@ export type LinkedStudent = {
 }
 
 export async function getLinkedStudents(parentUserId: string): Promise<LinkedStudent[]> {
-  const { data, error } = await supabase
+  // Step 1: Get the links
+  const { data: links, error: linksError } = await supabase
     .from('parent_student_links')
-    .select(`
-      id,
-      student_user_id,
-      relationship,
-      status,
-      profiles!parent_student_links_student_user_id_fkey (
-        user_id,
-        full_name,
-        school,
-        graduation_year
-      )
-    `)
+    .select('id, student_user_id, relationship, status')
     .eq('parent_user_id', parentUserId)
 
-  if (error || !data) {
-    console.warn('Failed to get linked students:', error?.message)
+  if (linksError || !links || links.length === 0) {
+    console.warn('Failed to get linked students:', linksError?.message)
     return []
   }
 
-  return data.map((link: Record<string, unknown>) => {
-    const profile = link.profiles as Record<string, unknown> | null
+  // Step 2: Get profiles for linked students
+  const studentIds = links.map(link => link.student_user_id)
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('user_id, full_name, school, graduation_year')
+    .in('user_id', studentIds)
+
+  if (profilesError) {
+    console.warn('Failed to get student profiles:', profilesError?.message)
+  }
+
+  // Step 3: Merge links with profiles
+  const profileMap = new Map(
+    (profiles || []).map(p => [p.user_id, p])
+  )
+
+  return links.map((link) => {
+    const profile = profileMap.get(link.student_user_id)
     return {
-      id: link.id as string,
-      link_id: link.id as string,
-      user_id: link.student_user_id as string,
-      full_name: profile?.full_name as string | null ?? null,
-      school: profile?.school as string | null ?? null,
-      graduation_year: profile?.graduation_year as number | null ?? null,
+      id: link.id,
+      link_id: link.id,
+      user_id: link.student_user_id,
+      full_name: profile?.full_name ?? null,
+      school: profile?.school ?? null,
+      graduation_year: profile?.graduation_year ?? null,
       status: link.status as 'pending' | 'accepted' | 'declined',
     }
   })
