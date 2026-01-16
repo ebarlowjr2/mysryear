@@ -34,7 +34,7 @@ serve(async (req) => {
   const { data: parentProfile } = await createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
     .from("profiles")
     .select("role")
-    .eq("id", parentUserId)
+    .eq("user_id", parentUserId)
     .maybeSingle();
 
   if (parentProfile?.role !== "parent") return json(403, { error: "Only parent accounts can cancel requests" });

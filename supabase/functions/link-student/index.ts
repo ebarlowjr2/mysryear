@@ -45,7 +45,7 @@ serve(async (req) => {
   const { data: parentProfile, error: parentProfileErr } = await admin
     .from("profiles")
     .select("role")
-    .eq("id", parentUserId)
+    .eq("user_id", parentUserId)
     .maybeSingle();
 
   if (parentProfileErr) return json(500, { error: "Profile lookup failed" });
@@ -63,7 +63,7 @@ serve(async (req) => {
   const { data: studentProfile, error: studentProfileErr } = await admin
     .from("profiles")
     .select("role")
-    .eq("id", studentUserId)
+    .eq("user_id", studentUserId)
     .maybeSingle();
 
   if (studentProfileErr) return json(500, { error: "Student profile lookup failed" });
