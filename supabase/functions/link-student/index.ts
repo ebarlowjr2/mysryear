@@ -13,11 +13,16 @@ function json(status: number, body: unknown) {
 }
 
 serve(async (req) => {
+  console.log("link-student function invoked");
+  
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   // 1) Validate auth header
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
+  if (!authHeader?.startsWith("Bearer ")) {
+    console.log("No auth header");
+    return json(401, { error: "Unauthorized" });
+  }
 
   const token = authHeader.replace("Bearer ", "");
 
@@ -28,14 +33,22 @@ serve(async (req) => {
 
   // 2) Get caller identity
   const { data: userData, error: userErr } = await supabaseUserClient.auth.getUser();
-  if (userErr || !userData?.user) return json(401, { error: "Unauthorized" });
+  if (userErr || !userData?.user) {
+    console.log("User auth failed:", userErr);
+    return json(401, { error: "Unauthorized" });
+  }
   const parentUserId = userData.user.id;
+  console.log("Parent user ID:", parentUserId);
 
   // 3) Parse and validate input
   const { studentEmail } = await req.json().catch(() => ({}));
-  if (!studentEmail || typeof studentEmail !== "string") return json(400, { error: "studentEmail required" });
+  if (!studentEmail || typeof studentEmail !== "string") {
+    console.log("No student email provided");
+    return json(400, { error: "studentEmail required" });
+  }
 
   const email = studentEmail.trim().toLowerCase();
+  console.log("Looking up student email:", email);
   if (!email.includes("@")) return json(400, { error: "Invalid email" });
 
   // 4) Service-role client for privileged lookup (with auth config for admin methods)
@@ -53,29 +66,43 @@ serve(async (req) => {
     .eq("user_id", parentUserId)
     .maybeSingle();
 
+  console.log("Parent profile:", parentProfile, "Error:", parentProfileErr);
   if (parentProfileErr) return json(500, { error: "Profile lookup failed" });
-  if (parentProfile?.role !== "parent") return json(403, { error: "Only parent accounts can link students" });
+  if (parentProfile?.role !== "parent") {
+    console.log("User is not a parent, role:", parentProfile?.role);
+    return json(403, { error: "Only parent accounts can link students" });
+  }
 
   // 6) Look up student by email using Supabase Admin API via REST
-  const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?filter=email.eq.${encodeURIComponent(email)}`, {
+  const adminApiUrl = `${SUPABASE_URL}/auth/v1/admin/users`;
+  console.log("Calling admin API:", adminApiUrl);
+  
+  const authResponse = await fetch(adminApiUrl, {
     headers: {
       Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
       apikey: SERVICE_ROLE_KEY,
     },
   });
 
+  console.log("Admin API response status:", authResponse.status);
   if (!authResponse.ok) {
-    return json(404, { error: "Student account not found" });
+    const errorText = await authResponse.text();
+    console.log("Admin API error:", errorText);
+    return json(500, { error: "Failed to lookup users" });
   }
 
   const authData = await authResponse.json();
+  console.log("Admin API returned", Array.isArray(authData.users) ? authData.users.length : "unknown", "users");
+  
   const users = authData.users || authData;
   const matchedUser = Array.isArray(users) ? users.find((u: { email: string }) => u.email?.toLowerCase() === email) : null;
 
   if (!matchedUser) {
+    console.log("No user found with email:", email);
     return json(404, { error: "Student account not found" });
   }
   const studentUserId = matchedUser.id;
+  console.log("Found student user ID:", studentUserId);
 
   // 7) Verify target role=student
   const { data: studentProfile, error: studentProfileErr } = await admin
