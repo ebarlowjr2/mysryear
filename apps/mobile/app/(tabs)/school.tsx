@@ -13,8 +13,19 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSession } from '../../src/hooks/useSession'
-import { getUserSchoolMembership, searchSchools, joinSchool, type School, type SchoolMembership } from '../../src/data/schools'
+import { getUserSchoolMembership, searchSchools, joinSchool, createSchool, type School, type SchoolMembership } from '../../src/data/schools'
 import { colors, ui, radius, shadow } from '../../src/theme'
+
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+  'Wisconsin', 'Wyoming'
+]
 
 export default function SchoolScreen() {
   const { user, loading: sessionLoading } = useSession()
@@ -26,6 +37,14 @@ export default function SchoolScreen() {
   const [searchResults, setSearchResults] = useState<School[]>([])
   const [searching, setSearching] = useState(false)
   const [joining, setJoining] = useState(false)
+  
+  // Manual entry state
+  const [showManualEntry, setShowManualEntry] = useState(false)
+  const [manualSchoolName, setManualSchoolName] = useState('')
+  const [manualCity, setManualCity] = useState('')
+  const [manualState, setManualState] = useState('')
+  const [showStatePicker, setShowStatePicker] = useState(false)
+  const [creatingSchool, setCreatingSchool] = useState(false)
 
   const fetchMembership = useCallback(async () => {
     if (!user?.id) return
@@ -71,7 +90,7 @@ export default function SchoolScreen() {
     if (!user?.id) return
     setJoining(true)
     try {
-      const { success, error } = await joinSchool(user.id, school.id, 'teacher')
+      const { success, error } = await joinSchool(user.id, school.id, 'student')
       if (success) {
         Alert.alert('Success', `You have joined ${school.name}!`, [
           { text: 'OK', onPress: () => {
@@ -88,6 +107,49 @@ export default function SchoolScreen() {
       Alert.alert('Error', 'Failed to join school. Please try again.')
     } finally {
       setJoining(false)
+    }
+  }
+
+  const handleCreateAndJoinSchool = async () => {
+    if (!user?.id || !manualSchoolName.trim()) {
+      Alert.alert('Error', 'Please enter a school name')
+      return
+    }
+    
+    setCreatingSchool(true)
+    try {
+      // Create the school
+      const { school, error: createError } = await createSchool({
+        name: manualSchoolName.trim(),
+        city: manualCity.trim() || undefined,
+        state: manualState || undefined,
+      })
+      
+      if (createError || !school) {
+        Alert.alert('Error', createError || 'Failed to create school')
+        return
+      }
+      
+      // Join the school
+      const { success, error: joinError } = await joinSchool(user.id, school.id, 'student')
+      if (success) {
+        Alert.alert('Success', `You have joined ${school.name}!`, [
+          { text: 'OK', onPress: () => {
+            setShowSearchModal(false)
+            setShowManualEntry(false)
+            setManualSchoolName('')
+            setManualCity('')
+            setManualState('')
+            fetchMembership()
+          }}
+        ])
+      } else {
+        Alert.alert('Error', joinError || 'Failed to join school')
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to create school. Please try again.')
+    } finally {
+      setCreatingSchool(false)
     }
   }
 
@@ -248,9 +310,105 @@ export default function SchoolScreen() {
               </ScrollView>
             )}
 
-            {searchQuery && searchResults.length === 0 && !searching && (
+            {searchQuery && searchResults.length === 0 && !searching && !showManualEntry && (
               <View style={styles.noResults}>
                 <Text style={styles.noResultsText}>No schools found. Try a different search term.</Text>
+                <TouchableOpacity 
+                  style={styles.manualEntryLink}
+                  onPress={() => setShowManualEntry(true)}
+                >
+                  <Text style={styles.manualEntryLinkText}>Can't find your school? Add it manually</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {!showManualEntry && !searchQuery && (
+              <View style={styles.noResults}>
+                <TouchableOpacity 
+                  style={styles.manualEntryLink}
+                  onPress={() => setShowManualEntry(true)}
+                >
+                  <Text style={styles.manualEntryLinkText}>Can't find your school? Add it manually</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {showManualEntry && (
+              <View style={styles.manualEntryForm}>
+                <Text style={styles.manualEntryTitle}>Add Your School</Text>
+                
+                <Text style={styles.inputLabel}>School Name *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter school name"
+                  placeholderTextColor={ui.inputPlaceholder}
+                  value={manualSchoolName}
+                  onChangeText={setManualSchoolName}
+                />
+                
+                <Text style={styles.inputLabel}>City (optional)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter city"
+                  placeholderTextColor={ui.inputPlaceholder}
+                  value={manualCity}
+                  onChangeText={setManualCity}
+                />
+                
+                <Text style={styles.inputLabel}>State (optional)</Text>
+                <TouchableOpacity 
+                  style={styles.formInput}
+                  onPress={() => setShowStatePicker(!showStatePicker)}
+                >
+                  <Text style={manualState ? styles.formInputText : styles.formInputPlaceholder}>
+                    {manualState || 'Select state'}
+                  </Text>
+                </TouchableOpacity>
+                
+                {showStatePicker && (
+                  <ScrollView style={styles.statePicker} nestedScrollEnabled>
+                    {US_STATES.map((state) => (
+                      <TouchableOpacity
+                        key={state}
+                        style={styles.stateOption}
+                        onPress={() => {
+                          setManualState(state)
+                          setShowStatePicker(false)
+                        }}
+                      >
+                        <Text style={[
+                          styles.stateOptionText,
+                          manualState === state && styles.stateOptionSelected
+                        ]}>{state}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+                
+                <View style={styles.manualEntryButtons}>
+                  <TouchableOpacity 
+                    style={styles.cancelEntryButton}
+                    onPress={() => {
+                      setShowManualEntry(false)
+                      setManualSchoolName('')
+                      setManualCity('')
+                      setManualState('')
+                    }}
+                  >
+                    <Text style={styles.cancelEntryButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.addSchoolButton, creatingSchool && styles.addSchoolButtonDisabled]}
+                    onPress={handleCreateAndJoinSchool}
+                    disabled={creatingSchool || !manualSchoolName.trim()}
+                  >
+                    {creatingSchool ? (
+                      <ActivityIndicator color={colors.white} size="small" />
+                    ) : (
+                      <Text style={styles.addSchoolButtonText}>Add & Join School</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
@@ -517,5 +675,101 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: ui.textSecondary,
     textAlign: 'center',
+  },
+  manualEntryLink: {
+    marginTop: 16,
+    padding: 8,
+  },
+  manualEntryLinkText: {
+    fontSize: 14,
+    color: ui.primary,
+    textDecorationLine: 'underline',
+  },
+  manualEntryForm: {
+    flex: 1,
+  },
+  manualEntryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: ui.text,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  formInput: {
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
+    padding: 16,
+    fontSize: 16,
+    color: ui.inputText,
+    borderWidth: 1,
+    borderColor: ui.inputBorder,
+  },
+  formInputText: {
+    fontSize: 16,
+    color: ui.inputText,
+  },
+  formInputPlaceholder: {
+    fontSize: 16,
+    color: ui.inputPlaceholder,
+  },
+  statePicker: {
+    maxHeight: 200,
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    marginTop: 8,
+  },
+  stateOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: ui.border,
+  },
+  stateOptionText: {
+    fontSize: 16,
+    color: ui.text,
+  },
+  stateOptionSelected: {
+    color: ui.primary,
+    fontWeight: '600',
+  },
+  manualEntryButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  cancelEntryButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: ui.border,
+    alignItems: 'center',
+  },
+  cancelEntryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.textSecondary,
+  },
+  addSchoolButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: radius.md,
+    backgroundColor: ui.primary,
+    alignItems: 'center',
+  },
+  addSchoolButtonDisabled: {
+    opacity: 0.5,
+  },
+  addSchoolButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
   },
 })
