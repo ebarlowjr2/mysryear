@@ -23,6 +23,11 @@ export interface Opportunity {
   updated_at: string
 }
 
+// Sprint 10: Extended opportunity with owner verification status
+export interface OpportunityWithOwner extends Opportunity {
+  owner_verified: boolean
+}
+
 export interface CreateOpportunityPayload {
   org_name?: string | null
   title: string
@@ -121,7 +126,7 @@ export async function listOpportunitiesForUser(profile: Profile | null): Promise
       if (opp.location_mode === 'local') {
         const stateMatches = opp.state?.toLowerCase() === profile.state?.toLowerCase()
         const countyMatches = opp.counties?.some(
-          c => c.toLowerCase() === profile.county?.toLowerCase()
+          (c: string) => c.toLowerCase() === profile.county?.toLowerCase()
         )
         return stateMatches && countyMatches
       }
@@ -312,4 +317,68 @@ export function parseCounties(input: string): string[] {
 export function formatCounties(counties: string[] | null): string {
   if (!counties || counties.length === 0) return ''
   return counties.join(', ')
+}
+
+/**
+ * Sprint 10: List opportunities with owner verification status
+ * Used for student view to show trust badges
+ */
+export async function listOpportunitiesWithOwnerStatus(profile: Profile | null): Promise<OpportunityWithOwner[]> {
+  const opportunities = await listOpportunitiesForUser(profile)
+  
+  if (opportunities.length === 0) {
+    return []
+  }
+
+  // Get unique owner IDs
+  const ownerIds = [...new Set(opportunities.map(o => o.owner_user_id))]
+  
+  // Fetch verification status for all owners
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('user_id, verification_status')
+    .in('user_id', ownerIds)
+
+  if (error) {
+    console.error('Error fetching owner profiles:', error)
+    // Return opportunities without verification status on error
+    return opportunities.map(o => ({ ...o, owner_verified: false }))
+  }
+
+  // Create a map of owner_id -> verified status
+  const verificationMap = new Map<string, boolean>()
+  profiles?.forEach(p => {
+    verificationMap.set(p.user_id, p.verification_status === 'verified')
+  })
+
+  // Enrich opportunities with owner verification status
+  return opportunities.map(o => ({
+    ...o,
+    owner_verified: verificationMap.get(o.owner_user_id) || false,
+  }))
+}
+
+/**
+ * Sprint 10: Get single opportunity with owner verification status
+ */
+export async function getOpportunityWithOwnerStatus(id: string): Promise<OpportunityWithOwner | null> {
+  const opportunity = await getOpportunity(id)
+  if (!opportunity) return null
+
+  // Fetch owner's verification status
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('verification_status')
+    .eq('user_id', opportunity.owner_user_id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching owner profile:', error)
+    return { ...opportunity, owner_verified: false }
+  }
+
+  return {
+    ...opportunity,
+    owner_verified: profile?.verification_status === 'verified',
+  }
 }

@@ -37,6 +37,7 @@ import {
   requestVerification,
   getVerificationBannerConfig,
   type VerificationStatus,
+  type VerificationBannerConfig,
 } from '../../src/data/verification'
 import {
   getBusinessProfile,
@@ -175,8 +176,10 @@ export default function ProfileScreen() {
             setBusinessIndustry(bp.industry || '')
             setBusinessHqState(bp.hq_state || '')
             setBusinessHqCounty(bp.hq_county || '')
-            setVerificationStatus(bp.verification_status)
           }
+          // Sprint 10: Get verification status from profiles table
+          const verificationInfo = await getVerificationStatus(user.id)
+          setVerificationStatus(verificationInfo.status)
         }
         
         if (data.role === 'teacher') {
@@ -186,8 +189,10 @@ export default function ProfileScreen() {
             setTeacherProfile(teacherData)
             setTeacherTitle(tp.title || '')
             setSelectedSchool(teacherData?.school || null)
-            setVerificationStatus(tp.verification_status)
           }
+          // Sprint 10: Get verification status from profiles table
+          const verificationInfo = await getVerificationStatus(user.id)
+          setVerificationStatus(verificationInfo.status)
         }
       }
     } catch (err) {
@@ -392,13 +397,12 @@ export default function ProfileScreen() {
     )
   }
 
-  // Sprint 4: Verification handler
+  // Sprint 10: Verification handler - uses profiles table
   const handleRequestVerification = async () => {
     if (!user?.id || !profile?.role) return
     
-    const role = profile.role as 'business' | 'teacher'
     setRequestingVerification(true)
-    const { success, error: verifyError } = await requestVerification(user.id, role)
+    const { success, error: verifyError } = await requestVerification(user.id)
     setRequestingVerification(false)
     
     if (!success) {
@@ -407,7 +411,7 @@ export default function ProfileScreen() {
     }
     
     setVerificationStatus('pending')
-    Alert.alert('Success', 'Verification request submitted. We will contact you soon.')
+    Alert.alert('Success', 'Verification request submitted. We\'ll notify you once reviewed.')
   }
 
   // Sprint 4: Business profile handler
@@ -552,27 +556,38 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Sprint 4: Verification Banner for Business/Teacher */}
-      {(profile?.role === 'business' || profile?.role === 'teacher') && (
-        <View style={[styles.verificationBanner, { backgroundColor: getVerificationBannerConfig(verificationStatus).backgroundColor }]}>
-          <Text style={styles.verificationBannerText}>
-            {getVerificationBannerConfig(verificationStatus).message}
-          </Text>
-          {getVerificationBannerConfig(verificationStatus).showRequestButton && (
-            <TouchableOpacity
-              style={styles.verificationButton}
-              onPress={handleRequestVerification}
-              disabled={requestingVerification}
-            >
-              {requestingVerification ? (
-                <ActivityIndicator size="small" color={colors.white} />
-              ) : (
-                <Text style={styles.verificationButtonText}>Request Verification</Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+      {/* Sprint 10: Verification Banner for Business/Teacher */}
+      {(profile?.role === 'business' || profile?.role === 'teacher') && (() => {
+        const bannerConfig = getVerificationBannerConfig(verificationStatus, profile.role as 'business' | 'teacher')
+        return (
+          <View style={[styles.verificationBanner, { backgroundColor: bannerConfig.backgroundColor }]}>
+            <View style={styles.verificationBannerHeader}>
+              <Ionicons name={bannerConfig.icon} size={20} color={bannerConfig.textColor} />
+              <Text style={[styles.verificationBannerText, { color: bannerConfig.textColor }]}>
+                {bannerConfig.message}
+              </Text>
+            </View>
+            {bannerConfig.helperText ? (
+              <Text style={[styles.verificationHelperText, { color: bannerConfig.textColor }]}>
+                {bannerConfig.helperText}
+              </Text>
+            ) : null}
+            {bannerConfig.showRequestButton && (
+              <TouchableOpacity
+                style={[styles.verificationButton, { backgroundColor: bannerConfig.textColor }]}
+                onPress={handleRequestVerification}
+                disabled={requestingVerification}
+              >
+                {requestingVerification ? (
+                  <ActivityIndicator size="small" color={bannerConfig.backgroundColor} />
+                ) : (
+                  <Text style={[styles.verificationButtonText, { color: bannerConfig.backgroundColor }]}>Request Verification</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        )
+      })()}
 
       {/* Sprint 4: Linked Students Section for Parents */}
       {profile?.role === 'parent' && (
@@ -1603,29 +1618,40 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 32,
   },
-  // Sprint 4: Verification Banner styles
+  // Sprint 10: Verification Banner styles
   verificationBanner: {
     padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: radius.md,
+    gap: 8,
+  },
+  verificationBannerHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 12,
+    alignItems: 'flex-start',
+    gap: 8,
   },
   verificationBannerText: {
-    color: colors.white,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     flex: 1,
+    lineHeight: 20,
+  },
+  verificationHelperText: {
+    fontSize: 13,
+    opacity: 0.9,
+    lineHeight: 18,
+    marginLeft: 28,
   },
   verificationButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: radius.md,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    marginLeft: 28,
   },
   verificationButtonText: {
-    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },

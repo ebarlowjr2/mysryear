@@ -16,6 +16,7 @@ import {
 } from '../../src/data/applications'
 import { getProfile, Profile } from '../../src/data/profile'
 import ParentDashboard from '../../src/components/ParentDashboard'
+import { getVerificationStatus, VerificationStatus } from '../../src/data/verification'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
@@ -28,6 +29,8 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [applicationsCount, setApplicationsCount] = useState(0)
   const [nextAppDeadline, setNextAppDeadline] = useState<Application | null>(null)
+  // Sprint 10: Verification status for business/teacher nudge
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('unverified')
 
     const fetchData = useCallback(async (userId: string) => {
       try {
@@ -44,6 +47,12 @@ export default function DashboardScreen() {
         setNextDeadline(deadlineData)
         setApplicationsCount(applications.length)
         setNextAppDeadline(appDeadline)
+        
+        // Sprint 10: Fetch verification status for business/teacher users
+        if (profileData?.role === 'business' || profileData?.role === 'teacher') {
+          const verificationInfo = await getVerificationStatus(userId).catch(() => ({ status: 'unverified' as VerificationStatus }))
+          setVerificationStatus(verificationInfo.status)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       } finally {
@@ -117,6 +126,25 @@ export default function DashboardScreen() {
           Manage applications, track scholarships, and plan life after high school.
         </Text>
       </View>
+
+      {/* Sprint 10: Verification Nudge for unverified Business/Teacher users */}
+      {(profile?.role === 'business' || profile?.role === 'teacher') && verificationStatus === 'unverified' && (
+        <TouchableOpacity 
+          style={styles.verificationNudge}
+          onPress={() => goTab('profile')}
+        >
+          <View style={styles.verificationNudgeIcon}>
+            <Ionicons name="shield-checkmark-outline" size={24} color="#B45309" />
+          </View>
+          <View style={styles.verificationNudgeContent}>
+            <Text style={styles.verificationNudgeTitle}>Get Verified</Text>
+            <Text style={styles.verificationNudgeDesc}>
+              Verified accounts build trust with students and parents.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#B45309" />
+        </TouchableOpacity>
+      )}
 
       {/* Quick Actions Row */}
       <View style={styles.quickActionsContainer}>
@@ -640,5 +668,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: ui.textSecondary,
     marginTop: 2,
+  },
+  // Sprint 10: Verification nudge styles
+  verificationNudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: radius.lg,
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  verificationNudgeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FDE68A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verificationNudgeContent: {
+    flex: 1,
+  },
+  verificationNudgeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  verificationNudgeDesc: {
+    fontSize: 13,
+    color: '#B45309',
+    marginTop: 2,
+    lineHeight: 18,
   },
 })

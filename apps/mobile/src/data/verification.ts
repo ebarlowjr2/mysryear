@@ -1,53 +1,51 @@
 import { supabase } from '../lib/supabase'
 
-export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
+export type VerificationStatus = 'unverified' | 'pending' | 'verified'
 
 export type VerificationInfo = {
   status: VerificationStatus
-  updatedAt: string | null
+  requestedAt: string | null
 }
 
 export type VerificationBannerConfig = {
-  color: 'gray' | 'yellow' | 'green' | 'red'
+  color: 'gray' | 'blue' | 'green'
   backgroundColor: string
   textColor: string
   message: string
+  helperText: string
   showRequestButton: boolean
+  icon: 'alert-circle' | 'time' | 'checkmark-circle'
 }
 
+// Sprint 10: Get verification status from profiles table
 export async function getVerificationStatus(
-  userId: string,
-  role: 'business' | 'teacher'
+  userId: string
 ): Promise<VerificationInfo> {
-  const table = role === 'business' ? 'business_profiles' : 'teacher_profiles'
-  
   const { data, error } = await supabase
-    .from(table)
-    .select('verification_status, updated_at')
+    .from('profiles')
+    .select('verification_status, verification_requested_at')
     .eq('user_id', userId)
     .single()
 
   if (error || !data) {
-    return { status: 'unverified', updatedAt: null }
+    return { status: 'unverified', requestedAt: null }
   }
 
   return {
-    status: data.verification_status as VerificationStatus,
-    updatedAt: data.updated_at as string | null,
+    status: (data.verification_status as VerificationStatus) || 'unverified',
+    requestedAt: data.verification_requested_at as string | null,
   }
 }
 
+// Sprint 10: Request verification - updates profiles table
 export async function requestVerification(
-  userId: string,
-  role: 'business' | 'teacher'
+  userId: string
 ): Promise<{ success: boolean; error: string | null }> {
-  const table = role === 'business' ? 'business_profiles' : 'teacher_profiles'
-  
   const { error } = await supabase
-    .from(table)
+    .from('profiles')
     .update({
       verification_status: 'pending',
-      updated_at: new Date().toISOString(),
+      verification_requested_at: new Date().toISOString(),
     })
     .eq('user_id', userId)
 
@@ -58,39 +56,46 @@ export async function requestVerification(
   return { success: true, error: null }
 }
 
-export function getVerificationBannerConfig(status: VerificationStatus): VerificationBannerConfig {
+// Sprint 10: Get banner config based on status and role
+export function getVerificationBannerConfig(
+  status: VerificationStatus,
+  role: 'business' | 'teacher'
+): VerificationBannerConfig {
+  const helperTexts = {
+    business: 'Verified businesses appear more prominently and build trust with students.',
+    teacher: 'Verified educators will be able to post school announcements and events (coming soon).',
+  }
+
   switch (status) {
     case 'unverified':
       return {
         color: 'gray',
-        backgroundColor: '#6B7280',
-        textColor: '#FFFFFF',
-        message: 'Unverified - limited visibility',
+        backgroundColor: '#FEF3C7', // Yellow-100
+        textColor: '#92400E', // Yellow-800
+        message: 'This account is not yet verified. Verified accounts build trust with students and parents.',
+        helperText: helperTexts[role],
         showRequestButton: true,
+        icon: 'alert-circle',
       }
     case 'pending':
       return {
-        color: 'yellow',
-        backgroundColor: '#F59E0B',
-        textColor: '#FFFFFF',
-        message: 'Verification pending - we will contact you soon',
+        color: 'blue',
+        backgroundColor: '#DBEAFE', // Blue-100
+        textColor: '#1E40AF', // Blue-800
+        message: 'Verification request submitted. We\'ll notify you once reviewed.',
+        helperText: '',
         showRequestButton: false,
+        icon: 'time',
       }
     case 'verified':
       return {
         color: 'green',
-        backgroundColor: '#10B981',
-        textColor: '#FFFFFF',
-        message: 'Verified account',
+        backgroundColor: '#D1FAE5', // Green-100
+        textColor: '#065F46', // Green-800
+        message: 'Verified Account',
+        helperText: '',
         showRequestButton: false,
-      }
-    case 'rejected':
-      return {
-        color: 'red',
-        backgroundColor: '#EF4444',
-        textColor: '#FFFFFF',
-        message: 'Verification rejected - update your info and request again',
-        showRequestButton: true,
+        icon: 'checkmark-circle',
       }
   }
 }

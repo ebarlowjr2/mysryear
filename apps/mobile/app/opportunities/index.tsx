@@ -17,11 +17,11 @@ import { safeBack } from '../../src/navigation/safeBack'
 import { useTapGuard } from '../../src/navigation/useTapGuard'
 import { getProfile, Profile } from '../../src/data/profile'
 import {
-  listOpportunitiesForUser,
+  listOpportunitiesWithOwnerStatus,
   getTypeInfo,
   formatDate,
   getDaysUntilDeadline,
-  Opportunity,
+  OpportunityWithOwner,
   OpportunityType,
   OPPORTUNITY_TYPES,
 } from '../../src/data/opportunities'
@@ -32,7 +32,7 @@ type LocationFilter = 'for_you' | 'remote' | 'my_county'
 export default function OpportunitiesListScreen() {
   const router = useRouter()
   const { user } = useAuth()
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+  const [opportunities, setOpportunities] = useState<OpportunityWithOwner[]>([])
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -48,7 +48,8 @@ export default function OpportunitiesListScreen() {
     try {
       const userProfile = await getProfile(user.id)
       setProfile(userProfile)
-      const data = await listOpportunitiesForUser(userProfile)
+      // Sprint 10: Use new function that includes owner verification status
+      const data = await listOpportunitiesWithOwnerStatus(userProfile)
       setOpportunities(data)
     } catch (error) {
       console.error('Failed to fetch opportunities:', error)
@@ -322,9 +323,18 @@ export default function OpportunitiesListScreen() {
                 </View>
 
                 {opp.org_name && (
-                  <Text style={styles.orgName} numberOfLines={1}>
-                    {opp.org_name}
-                  </Text>
+                  <View style={styles.orgRow}>
+                    <Text style={styles.orgName} numberOfLines={1}>
+                      {opp.org_name}
+                    </Text>
+                    {/* Sprint 10: Show Verified badge if owner is verified */}
+                    {opp.owner_verified && (
+                      <View style={styles.verifiedBadge}>
+                        <Ionicons name="checkmark-circle" size={14} color="#065F46" />
+                        <Text style={styles.verifiedBadgeText}>Verified</Text>
+                      </View>
+                    )}
+                  </View>
                 )}
 
                 <View style={styles.cardFooter}>
@@ -528,10 +538,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  orgRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 8,
+  },
   orgName: {
     fontSize: 14,
     color: ui.textSecondary,
-    marginTop: 4,
+    flex: 1,
+  },
+  // Sprint 10: Verified badge styles
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    gap: 4,
+  },
+  verifiedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#065F46',
   },
   cardFooter: {
     flexDirection: 'row',

@@ -17,12 +17,12 @@ import { goTab } from '../../src/navigation/goTab'
 import { safeBack } from '../../src/navigation/safeBack'
 import { useTapGuard } from '../../src/navigation/useTapGuard'
 import {
-  getOpportunity,
+  getOpportunityWithOwnerStatus,
   getTypeInfo,
   formatDate,
   formatCounties,
   getDaysUntilDeadline,
-  Opportunity,
+  OpportunityWithOwner,
   LOCATION_MODES,
 } from '../../src/data/opportunities'
 import { createTask } from '../../src/data/planner'
@@ -31,7 +31,7 @@ export default function OpportunityDetailScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
-  const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
+  const [opportunity, setOpportunity] = useState<OpportunityWithOwner | null>(null)
   const [loading, setLoading] = useState(true)
   const [addingToPlanner, setAddingToPlanner] = useState(false)
 
@@ -42,7 +42,8 @@ export default function OpportunityDetailScreen() {
   const fetchOpportunity = useCallback(async () => {
     if (!id) return
     try {
-      const data = await getOpportunity(id)
+      // Sprint 10: Use new function that includes owner verification status
+      const data = await getOpportunityWithOwnerStatus(id)
       setOpportunity(data)
     } catch (error) {
       console.error('Failed to fetch opportunity:', error)
@@ -214,7 +215,16 @@ export default function OpportunityDetailScreen() {
           </View>
           <Text style={styles.title}>{opportunity.title}</Text>
           {opportunity.org_name && (
-            <Text style={styles.orgName}>{opportunity.org_name}</Text>
+            <View style={styles.orgRow}>
+              <Text style={styles.orgName}>{opportunity.org_name}</Text>
+              {/* Sprint 10: Show Verified Business badge if owner is verified */}
+              {opportunity.owner_verified && (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={16} color="#065F46" />
+                  <Text style={styles.verifiedBadgeText}>Verified Business</Text>
+                </View>
+              )}
+            </View>
           )}
         </View>
 
@@ -401,10 +411,31 @@ const styles = StyleSheet.create({
     color: ui.text,
     marginBottom: 4,
   },
+  orgRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   orgName: {
     fontSize: 16,
     color: ui.textSecondary,
-    marginTop: 4,
+  },
+  // Sprint 10: Verified badge styles
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    gap: 4,
+  },
+  verifiedBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#065F46',
   },
   section: {
     padding: 20,
