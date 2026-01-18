@@ -23,6 +23,12 @@ export type Profile = {
   waitlist_drive: boolean
   waitlist_onedrive: boolean
   onboarding_complete: boolean
+  // Sprint 10: Business profile fields
+  org_state: string | null
+  org_counties: string[] | null
+  // Sprint 10: Teacher profile fields
+  job_title: string | null
+  department: string | null
   created_at: string
   updated_at: string
 }
@@ -110,6 +116,12 @@ export type ProfileUpdate = Partial<{
   waitlist_ai_aura: boolean
   waitlist_drive: boolean
   waitlist_onedrive: boolean
+  // Sprint 10: Business profile fields
+  org_state: string | null
+  org_counties: string[] | null
+  // Sprint 10: Teacher profile fields
+  job_title: string | null
+  department: string | null
 }>
 
 export async function updateMyProfile(

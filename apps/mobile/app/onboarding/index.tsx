@@ -1,23 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
+import type { Href } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
-import { updateProfile, completeOnboarding, type UserRole } from '../../src/data/profile'
+import { updateProfile, type UserRole } from '../../src/data/profile'
 import { colors, ui, radius } from '../../src/theme'
-
-type OnboardingStep = 1 | 2 | 3
 
 type RoleOption = {
   value: UserRole
@@ -53,61 +49,60 @@ const ROLE_OPTIONS: RoleOption[] = [
   },
 ]
 
-export default function OnboardingScreen() {
-  const { user, refreshProfile } = useAuth()
-  const [step, setStep] = useState<OnboardingStep>(1)
+// Sprint 10: Onboarding Router - routes to role-specific onboarding screens
+export default function OnboardingRouterScreen() {
+  const { user, profile, refreshProfile } = useAuth()
+  const [step, setStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(false)
-  
-  const [fullName, setFullName] = useState('')
-  const [school, setSchool] = useState('')
-  const [graduationYear, setGraduationYear] = useState('')
-  const [role, setRole] = useState<UserRole | null>(null)
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null)
+
+  // Check if user already has a role and route accordingly
+  useEffect(() => {
+    if (profile?.role && !profile.onboarding_complete) {
+      // User has role but hasn't completed onboarding - route to role-specific screen
+      routeToRoleOnboarding(profile.role)
+    } else if (profile?.onboarding_complete) {
+      // Already completed onboarding - go to dashboard
+      router.replace('/(tabs)')
+    }
+  }, [profile])
+
+  const routeToRoleOnboarding = (role: UserRole) => {
+    switch (role) {
+      case 'student':
+        router.replace('/onboarding/student' as Href)
+        break
+      case 'teacher':
+        router.replace('/onboarding/teacher' as Href)
+        break
+      case 'parent':
+        router.replace('/onboarding/parent' as Href)
+        break
+      case 'business':
+        router.replace('/onboarding/business' as Href)
+        break
+    }
+  }
 
   const handleNext = () => {
-    if (step < 3) {
-      setStep((step + 1) as OnboardingStep)
+    if (step === 1) {
+      setStep(2)
     }
   }
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep((step - 1) as OnboardingStep)
-    }
-  }
-
-  const handleComplete = async () => {
-    if (!user) return
+  const handleSelectRole = async () => {
+    if (!user || !selectedRole) return
 
     setLoading(true)
     try {
-      await updateProfile(user.id, {
-        full_name: fullName || null,
-        school: school || null,
-        graduation_year: graduationYear ? parseInt(graduationYear, 10) : null,
-        role: role || null,
-      })
-      
-      await completeOnboarding(user.id)
+      // Save the role to profile
+      await updateProfile(user.id, { role: selectedRole })
       await refreshProfile()
       
-      router.replace('/(tabs)')
+      // Route to role-specific onboarding
+      routeToRoleOnboarding(selectedRole)
     } catch (err) {
-      console.error('Failed to complete onboarding:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSkip = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      await completeOnboarding(user.id)
-      await refreshProfile()
-      router.replace('/(tabs)')
-    } catch (err) {
-      console.error('Failed to skip onboarding:', err)
+      console.error('Failed to set role:', err)
     } finally {
       setLoading(false)
     }
@@ -136,23 +131,23 @@ export default function OnboardingScreen() {
         {ROLE_OPTIONS.map((option) => (
           <TouchableOpacity
             key={option.value}
-            style={[styles.roleCard, role === option.value && styles.roleCardActive]}
-            onPress={() => setRole(option.value)}
+            style={[styles.roleCard, selectedRole === option.value && styles.roleCardActive]}
+            onPress={() => setSelectedRole(option.value)}
           >
-            <View style={[styles.roleIconContainer, role === option.value && styles.roleIconContainerActive]}>
+            <View style={[styles.roleIconContainer, selectedRole === option.value && styles.roleIconContainerActive]}>
               <Ionicons 
                 name={option.icon} 
                 size={24} 
-                color={role === option.value ? ui.primary : ui.textSecondary} 
+                color={selectedRole === option.value ? ui.primary : ui.textSecondary} 
               />
             </View>
             <View style={styles.roleCardContent}>
-              <Text style={[styles.roleCardTitle, role === option.value && styles.roleCardTitleActive]}>
+              <Text style={[styles.roleCardTitle, selectedRole === option.value && styles.roleCardTitleActive]}>
                 {option.label}
               </Text>
               <Text style={styles.roleCardDescription}>{option.description}</Text>
             </View>
-            {role === option.value && (
+            {selectedRole === option.value && (
               <Ionicons name="checkmark-circle" size={24} color={ui.primary} />
             )}
           </TouchableOpacity>
@@ -161,102 +156,48 @@ export default function OnboardingScreen() {
     </View>
   )
 
-  const renderStep3 = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>School Information</Text>
-      <Text style={styles.stepDescription}>
-        Help us find scholarships and deadlines relevant to you.
-      </Text>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>School Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your school name"
-          placeholderTextColor={ui.inputPlaceholder}
-          value={school}
-          onChangeText={setSchool}
-          autoCapitalize="words"
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Graduation Year</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., 2025"
-          placeholderTextColor={ui.inputPlaceholder}
-          value={graduationYear}
-          onChangeText={setGraduationYear}
-          keyboardType="number-pad"
-          maxLength={4}
-        />
-      </View>
-    </View>
-  )
-
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleSkip} disabled={loading}>
-              <Text style={styles.skipText}>Skip</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.progressContainer}>
+          {[1, 2].map((s) => (
+            <View
+              key={s}
+              style={[
+                styles.progressDot,
+                s === step && styles.progressDotActive,
+                s < step && styles.progressDotCompleted,
+              ]}
+            />
+          ))}
+        </View>
+
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+
+        <View style={styles.footer}>
+          {step === 1 ? (
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+            >
+              <Text style={styles.nextButtonText}>Let's Go</Text>
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.progressContainer}>
-            {[1, 2, 3].map((s) => (
-              <View
-                key={s}
-                style={[
-                  styles.progressDot,
-                  s === step && styles.progressDotActive,
-                  s < step && styles.progressDotCompleted,
-                ]}
-              />
-            ))}
-          </View>
-
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
-
-          <View style={styles.footer}>
-            {step > 1 && (
-              <TouchableOpacity style={styles.backButton} onPress={handleBack} disabled={loading}>
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
-            )}
-            
-            {step < 3 ? (
-              <TouchableOpacity
-                style={[styles.nextButton, step === 1 && styles.nextButtonFull]}
-                onPress={handleNext}
-              >
-                <Text style={styles.nextButtonText}>
-                  {step === 1 ? "Let's Go" : 'Next'}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[styles.nextButton, loading && styles.buttonDisabled]}
-                onPress={handleComplete}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.nextButtonText}>Get Started</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          ) : (
+            <TouchableOpacity
+              style={[styles.nextButton, (!selectedRole || loading) && styles.buttonDisabled]}
+              onPress={handleSelectRole}
+              disabled={!selectedRole || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.nextButtonText}>Continue</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
@@ -266,21 +207,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: ui.background,
   },
-  keyboardView: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingTop: 16,
-  },
-  skipText: {
-    color: ui.textMuted,
-    fontSize: 16,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -326,24 +255,6 @@ const styles = StyleSheet.create({
   },
   illustrationEmoji: {
     fontSize: 80,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: ui.textSecondary,
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: ui.inputBackground,
-    borderRadius: radius.md,
-    padding: 16,
-    fontSize: 16,
-    color: ui.inputText,
-    borderWidth: 1,
-    borderColor: ui.inputBorder,
   },
   roleCardsContainer: {
     gap: 12,
@@ -391,33 +302,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   footer: {
-    flexDirection: 'row',
-    gap: 12,
     paddingVertical: 24,
   },
-  backButton: {
-    flex: 1,
-    backgroundColor: ui.backgroundSecondary,
-    borderRadius: radius.md,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: ui.border,
-  },
-  backButtonText: {
-    color: ui.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
   nextButton: {
-    flex: 2,
     backgroundColor: ui.primary,
     borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
-  },
-  nextButtonFull: {
-    flex: 1,
   },
   nextButtonText: {
     color: colors.white,
