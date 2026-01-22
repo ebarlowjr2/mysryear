@@ -1,129 +1,24 @@
-import React from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
+import type { Href } from 'expo-router'
 import { colors, ui, radius, shadow } from '../../src/theme'
 import { goTab } from '../../src/navigation/goTab'
 import { useTapGuard } from '../../src/navigation/useTapGuard'
-
-type TestInfo = {
-  id: string
-  name: string
-  fullName: string
-  description: string
-  icon: keyof typeof Ionicons.glyphMap
-  color: string
-  bgColor: string
-  features: string[]
-}
-
-const TESTS: Record<string, TestInfo> = {
-  sat: {
-    id: 'sat',
-    name: 'SAT',
-    fullName: 'SAT (Scholastic Assessment Test)',
-    description: 'The SAT is a standardized test widely used for college admissions in the United States. It tests reading, writing, and math skills.',
-    icon: 'school-outline',
-    color: '#1976D2',
-    bgColor: '#E3F2FD',
-    features: [
-      'Practice questions for Reading & Writing',
-      'Math section practice with explanations',
-      'Full-length practice tests',
-      'Score tracking and analytics',
-      'Study schedule generator',
-    ],
-  },
-  act: {
-    id: 'act',
-    name: 'ACT',
-    fullName: 'ACT (American College Testing)',
-    description: 'The ACT is a standardized test used for college admissions. It covers English, mathematics, reading, and science reasoning.',
-    icon: 'document-text-outline',
-    color: '#388E3C',
-    bgColor: '#E8F5E9',
-    features: [
-      'English section practice',
-      'Math practice with step-by-step solutions',
-      'Reading comprehension exercises',
-      'Science reasoning practice',
-      'Optional writing section prep',
-    ],
-  },
-  psat: {
-    id: 'psat',
-    name: 'PSAT',
-    fullName: 'PSAT/NMSQT',
-    description: 'The PSAT/NMSQT is a preliminary test that prepares students for the SAT and qualifies them for the National Merit Scholarship Program.',
-    icon: 'ribbon-outline',
-    color: '#7B1FA2',
-    bgColor: '#F3E5F5',
-    features: [
-      'SAT-style practice questions',
-      'National Merit Scholarship info',
-      'Score prediction tools',
-      'Personalized study plans',
-      'Progress tracking',
-    ],
-  },
-  ap: {
-    id: 'ap',
-    name: 'AP Exams',
-    fullName: 'Advanced Placement Exams',
-    description: 'AP Exams are standardized exams designed to measure how well you\'ve mastered the content and skills of a specific AP course.',
-    icon: 'trophy-outline',
-    color: '#F57C00',
-    bgColor: '#FFF3E0',
-    features: [
-      'Subject-specific practice tests',
-      'Free response question practice',
-      'Multiple choice drills',
-      'Scoring guidelines and rubrics',
-      'Study guides for all AP subjects',
-    ],
-  },
-  clep: {
-    id: 'clep',
-    name: 'CLEP',
-    fullName: 'College Level Examination Program',
-    description: 'CLEP exams allow you to earn college credit by demonstrating mastery of college-level material in various subjects.',
-    icon: 'medal-outline',
-    color: '#C2185B',
-    bgColor: '#FCE4EC',
-    features: [
-      'Practice exams for all CLEP subjects',
-      'Credit equivalency information',
-      'Study materials and guides',
-      'Test-taking strategies',
-      'Score requirements by college',
-    ],
-  },
-  toefl: {
-    id: 'toefl',
-    name: 'TOEFL',
-    fullName: 'Test of English as a Foreign Language',
-    description: 'TOEFL measures the English language ability of non-native speakers wishing to enroll in English-speaking universities.',
-    icon: 'globe-outline',
-    color: '#00796B',
-    bgColor: '#E0F2F1',
-    features: [
-      'Reading section practice',
-      'Listening comprehension exercises',
-      'Speaking practice with feedback',
-      'Writing section practice',
-      'Full-length practice tests',
-    ],
-  },
-}
+import { useAuth } from '../../src/contexts/AuthContext'
+import { getTestById, TestMilestone } from '../../src/content/testPrep'
+import { createTaskFromMilestone } from '../../src/utils/createPlannerTask'
 
 export default function TestDetailScreen() {
   const { testId } = useLocalSearchParams<{ testId: string }>()
   const router = useRouter()
+  const { user } = useAuth()
+  const [addingMilestone, setAddingMilestone] = useState<string | null>(null)
   
-  // Tap guard to prevent rapid double-taps on Home button
   const guardedHome = useTapGuard(() => goTab('dashboard'))
   
-  const test = TESTS[testId || '']
+  const test = getTestById(testId || '')
   
   if (!test) {
     return (
@@ -140,60 +35,138 @@ export default function TestDetailScreen() {
     )
   }
 
+  const handleAddMilestone = async (milestone: TestMilestone) => {
+    if (!user?.id) {
+      Alert.alert('Sign In Required', 'Please sign in to add tasks to your planner.')
+      return
+    }
+
+    setAddingMilestone(milestone.id)
+    try {
+      await createTaskFromMilestone(user.id, milestone, test.name)
+      Alert.alert(
+        'Added to Planner',
+        `"${milestone.taskTitle}" has been added to your planner.`,
+        [
+          { text: 'View Planner', onPress: () => goTab('planner') },
+          { text: 'OK', style: 'cancel' },
+        ]
+      )
+    } catch (error) {
+      console.error('Failed to add milestone:', error)
+      Alert.alert('Error', 'Failed to add task to planner. Please try again.')
+    } finally {
+      setAddingMilestone(null)
+    }
+  }
+
+  const handleOpenLink = (url: string) => {
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'Could not open link.')
+    })
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-            <Stack.Screen 
-              options={{ 
-                title: test.name,
-                headerRight: () => (
-                  <TouchableOpacity 
-                    style={styles.homeButton}
-                    onPress={guardedHome}
-                  >
-                    <Ionicons name="home" size={20} color={ui.primary} />
-                  </TouchableOpacity>
-                ),
-              }} 
-            />
+      <Stack.Screen 
+        options={{ 
+          title: test.name,
+          headerRight: () => (
+            <TouchableOpacity 
+              style={styles.homeButton}
+              onPress={guardedHome}
+            >
+              <Ionicons name="home" size={20} color={ui.primary} />
+            </TouchableOpacity>
+          ),
+        }} 
+      />
       
       <View style={styles.heroSection}>
         <View style={[styles.heroIcon, { backgroundColor: test.bgColor }]}>
-          <Ionicons name={test.icon} size={48} color={test.color} />
+          <Ionicons name={test.icon as keyof typeof Ionicons.glyphMap} size={48} color={test.color} />
         </View>
-        <Text style={styles.heroTitle}>{test.fullName}</Text>
-        <Text style={styles.heroDescription}>{test.description}</Text>
+        <Text style={styles.heroTitle}>{test.name}</Text>
       </View>
 
-      <View style={styles.comingSoonCard}>
-        <View style={styles.comingSoonIcon}>
-          <Ionicons name="construct-outline" size={32} color={ui.primary} />
-        </View>
-        <Text style={styles.comingSoonTitle}>Coming Soon!</Text>
-        <Text style={styles.comingSoonText}>
-          We're working hard to bring you comprehensive {test.name} prep resources. Check back soon!
-        </Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>What It Is</Text>
+        <Text style={styles.sectionText}>{test.whatItIs}</Text>
       </View>
 
-      <View style={styles.featuresSection}>
-        <Text style={styles.sectionTitle}>What's Coming</Text>
-        <View style={styles.featuresList}>
-          {test.features.map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <View style={styles.featureCheck}>
-                <Ionicons name="time-outline" size={16} color={ui.textMuted} />
-              </View>
-              <Text style={styles.featureText}>{feature}</Text>
-            </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Who Should Take It</Text>
+        <Text style={styles.sectionText}>{test.whoShouldTake}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Why It Matters</Text>
+        <Text style={styles.sectionText}>{test.whyItMatters}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>When to Take It</Text>
+        <Text style={styles.sectionText}>{test.whenToTake}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Add to Your Planner</Text>
+        <Text style={styles.sectionSubtext}>Tap a button to add a reminder to your planner</Text>
+        <View style={styles.milestoneList}>
+          {test.milestones.map((milestone) => (
+            <TouchableOpacity
+              key={milestone.id}
+              style={[
+                styles.milestoneButton,
+                addingMilestone === milestone.id && styles.milestoneButtonDisabled,
+              ]}
+              onPress={() => handleAddMilestone(milestone)}
+              disabled={addingMilestone === milestone.id}
+            >
+              <Ionicons 
+                name={addingMilestone === milestone.id ? 'hourglass-outline' : 'add-circle-outline'} 
+                size={20} 
+                color={ui.primary} 
+              />
+              <Text style={styles.milestoneButtonText}>{milestone.label}</Text>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      <View style={styles.notifyCard}>
-        <Ionicons name="notifications-outline" size={24} color={ui.primary} />
-        <View style={styles.notifyContent}>
-          <Text style={styles.notifyTitle}>Get Notified</Text>
-          <Text style={styles.notifyText}>We'll let you know when {test.name} prep is available.</Text>
+      {test.links && test.links.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Helpful Links</Text>
+          <View style={styles.linksList}>
+            {test.links.map((link, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.linkButton}
+                onPress={() => handleOpenLink(link.url)}
+              >
+                <Ionicons name="open-outline" size={18} color={ui.primary} />
+                <Text style={styles.linkButtonText}>{link.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
+      )}
+
+      <View style={styles.auraCard}>
+        <View style={styles.auraCardIcon}>
+          <Ionicons name="sparkles" size={28} color="#7C3AED" />
+        </View>
+        <Text style={styles.auraCardTitle}>Need help deciding?</Text>
+        <Text style={styles.auraCardText}>
+          A.U.R.A. will help you choose the right path and plan your next steps (coming soon).
+        </Text>
+        <TouchableOpacity
+          style={styles.auraButton}
+          onPress={() => router.push('/aura' as Href)}
+        >
+          <Ionicons name="sparkles-outline" size={18} color={colors.white} />
+          <Text style={styles.auraButtonText}>Open A.U.R.A.</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   )
@@ -235,16 +208,16 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    padding: 32,
-    paddingTop: 24,
+    padding: 24,
+    paddingTop: 16,
   },
   heroIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   heroTitle: {
     fontSize: 24,
@@ -252,101 +225,109 @@ const styles = StyleSheet.create({
     color: ui.text,
     textAlign: 'center',
   },
-  heroDescription: {
-    fontSize: 15,
-    color: ui.textSecondary,
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
-  comingSoonCard: {
-    alignItems: 'center',
-    backgroundColor: ui.primaryLight,
-    marginHorizontal: 24,
-    padding: 32,
-    borderRadius: radius.lg,
-  },
-  comingSoonIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  comingSoonTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: ui.primary,
-    marginBottom: 8,
-  },
-  comingSoonText: {
-    fontSize: 14,
-    color: ui.primaryText,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  featuresSection: {
-    padding: 24,
-    paddingTop: 32,
+  section: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: ui.text,
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  featuresList: {
-    gap: 12,
+  sectionSubtext: {
+    fontSize: 14,
+    color: ui.textSecondary,
+    marginBottom: 12,
   },
-  featureItem: {
+  sectionText: {
+    fontSize: 15,
+    color: ui.textSecondary,
+    lineHeight: 22,
+  },
+  milestoneList: {
+    gap: 10,
+  },
+  milestoneButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: ui.card,
-    padding: 16,
+    padding: 14,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: ui.cardBorder,
+    gap: 12,
   },
-  featureCheck: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: ui.backgroundSecondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  milestoneButtonDisabled: {
+    opacity: 0.6,
   },
-  featureText: {
+  milestoneButtonText: {
     flex: 1,
     fontSize: 15,
     color: ui.text,
+    fontWeight: '500',
   },
-  notifyCard: {
+  linksList: {
+    gap: 10,
+  },
+  linkButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ui.card,
-    marginHorizontal: 24,
-    padding: 16,
+    backgroundColor: ui.primaryLight,
+    padding: 14,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: ui.cardBorder,
-    gap: 16,
-    ...shadow.card,
+    gap: 10,
   },
-  notifyContent: {
+  linkButtonText: {
     flex: 1,
+    fontSize: 15,
+    color: ui.primary,
+    fontWeight: '500',
   },
-  notifyTitle: {
-    fontSize: 16,
+  auraCard: {
+    alignItems: 'center',
+    backgroundColor: '#F3E8FF',
+    marginHorizontal: 24,
+    marginTop: 8,
+    padding: 24,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+  },
+  auraCardIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EDE9FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  auraCardTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    color: ui.text,
+    color: '#5B21B6',
+    marginBottom: 8,
   },
-  notifyText: {
+  auraCardText: {
     fontSize: 14,
-    color: ui.textSecondary,
-    marginTop: 2,
+    color: '#7C3AED',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  auraButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    gap: 8,
+  },
+  auraButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
   },
 })
