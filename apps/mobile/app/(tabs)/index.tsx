@@ -360,6 +360,30 @@ export default function DashboardScreen() {
                       <Text style={styles.featureLink}>Open</Text>
                     </TouchableOpacity>
 
+                    <TouchableOpacity 
+                      style={styles.featureCard}
+                      onPress={() => router.push('/mentors' as never)}
+                    >
+                      <View style={[styles.featureIcon, { backgroundColor: '#3b82f620' }]}>
+                        <Ionicons name="people-outline" size={24} color="#3b82f6" />
+                      </View>
+                      <Text style={styles.featureTitle}>Find a Mentor</Text>
+                      <Text style={styles.featureDesc}>Connect with professionals who can guide your career journey.</Text>
+                      <Text style={styles.featureLink}>Open</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={styles.featureCard}
+                      onPress={() => router.push('/jobs' as never)}
+                    >
+                      <View style={[styles.featureIcon, { backgroundColor: '#22c55e20' }]}>
+                        <Ionicons name="bag-outline" size={24} color="#22c55e" />
+                      </View>
+                      <Text style={styles.featureTitle}>Jobs & Programs</Text>
+                      <Text style={styles.featureDesc}>Browse internships, apprenticeships, and entry-level opportunities.</Text>
+                      <Text style={styles.featureLink}>Open</Text>
+                    </TouchableOpacity>
+
                     <View style={[styles.featureCard, styles.featureCardDisabled]}>
             <View style={styles.featureIcon}>
               <Ionicons name="folder-outline" size={24} color={ui.textMuted} />

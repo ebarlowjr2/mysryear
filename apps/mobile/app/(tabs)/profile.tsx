@@ -1373,6 +1373,44 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Mentors MVP: Become a Mentor / Recruiter Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Community</Text>
+        <Text style={styles.sectionSubtitle}>Help students succeed by sharing your expertise</Text>
+        
+        <TouchableOpacity 
+          style={styles.communityCard}
+          onPress={() => router.push('/mentor/setup' as never)}
+        >
+          <View style={[styles.communityIcon, { backgroundColor: '#3b82f620' }]}>
+            <Ionicons name="people-outline" size={24} color="#3b82f6" />
+          </View>
+          <View style={styles.communityInfo}>
+            <Text style={styles.communityTitle}>Become a Mentor</Text>
+            <Text style={styles.communityDesc}>
+              Guide students exploring career paths in your field
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.communityCard}
+          onPress={() => router.push('/recruiter/setup' as never)}
+        >
+          <View style={[styles.communityIcon, { backgroundColor: '#6366f120' }]}>
+            <Ionicons name="briefcase-outline" size={24} color="#6366f1" />
+          </View>
+          <View style={styles.communityInfo}>
+            <Text style={styles.communityTitle}>Become a Recruiter</Text>
+            <Text style={styles.communityDesc}>
+              Post jobs, internships, and programs for students
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+        </TouchableOpacity>
+      </View>
+
       {/* G) Actions Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actions</Text>
@@ -2009,5 +2047,38 @@ const styles = StyleSheet.create({
   leadDayChipTextActive: {
     color: ui.primary,
     fontWeight: '600',
+  },
+  // Mentors MVP: Community section styles
+  communityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+  },
+  communityIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  communityInfo: {
+    flex: 1,
+  },
+  communityTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: ui.text,
+    marginBottom: 4,
+  },
+  communityDesc: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    lineHeight: 18,
   },
 })
