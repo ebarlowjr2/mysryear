@@ -29,6 +29,11 @@ export type Profile = {
   // Sprint 10: Teacher profile fields
   job_title: string | null
   department: string | null
+  // Push notification preferences
+  notify_link_requests: boolean
+  notify_deadlines: boolean
+  notify_parent_updates: boolean
+  deadline_lead_days: number
   created_at: string
   updated_at: string
 }
@@ -122,6 +127,11 @@ export type ProfileUpdate = Partial<{
   // Sprint 10: Teacher profile fields
   job_title: string | null
   department: string | null
+  // Push notification preferences
+  notify_link_requests: boolean
+  notify_deadlines: boolean
+  notify_parent_updates: boolean
+  deadline_lead_days: number
 }>
 
 export async function updateMyProfile(

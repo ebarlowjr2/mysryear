@@ -95,6 +95,11 @@ export default function ProfileScreen() {
   const [notificationsTasks, setNotificationsTasks] = useState(true)
   const [notificationsDeadlines, setNotificationsDeadlines] = useState(true)
   const [waitlistAiAura, setWaitlistAiAura] = useState(false)
+  // Push notification preferences
+  const [notifyLinkRequests, setNotifyLinkRequests] = useState(true)
+  const [notifyDeadlines, setNotifyDeadlines] = useState(true)
+  const [notifyParentUpdates, setNotifyParentUpdates] = useState(true)
+  const [deadlineLeadDays, setDeadlineLeadDays] = useState(3)
   const [waitlistDrive, setWaitlistDrive] = useState(false)
   const [waitlistOnedrive, setWaitlistOnedrive] = useState(false)
   const [showStatePicker, setShowStatePicker] = useState(false)
@@ -151,6 +156,11 @@ export default function ProfileScreen() {
         setNotificationsTasks(data.notifications_tasks ?? true)
         setNotificationsDeadlines(data.notifications_deadlines ?? true)
         setWaitlistAiAura(data.waitlist_ai_aura ?? false)
+        // Push notification preferences
+        setNotifyLinkRequests(data.notify_link_requests ?? true)
+        setNotifyDeadlines(data.notify_deadlines ?? true)
+        setNotifyParentUpdates(data.notify_parent_updates ?? true)
+        setDeadlineLeadDays(data.deadline_lead_days ?? 3)
         setWaitlistDrive(data.waitlist_drive ?? false)
         setWaitlistOnedrive(data.waitlist_onedrive ?? false)
 
@@ -274,6 +284,19 @@ export default function ProfileScreen() {
     if (waitlistOnedrive !== (profile?.waitlist_onedrive ?? false)) {
       updates.waitlist_onedrive = waitlistOnedrive
     }
+    // Push notification preferences
+    if (notifyLinkRequests !== (profile?.notify_link_requests ?? true)) {
+      updates.notify_link_requests = notifyLinkRequests
+    }
+    if (notifyDeadlines !== (profile?.notify_deadlines ?? true)) {
+      updates.notify_deadlines = notifyDeadlines
+    }
+    if (notifyParentUpdates !== (profile?.notify_parent_updates ?? true)) {
+      updates.notify_parent_updates = notifyParentUpdates
+    }
+    if (deadlineLeadDays !== (profile?.deadline_lead_days ?? 3)) {
+      updates.deadline_lead_days = deadlineLeadDays
+    }
 
     // Only update if there are changes
     if (Object.keys(updates).length === 0) {
@@ -310,6 +333,11 @@ export default function ProfileScreen() {
       setWaitlistAiAura(profile.waitlist_ai_aura ?? false)
       setWaitlistDrive(profile.waitlist_drive ?? false)
       setWaitlistOnedrive(profile.waitlist_onedrive ?? false)
+      // Push notification preferences
+      setNotifyLinkRequests(profile.notify_link_requests ?? true)
+      setNotifyDeadlines(profile.notify_deadlines ?? true)
+      setNotifyParentUpdates(profile.notify_parent_updates ?? true)
+      setDeadlineLeadDays(profile.deadline_lead_days ?? 3)
     }
     setIsEditing(false)
   }
@@ -1189,6 +1217,84 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* E2) Push Notification Preferences */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Push Notifications</Text>
+        <Text style={styles.sectionSubtitle}>Control which notifications you receive</Text>
+        
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Link Requests</Text>
+            <Text style={styles.toggleDesc}>Notify when someone wants to link accounts</Text>
+          </View>
+          <Switch
+            value={notifyLinkRequests}
+            onValueChange={setNotifyLinkRequests}
+            disabled={!isEditing}
+            trackColor={{ false: ui.backgroundSecondary, true: ui.primaryLight }}
+            thumbColor={notifyLinkRequests ? ui.primary : ui.textMuted}
+          />
+        </View>
+        
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Deadline Alerts</Text>
+            <Text style={styles.toggleDesc}>Push notifications for upcoming deadlines</Text>
+          </View>
+          <Switch
+            value={notifyDeadlines}
+            onValueChange={setNotifyDeadlines}
+            disabled={!isEditing}
+            trackColor={{ false: ui.backgroundSecondary, true: ui.primaryLight }}
+            thumbColor={notifyDeadlines ? ui.primary : ui.textMuted}
+          />
+        </View>
+        
+        {profile?.role === 'parent' && (
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleInfo}>
+              <Text style={styles.toggleLabel}>Parent Updates</Text>
+              <Text style={styles.toggleDesc}>Get updates about linked students</Text>
+            </View>
+            <Switch
+              value={notifyParentUpdates}
+              onValueChange={setNotifyParentUpdates}
+              disabled={!isEditing}
+              trackColor={{ false: ui.backgroundSecondary, true: ui.primaryLight }}
+              thumbColor={notifyParentUpdates ? ui.primary : ui.textMuted}
+            />
+          </View>
+        )}
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Reminder Lead Time</Text>
+          <Text style={styles.infoValue}>{deadlineLeadDays} days before deadline</Text>
+        </View>
+        {isEditing && (
+          <View style={styles.leadDaysRow}>
+            {[1, 3, 5, 7].map((days) => (
+              <TouchableOpacity
+                key={days}
+                style={[
+                  styles.leadDayChip,
+                  deadlineLeadDays === days && styles.leadDayChipActive,
+                ]}
+                onPress={() => setDeadlineLeadDays(days)}
+              >
+                <Text
+                  style={[
+                    styles.leadDayChipText,
+                    deadlineLeadDays === days && styles.leadDayChipTextActive,
+                  ]}
+                >
+                  {days} day{days > 1 ? 's' : ''}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
       {/* F) Future Features Section (Teasers) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Future Features</Text>
@@ -1877,5 +1983,31 @@ const styles = StyleSheet.create({
   featureToggleLabel: {
     fontSize: 14,
     color: ui.text,
+  },
+  leadDaysRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  leadDayChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: ui.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: ui.border,
+  },
+  leadDayChipActive: {
+    backgroundColor: ui.primaryLight,
+    borderColor: ui.primary,
+  },
+  leadDayChipText: {
+    fontSize: 14,
+    color: ui.textSecondary,
+  },
+  leadDayChipTextActive: {
+    color: ui.primary,
+    fontWeight: '600',
   },
 })

@@ -151,6 +151,44 @@ serve(async (req) => {
     return json(500, { error: "Failed to create link request" });
   }
 
+  // 10) Get parent's name for notification
+  const { data: parentFullProfile } = await admin
+    .from("profiles")
+    .select("full_name, first_name, last_name")
+    .eq("user_id", parentUserId)
+    .maybeSingle();
+
+  const parentName = parentFullProfile?.full_name 
+    || `${parentFullProfile?.first_name || ''} ${parentFullProfile?.last_name || ''}`.trim() 
+    || "A parent";
+
+  // 11) Send push notification to student
+  console.log("Sending push notification to student...");
+  try {
+    const pushResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        userId: studentUserId,
+        title: "New Parent Link Request",
+        body: `${parentName} wants to link to your account.`,
+        deepLink: "/parent/requests",
+        type: "link_request",
+      }),
+    });
+    
+    if (!pushResponse.ok) {
+      console.log("Push notification failed:", await pushResponse.text());
+    } else {
+      console.log("Push notification sent successfully");
+    }
+  } catch (pushErr) {
+    console.log("Push notification error (non-fatal):", pushErr);
+  }
+
   console.log("Link request created successfully!");
   return json(200, { success: true, message: "Link request sent" });
 });
