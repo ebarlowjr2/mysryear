@@ -23,6 +23,7 @@ import {
   type JobPost,
 } from '../../src/data/jobs'
 import { createTask } from '../../src/data/planner'
+import { isJobTracked, trackJob, untrackJob } from '../../src/data/tracking'
 
 export default function JobDetailScreen() {
   const router = useRouter()
@@ -31,6 +32,9 @@ export default function JobDetailScreen() {
   const [job, setJob] = useState<JobPost | null>(null)
   const [addingToPlanner, setAddingToPlanner] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  // Sprint 14: Tracking state
+  const [isTracked, setIsTracked] = useState(false)
+  const [trackingLoading, setTrackingLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -47,11 +51,40 @@ export default function JobDetailScreen() {
 
       const jobData = await getJob(id!)
       setJob(jobData)
+      
+      // Sprint 14: Check if job is tracked
+      const tracked = await isJobTracked(id!)
+      setIsTracked(tracked)
     } catch (error) {
       console.error('Error loading job:', error)
       Alert.alert('Error', 'Failed to load job details')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Sprint 14: Toggle tracking
+  async function handleToggleTracking() {
+    if (!id) return
+    
+    setTrackingLoading(true)
+    try {
+      if (isTracked) {
+        const success = await untrackJob(id)
+        if (success) {
+          setIsTracked(false)
+        }
+      } else {
+        const success = await trackJob(id)
+        if (success) {
+          setIsTracked(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling tracking:', error)
+      Alert.alert('Error', 'Failed to update tracking')
+    } finally {
+      setTrackingLoading(false)
     }
   }
 
@@ -234,6 +267,32 @@ export default function JobDetailScreen() {
               </>
             )}
           </TouchableOpacity>
+
+          {/* Sprint 14: Track/Untrack Button */}
+          <TouchableOpacity
+            style={[
+              styles.trackButton,
+              isTracked && styles.trackButtonActive,
+              trackingLoading && styles.buttonDisabled,
+            ]}
+            onPress={handleToggleTracking}
+            disabled={trackingLoading}
+          >
+            {trackingLoading ? (
+              <ActivityIndicator color={isTracked ? '#fff' : '#f59e0b'} size="small" />
+            ) : (
+              <>
+                <Ionicons
+                  name={isTracked ? 'bookmark' : 'bookmark-outline'}
+                  size={20}
+                  color={isTracked ? '#fff' : '#f59e0b'}
+                />
+                <Text style={[styles.trackButtonText, isTracked && styles.trackButtonTextActive]}>
+                  {isTracked ? 'Tracked' : 'Track Job'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomPadding} />
@@ -406,5 +465,29 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  // Sprint 14: Track button styles
+  trackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  trackButtonActive: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
+  },
+  trackButtonText: {
+    color: '#f59e0b',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  trackButtonTextActive: {
+    color: '#fff',
   },
 })

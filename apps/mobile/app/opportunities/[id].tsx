@@ -26,6 +26,7 @@ import {
   LOCATION_MODES,
 } from '../../src/data/opportunities'
 import { createTask } from '../../src/data/planner'
+import { isOpportunityTracked, trackOpportunity, untrackOpportunity } from '../../src/data/tracking'
 
 export default function OpportunityDetailScreen() {
   const router = useRouter()
@@ -34,6 +35,9 @@ export default function OpportunityDetailScreen() {
   const [opportunity, setOpportunity] = useState<OpportunityWithOwner | null>(null)
   const [loading, setLoading] = useState(true)
   const [addingToPlanner, setAddingToPlanner] = useState(false)
+  // Sprint 14: Tracking state
+  const [isTracked, setIsTracked] = useState(false)
+  const [trackingLoading, setTrackingLoading] = useState(false)
 
   // Tap guards for navigation
   const guardedBack = useTapGuard(() => safeBack('dashboard'))
@@ -45,12 +49,41 @@ export default function OpportunityDetailScreen() {
       // Sprint 10: Use new function that includes owner verification status
       const data = await getOpportunityWithOwnerStatus(id)
       setOpportunity(data)
+      
+      // Sprint 14: Check if opportunity is tracked
+      const tracked = await isOpportunityTracked(id)
+      setIsTracked(tracked)
     } catch (error) {
       console.error('Failed to fetch opportunity:', error)
     } finally {
       setLoading(false)
     }
   }, [id])
+
+  // Sprint 14: Toggle tracking
+  const handleToggleTracking = async () => {
+    if (!id) return
+    
+    setTrackingLoading(true)
+    try {
+      if (isTracked) {
+        const success = await untrackOpportunity(id)
+        if (success) {
+          setIsTracked(false)
+        }
+      } else {
+        const success = await trackOpportunity(id)
+        if (success) {
+          setIsTracked(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling tracking:', error)
+      Alert.alert('Error', 'Failed to update tracking')
+    } finally {
+      setTrackingLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchOpportunity()
@@ -327,6 +360,33 @@ export default function OpportunityDetailScreen() {
               </>
             )}
           </TouchableOpacity>
+
+          {/* Sprint 14: Track/Untrack Button */}
+          <TouchableOpacity
+            style={[
+              styles.trackButton,
+              isTracked && styles.trackButtonActive,
+              trackingLoading && styles.buttonDisabled,
+            ]}
+            onPress={handleToggleTracking}
+            disabled={trackingLoading}
+            activeOpacity={0.8}
+          >
+            {trackingLoading ? (
+              <ActivityIndicator size="small" color={isTracked ? colors.white : '#f59e0b'} />
+            ) : (
+              <>
+                <Ionicons
+                  name={isTracked ? 'bookmark' : 'bookmark-outline'}
+                  size={20}
+                  color={isTracked ? colors.white : '#f59e0b'}
+                />
+                <Text style={[styles.trackButtonText, isTracked && styles.trackButtonTextActive]}>
+                  {isTracked ? 'Tracked' : 'Track Opportunity'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -517,5 +577,32 @@ const styles = StyleSheet.create({
     color: ui.primary,
     fontSize: 17,
     fontWeight: '600',
+  },
+  // Sprint 14: Track button styles
+  trackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fef3c7',
+    paddingVertical: 16,
+    borderRadius: radius.lg,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  trackButtonActive: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
+  },
+  trackButtonText: {
+    color: '#f59e0b',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  trackButtonTextActive: {
+    color: colors.white,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 })

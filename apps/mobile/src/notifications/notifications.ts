@@ -238,12 +238,12 @@ export function calculateReminderDates(
 }
 
 /**
- * Schedule deadline reminders for a task/application/opportunity
+ * Schedule deadline reminders for a task/application/opportunity/job
  * Returns array of notification identifiers
  */
 export async function scheduleDeadlineReminders(
   itemId: string,
-  itemType: 'task' | 'application' | 'opportunity',
+  itemType: 'task' | 'application' | 'opportunity' | 'job',
   title: string,
   dueDate: Date,
   leadDays: number = 3
@@ -284,7 +284,7 @@ export async function scheduleDeadlineReminders(
 /**
  * Get notification title based on item type
  */
-function getNotificationTitle(itemType: 'task' | 'application' | 'opportunity'): string {
+function getNotificationTitle(itemType: 'task' | 'application' | 'opportunity' | 'job'): string {
   switch (itemType) {
     case 'task':
       return 'Task Reminder'
@@ -292,6 +292,8 @@ function getNotificationTitle(itemType: 'task' | 'application' | 'opportunity'):
       return 'Application Deadline'
     case 'opportunity':
       return 'Opportunity Deadline'
+    case 'job':
+      return 'Job Deadline'
     default:
       return 'Reminder'
   }
@@ -300,7 +302,7 @@ function getNotificationTitle(itemType: 'task' | 'application' | 'opportunity'):
 /**
  * Get deep link for item based on type
  */
-function getDeepLinkForItem(itemId: string, itemType: 'task' | 'application' | 'opportunity'): string {
+function getDeepLinkForItem(itemId: string, itemType: 'task' | 'application' | 'opportunity' | 'job'): string {
   switch (itemType) {
     case 'task':
       return `/planner?task=${itemId}`
@@ -308,6 +310,8 @@ function getDeepLinkForItem(itemId: string, itemType: 'task' | 'application' | '
       return `/applications/${itemId}`
     case 'opportunity':
       return `/opportunities/${itemId}`
+    case 'job':
+      return `/jobs/${itemId}`
     default:
       return '/'
   }

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getTasks, Task } from '../data/planner'
 import { listApplications, Application } from '../data/applications'
 import { getProfile } from '../data/profile'
+import { getTrackedJobsWithDeadlines, getTrackedOpportunitiesWithDeadlines } from '../data/tracking'
 import {
   registerForPushNotificationsAsync,
   saveDeviceToken,
@@ -124,6 +125,46 @@ export function useNotifications() {
 
         if (identifiers.length > 0) {
           newIds[app.id] = identifiers
+        }
+      }
+
+      // Sprint 14: Fetch tracked jobs with deadlines
+      const trackedJobs = await getTrackedJobsWithDeadlines()
+
+      for (const job of trackedJobs) {
+        const deadline = new Date(job.deadline)
+        if (deadline <= now || deadline > thirtyDaysFromNow) continue
+
+        const identifiers = await scheduleDeadlineReminders(
+          `job_${job.id}`,
+          'job',
+          job.title,
+          deadline,
+          leadDays
+        )
+
+        if (identifiers.length > 0) {
+          newIds[`job_${job.id}`] = identifiers
+        }
+      }
+
+      // Sprint 14: Fetch tracked opportunities with deadlines
+      const trackedOpportunities = await getTrackedOpportunitiesWithDeadlines()
+
+      for (const opp of trackedOpportunities) {
+        const deadline = new Date(opp.deadline)
+        if (deadline <= now || deadline > thirtyDaysFromNow) continue
+
+        const identifiers = await scheduleDeadlineReminders(
+          `opp_${opp.id}`,
+          'opportunity',
+          opp.title,
+          deadline,
+          leadDays
+        )
+
+        if (identifiers.length > 0) {
+          newIds[`opp_${opp.id}`] = identifiers
         }
       }
 

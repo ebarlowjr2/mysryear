@@ -134,6 +134,9 @@ function AuthGate() {
       <Stack.Screen name="parent/tasks" options={{ title: 'Student Tasks', headerShown: false }} />
       <Stack.Screen name="parent/applications" options={{ title: 'Student Applications', headerShown: false }} />
       <Stack.Screen name="parent/requests" options={{ title: 'Link Requests', headerShown: false }} />
+      
+      {/* Sprint 14: Notifications inbox */}
+      <Stack.Screen name="notifications/index" options={{ title: 'Notifications', headerShown: false }} />
     </Stack>
   )
 }

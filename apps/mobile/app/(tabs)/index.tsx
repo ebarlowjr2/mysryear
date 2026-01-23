@@ -17,6 +17,7 @@ import {
 import { getProfile, Profile } from '../../src/data/profile'
 import ParentDashboard from '../../src/components/ParentDashboard'
 import { getVerificationStatus, VerificationStatus } from '../../src/data/verification'
+import { getUnreadNotificationCount } from '../../src/data/notifications'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
@@ -31,6 +32,8 @@ export default function DashboardScreen() {
   const [nextAppDeadline, setNextAppDeadline] = useState<Application | null>(null)
   // Sprint 10: Verification status for business/teacher nudge
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('unverified')
+  // Sprint 14: Unread notification count for bell icon badge
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
 
     const fetchData = useCallback(async (userId: string) => {
       try {
@@ -53,6 +56,10 @@ export default function DashboardScreen() {
           const verificationInfo = await getVerificationStatus(userId).catch(() => ({ status: 'unverified' as VerificationStatus }))
           setVerificationStatus(verificationInfo.status)
         }
+        
+        // Sprint 14: Fetch unread notification count
+        const unreadCount = await getUnreadNotificationCount().catch(() => 0)
+        setUnreadNotificationCount(unreadCount)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       } finally {
@@ -119,6 +126,24 @@ export default function DashboardScreen() {
         />
       }
     >
+      {/* Sprint 14: Header with notification bell */}
+      <View style={styles.dashboardHeader}>
+        <View style={styles.headerSpacer} />
+        <TouchableOpacity 
+          style={styles.notificationBell}
+          onPress={() => router.push('/notifications')}
+        >
+          <Ionicons name="notifications-outline" size={24} color={ui.text} />
+          {unreadNotificationCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.hero}>
         <Text style={styles.badge}>Built for Students & Parents</Text>
         <Text style={styles.heroTitle}>Your senior year, organized and stress-less.</Text>
@@ -727,5 +752,37 @@ const styles = StyleSheet.create({
     color: '#B45309',
     marginTop: 2,
     lineHeight: 18,
+  },
+  // Sprint 14: Dashboard header with notification bell
+  dashboardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  notificationBell: {
+    padding: 8,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 })

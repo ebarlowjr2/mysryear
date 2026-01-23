@@ -25,9 +25,11 @@ import {
   OpportunityType,
   OPPORTUNITY_TYPES,
 } from '../../src/data/opportunities'
+import { getTrackedOpportunityIds } from '../../src/data/tracking'
 
 type FilterType = 'all' | OpportunityType
 type LocationFilter = 'for_you' | 'remote' | 'my_county'
+type TabFilter = 'for_you' | 'tracked'
 
 export default function OpportunitiesListScreen() {
   const router = useRouter()
@@ -38,6 +40,9 @@ export default function OpportunitiesListScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [typeFilter, setTypeFilter] = useState<FilterType>('all')
   const [locationFilter, setLocationFilter] = useState<LocationFilter>('for_you')
+  // Sprint 14: Tab state for For You vs Tracked
+  const [activeTab, setActiveTab] = useState<TabFilter>('for_you')
+  const [trackedOpportunityIds, setTrackedOpportunityIds] = useState<string[]>([])
 
   // Tap guards for navigation
   const guardedBack = useTapGuard(() => safeBack('dashboard'))
@@ -51,6 +56,10 @@ export default function OpportunitiesListScreen() {
       // Sprint 10: Use new function that includes owner verification status
       const data = await listOpportunitiesWithOwnerStatus(userProfile)
       setOpportunities(data)
+      
+      // Sprint 14: Fetch tracked opportunity IDs
+      const trackedIds = await getTrackedOpportunityIds()
+      setTrackedOpportunityIds(trackedIds)
     } catch (error) {
       console.error('Failed to fetch opportunities:', error)
     } finally {
@@ -68,10 +77,15 @@ export default function OpportunitiesListScreen() {
     setRefreshing(false)
   }
 
+  // Sprint 14: Filter by tracked tab first
+  let filteredOpportunities = activeTab === 'tracked'
+    ? opportunities.filter(opp => trackedOpportunityIds.includes(opp.id))
+    : opportunities
+
   // Filter by type
-  let filteredOpportunities = typeFilter === 'all'
-    ? opportunities
-    : opportunities.filter(opp => opp.type === typeFilter)
+  filteredOpportunities = typeFilter === 'all'
+    ? filteredOpportunities
+    : filteredOpportunities.filter(opp => opp.type === typeFilter)
 
   // Filter by location
   if (locationFilter === 'remote') {
@@ -198,6 +212,31 @@ export default function OpportunitiesListScreen() {
           <Ionicons name="chevron-forward" size={16} color={colors.warning} />
         </TouchableOpacity>
       )}
+
+      {/* Sprint 14: Tab Toggle */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'for_you' && styles.tabActive]}
+          onPress={() => setActiveTab('for_you')}
+        >
+          <Text style={[styles.tabText, activeTab === 'for_you' && styles.tabTextActive]}>
+            For You
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'tracked' && styles.tabActive]}
+          onPress={() => setActiveTab('tracked')}
+        >
+          <Ionicons
+            name="bookmark"
+            size={14}
+            color={activeTab === 'tracked' ? ui.primary : ui.textSecondary}
+          />
+          <Text style={[styles.tabText, activeTab === 'tracked' && styles.tabTextActive]}>
+            Tracked ({trackedOpportunityIds.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Type Filter Chips */}
       <ScrollView
@@ -609,5 +648,34 @@ const styles = StyleSheet.create({
     right: 16,
     top: '50%',
     marginTop: -10,
+  },
+  // Sprint 14: Tab styles
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: ui.border,
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: radius.full,
+    backgroundColor: ui.backgroundSecondary,
+    gap: 6,
+  },
+  tabActive: {
+    backgroundColor: ui.primaryLight,
+  },
+  tabText: {
+    fontSize: 14,
+    color: ui.textSecondary,
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: ui.primary,
   },
 })

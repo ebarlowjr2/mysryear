@@ -22,6 +22,7 @@ import {
   type JobCategory,
 } from '../../src/data/jobs'
 import type { Profile } from '../../src/data/profile'
+import { getTrackedJobIds } from '../../src/data/tracking'
 
 export default function JobsListScreen() {
   const router = useRouter()
@@ -29,6 +30,10 @@ export default function JobsListScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [jobs, setJobs] = useState<JobPost[]>([])
   const [profile, setProfile] = useState<Profile | null>(null)
+
+  // Sprint 14: Tab state for All vs Tracked
+  const [activeTab, setActiveTab] = useState<'all' | 'tracked'>('all')
+  const [trackedJobIds, setTrackedJobIds] = useState<string[]>([])
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<JobCategory | null>(null)
@@ -52,6 +57,10 @@ export default function JobsListScreen() {
 
       const jobList = await listJobsForUser(profile)
       setJobs(jobList)
+      
+      // Sprint 14: Fetch tracked job IDs
+      const trackedIds = await getTrackedJobIds()
+      setTrackedJobIds(trackedIds)
     } catch (error) {
       console.error('Error loading jobs:', error)
     } finally {
@@ -67,6 +76,12 @@ export default function JobsListScreen() {
 
   // Apply filters
   let filteredJobs = jobs
+  
+  // Sprint 14: Filter by tracked tab
+  if (activeTab === 'tracked') {
+    filteredJobs = filteredJobs.filter(j => trackedJobIds.includes(j.id))
+  }
+  
   if (selectedCategory) {
     filteredJobs = filteredJobs.filter(j => j.category === selectedCategory)
   }
@@ -94,6 +109,31 @@ export default function JobsListScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Jobs & Programs</Text>
         <View style={styles.headerRight} />
+      </View>
+
+      {/* Sprint 14: Tab Toggle */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'all' && styles.tabActive]}
+          onPress={() => setActiveTab('all')}
+        >
+          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
+            All
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'tracked' && styles.tabActive]}
+          onPress={() => setActiveTab('tracked')}
+        >
+          <Ionicons
+            name="bookmark"
+            size={14}
+            color={activeTab === 'tracked' ? '#3b82f6' : '#64748b'}
+          />
+          <Text style={[styles.tabText, activeTab === 'tracked' && styles.tabTextActive]}>
+            Tracked ({trackedJobIds.length})
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Filters */}
@@ -496,5 +536,37 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  // Sprint 14: Tab styles
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    gap: 6,
+  },
+  tabActive: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#3b82f6',
   },
 })
