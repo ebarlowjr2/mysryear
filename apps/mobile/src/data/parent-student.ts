@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { linkStudent, cancelLinkRequest } from '../api/edge'
+import { linkStudent, cancelLinkRequest, respondToLinkRequestEdge } from '../api/edge'
 
 export type ParentStudentLink = {
   id: string
@@ -113,16 +113,28 @@ export async function respondToLinkRequest(
   linkId: string,
   accept: boolean
 ): Promise<{ success: boolean; error: string | null }> {
-  const { error } = await supabase
-    .from('parent_student_links')
-    .update({ status: accept ? 'accepted' : 'declined' })
-    .eq('id', linkId)
-
-  if (error) {
-    return { success: false, error: error.message }
+  // Use Edge Function for secure server-side response handling
+  // The Edge Function handles:
+  // - Verifying caller is the student for this link
+  // - Updating the link status
+  // - Sending push notification to the parent
+  try {
+    await respondToLinkRequestEdge(linkId, accept ? 'accept' : 'decline')
+    return { success: true, error: null }
+  } catch (err) {
+    const error = err as { message?: string }
+    const message = error.message || 'Failed to respond to link request'
+    if (message.includes('Not authorized')) {
+      return { success: false, error: 'You are not authorized to respond to this request' }
+    }
+    if (message.includes('not pending')) {
+      return { success: false, error: 'This request has already been responded to' }
+    }
+    if (message.includes('not found')) {
+      return { success: false, error: 'Link request not found' }
+    }
+    return { success: false, error: message }
   }
-
-  return { success: true, error: null }
 }
 
 export async function removeLinkRequest(

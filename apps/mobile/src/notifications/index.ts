@@ -9,6 +9,9 @@ export {
   getScheduledReminders,
   calculateReminderDates,
   scheduleDeadlineReminders,
+  getNotificationPermissionStatus,
+  openSystemNotificationSettings,
+  requestNotificationPermission,
 } from './notifications'
 
 export {

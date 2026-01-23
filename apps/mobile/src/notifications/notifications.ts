@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
 import Constants from 'expo-constants'
-import { Platform } from 'react-native'
+import { Platform, Linking } from 'react-native'
 import { supabase } from '../lib/supabase'
 
 // Configure notification behavior when app is in foreground
@@ -311,6 +311,33 @@ function getDeepLinkForItem(itemId: string, itemType: 'task' | 'application' | '
     default:
       return '/'
   }
+}
+
+/**
+ * Get current notification permission status
+ */
+export async function getNotificationPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
+  const { status } = await Notifications.getPermissionsAsync()
+  return status
+}
+
+/**
+ * Open system notification settings for the app
+ */
+export async function openSystemNotificationSettings(): Promise<void> {
+  if (Platform.OS === 'ios') {
+    await Linking.openURL('app-settings:')
+  } else {
+    await Linking.openSettings()
+  }
+}
+
+/**
+ * Request notification permission (shows OS prompt)
+ */
+export async function requestNotificationPermission(): Promise<boolean> {
+  const { status } = await Notifications.requestPermissionsAsync()
+  return status === 'granted'
 }
 
 // Export types for external use

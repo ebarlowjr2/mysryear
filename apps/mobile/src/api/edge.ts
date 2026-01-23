@@ -29,6 +29,21 @@ export async function cancelLinkRequest(linkId: string): Promise<CancelLinkReque
   return callEdge<CancelLinkRequestResponse>('cancel-link-request', { linkId })
 }
 
+// Response type for respond-link-request
+export interface RespondLinkRequestResponse {
+  success: boolean
+  message: string
+  status: 'accepted' | 'declined'
+}
+
+// Respond to a parent link request (accept or decline)
+export async function respondToLinkRequestEdge(
+  linkId: string,
+  action: 'accept' | 'decline'
+): Promise<RespondLinkRequestResponse> {
+  return callEdge<RespondLinkRequestResponse>('respond-link-request', { linkId, action })
+}
+
 // Sprint 9C: Parent Experience Edge Functions
 
 // Response type for parent-student-summary
