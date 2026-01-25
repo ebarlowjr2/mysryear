@@ -4,6 +4,7 @@
 
 :root {
   --radius: 14px;
+  color-scheme: light;
 }
 
 html, body {
