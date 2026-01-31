@@ -12,9 +12,8 @@
     "lint": "eslint",
     "scrape": "node -e \"const { ScholarshipScraper } = require('./dist/lib/scrapers/scholarship-scraper.js'); new ScholarshipScraper().scrapeAll().then(console.log).catch(console.error);\""
   },
-    "dependencies": {
-      "@mysryear/shared": "*",
-      "@supabase/auth-helpers-nextjs": "^0.10.0",
+        "dependencies": {
+        "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.7.0",
