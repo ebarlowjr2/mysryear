@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 
+interface WebFormData {
+  get(name: string): FormDataEntryValue | null;
+}
+
 export async function POST(req: Request) {
   try {
-    const form = await req.formData();
-    const file = form.get("file");
+    const formData = await req.formData() as unknown as WebFormData;
+    const file = formData.get("file");
     
     if (!file || typeof file === "string") {
       return NextResponse.json({ error: "No file received" }, { status: 400 });

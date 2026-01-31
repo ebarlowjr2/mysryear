@@ -104,25 +104,18 @@ export default function ParentDashboard() {
         return
       }
 
-      type LinkWithProfile = {
-        id: string
-        student_user_id: string
-        status: string
-        profiles: {
-          full_name: string | null
-          first_name: string | null
-          last_name: string | null
-        } | null
-      }
-
-      const students: LinkedStudent[] = (links || []).map((link: LinkWithProfile) => ({
-        id: link.id,
-        student_user_id: link.student_user_id,
-        student_name: link.profiles?.full_name || 
-          `${link.profiles?.first_name || ''} ${link.profiles?.last_name || ''}`.trim() || 
-          'Student',
-        status: link.status
-      }))
+      const students: LinkedStudent[] = (links || []).map((link) => {
+        // profiles can be an object or array depending on Supabase query result
+        const profile = Array.isArray(link.profiles) ? link.profiles[0] : link.profiles
+        return {
+          id: link.id,
+          student_user_id: link.student_user_id,
+          student_name: profile?.full_name || 
+            `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 
+            'Student',
+          status: link.status
+        }
+      })
 
       setLinkedStudents(students)
       
