@@ -207,3 +207,133 @@ export type SchoolMembership = {
   role: 'student' | 'teacher'
   joined_at: string
 }
+
+// ============ OPPORTUNITY TYPES ============
+
+export type OpportunityType = 'internship' | 'apprenticeship' | 'job_shadow' | 'volunteer' | 'workshop' | 'other'
+
+export type Opportunity = {
+  id: string
+  business_user_id: string
+  title: string
+  description: string | null
+  opportunity_type: OpportunityType
+  location: string | null
+  is_remote: boolean
+  deadline: string | null
+  spots_available: number | null
+  requirements: string | null
+  contact_email: string | null
+  external_url: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  // Joined fields
+  business_name?: string
+  business_state?: string
+}
+
+export type CreateOpportunityInput = {
+  title: string
+  description?: string | null
+  opportunity_type?: OpportunityType
+  location?: string | null
+  is_remote?: boolean
+  deadline?: string | null
+  spots_available?: number | null
+  requirements?: string | null
+  contact_email?: string | null
+  external_url?: string | null
+}
+
+export type UpdateOpportunityInput = Partial<Omit<Opportunity, 'id' | 'business_user_id' | 'created_at' | 'updated_at' | 'business_name' | 'business_state'>>
+
+// ============ JOB TYPES ============
+
+export type JobType = 'full_time' | 'part_time' | 'internship' | 'contract' | 'seasonal'
+export type ExperienceLevel = 'entry' | 'mid' | 'senior' | 'any'
+
+export type Job = {
+  id: string
+  recruiter_user_id: string
+  title: string
+  company_name: string
+  description: string | null
+  job_type: JobType
+  experience_level: ExperienceLevel
+  location: string | null
+  is_remote: boolean
+  salary_min: number | null
+  salary_max: number | null
+  deadline: string | null
+  requirements: string | null
+  contact_email: string | null
+  external_url: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type CreateJobInput = {
+  title: string
+  company_name: string
+  description?: string | null
+  job_type?: JobType
+  experience_level?: ExperienceLevel
+  location?: string | null
+  is_remote?: boolean
+  salary_min?: number | null
+  salary_max?: number | null
+  deadline?: string | null
+  requirements?: string | null
+  contact_email?: string | null
+  external_url?: string | null
+}
+
+export type UpdateJobInput = Partial<Omit<Job, 'id' | 'recruiter_user_id' | 'created_at' | 'updated_at'>>
+
+// ============ MENTOR TYPES ============
+
+export type MentorProfile = {
+  id: string
+  user_id: string
+  headline: string
+  bio: string | null
+  career_paths: string[] | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  // Joined fields
+  full_name?: string
+  org_name?: string
+}
+
+export type CreateMentorProfileInput = {
+  headline: string
+  bio?: string | null
+  career_paths?: string[] | null
+}
+
+export type UpdateMentorProfileInput = Partial<Omit<MentorProfile, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'full_name' | 'org_name'>>
+
+// ============ MENTOR AVAILABILITY TYPES ============
+
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
+
+export type MentorAvailability = {
+  id: string
+  mentor_user_id: string
+  day_of_week: DayOfWeek
+  start_time: string
+  end_time: string
+  is_active: boolean
+  created_at: string
+}
+
+export type CreateAvailabilityInput = {
+  day_of_week: DayOfWeek
+  start_time: string
+  end_time: string
+}
+
+export type UpdateAvailabilityInput = Partial<Omit<MentorAvailability, 'id' | 'mentor_user_id' | 'created_at'>>

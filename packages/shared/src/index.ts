@@ -14,6 +14,9 @@ export * from './data/profiles'
 export * from './data/dashboard'
 export * from './data/parent'
 export * from './data/schools'
+export * from './data/opportunities'
+export * from './data/jobs'
+export * from './data/mentors'
 
 // Content
 export * from './content/careerPaths'

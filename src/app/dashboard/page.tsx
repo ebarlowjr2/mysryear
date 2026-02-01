@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GraduationCap, CalendarClock, ClipboardList, FileText, User } from 'lucide-react'
+import { GraduationCap, CalendarClock, ClipboardList, FileText, User, Briefcase, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import StatTile from '@/components/StatTile'
 
@@ -245,7 +245,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Link href="/applications" className="card p-6 hover:shadow-lg transition">
           <ClipboardList className="w-8 h-8 text-brand-600 mb-4" />
           <h3 className="text-lg font-bold mb-2">Applications</h3>
@@ -268,6 +268,27 @@ export default function Dashboard() {
           <FileText className="w-8 h-8 text-brand-600 mb-4" />
           <h3 className="text-lg font-bold mb-2">Resources</h3>
           <p className="text-slate-600 text-sm">Essays, resumes, and guides</p>
+        </Link>
+      </div>
+
+      <h2 className="text-2xl font-bold mb-4">Explore</h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Link href="/opportunities" className="card p-6 hover:shadow-lg transition">
+          <Briefcase className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Opportunities</h3>
+          <p className="text-slate-600 text-sm">Internships, apprenticeships, and more</p>
+        </Link>
+        
+        <Link href="/jobs" className="card p-6 hover:shadow-lg transition">
+          <ClipboardList className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Job Board</h3>
+          <p className="text-slate-600 text-sm">Find jobs and career opportunities</p>
+        </Link>
+        
+        <Link href="/mentors" className="card p-6 hover:shadow-lg transition">
+          <Users className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Mentors</h3>
+          <p className="text-slate-600 text-sm">Connect with professionals</p>
         </Link>
       </div>
     </div>
