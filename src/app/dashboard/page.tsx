@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { GraduationCap, CalendarClock, ClipboardList, FileText, User, Briefcase, Users } from 'lucide-react'
+import { GraduationCap, CalendarClock, ClipboardList, FileText, User, Briefcase, Users, Bell } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { getUnreadCount } from '@mysryear/shared'
 import StatTile from '@/components/StatTile'
 
 type DashboardMetrics = {
@@ -39,9 +40,10 @@ export default function Dashboard() {
     completedTasks: 0,
     applicationsCount: 0
   })
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([])
+    const [upcomingDeadlines, setUpcomingDeadlines] = useState<UpcomingDeadline[]>([])
+    const [unreadNotifications, setUnreadNotifications] = useState(0)
 
-  const supabase = createClient()
+    const supabase = createClient()
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -143,11 +145,15 @@ export default function Dashboard() {
           }
         })
 
-        // Sort by date and take top 5
-        deadlines.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-        setUpcomingDeadlines(deadlines.slice(0, 5))
+                // Sort by date and take top 5
+                deadlines.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                setUpcomingDeadlines(deadlines.slice(0, 5))
 
-        setLoading(false)
+                // Load unread notifications count
+                const unreadCount = await getUnreadCount(supabase)
+                setUnreadNotifications(unreadCount)
+
+                setLoading(false)
       } catch (err) {
         console.error('Error loading dashboard:', err)
         setLoading(false)
@@ -179,10 +185,20 @@ export default function Dashboard() {
             {profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]}` : 'Your senior year, organized and stress-less'}
           </p>
         </div>
-        <Link href="/profile" className="flex items-center gap-2 text-slate-600 hover:text-brand-600">
-          <User className="w-5 h-5" />
-          <span>Profile</span>
-        </Link>
+                <div className="flex items-center gap-4">
+                  <Link href="/notifications" className="relative text-slate-600 hover:text-brand-600">
+                    <Bell className="w-5 h-5" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                      </span>
+                    )}
+                  </Link>
+                  <Link href="/profile" className="flex items-center gap-2 text-slate-600 hover:text-brand-600">
+                    <User className="w-5 h-5" />
+                    <span>Profile</span>
+                  </Link>
+                </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

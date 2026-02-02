@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Calendar, ExternalLink, Building2, Mail, DollarSign } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, ExternalLink, Building2, Mail, DollarSign, Bookmark } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { isJobTracked, trackJob, untrackJob } from '@mysryear/shared'
 import type { Job, JobType, ExperienceLevel } from '@mysryear/shared'
 
 const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -25,10 +26,12 @@ const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
 export default function JobDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const [loading, setLoading] = useState(true)
-  const [job, setJob] = useState<Job | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [job, setJob] = useState<Job | null>(null)
+    const [isTracked, setIsTracked] = useState(false)
+    const [trackingLoading, setTrackingLoading] = useState(false)
 
-  const supabase = createClient()
+    const supabase = createClient()
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,8 +64,12 @@ export default function JobDetailPage() {
           return
         }
 
-        setJob(jobData as Job)
-        setLoading(false)
+                setJob(jobData as Job)
+
+                const tracked = await isJobTracked(supabase, jobData.id)
+                setIsTracked(tracked)
+
+                setLoading(false)
       } catch (err) {
         console.error('Error loading job:', err)
         router.push('/jobs')
@@ -77,13 +84,26 @@ export default function JobDetailPage() {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   }
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return null
-    if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`
-    if (min) return `From $${min.toLocaleString()}`
-    if (max) return `Up to $${max.toLocaleString()}`
-    return null
-  }
+    const formatSalary = (min: number | null, max: number | null) => {
+      if (!min && !max) return null
+      if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`
+      if (min) return `From $${min.toLocaleString()}`
+      if (max) return `Up to $${max.toLocaleString()}`
+      return null
+    }
+
+    const handleToggleTracking = async () => {
+      if (!job) return
+      setTrackingLoading(true)
+      if (isTracked) {
+        const success = await untrackJob(supabase, job.id)
+        if (success) setIsTracked(false)
+      } else {
+        const success = await trackJob(supabase, job.id)
+        if (success) setIsTracked(true)
+      }
+      setTrackingLoading(false)
+    }
 
   if (loading || !job) {
     return (
@@ -101,23 +121,35 @@ export default function JobDetailPage() {
           Back to Jobs
         </Link>
 
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex gap-2 mb-2">
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700">
-                {JOB_TYPE_LABELS[job.job_type]}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                {EXPERIENCE_LABELS[job.experience_level]}
-              </span>
-            </div>
-            <h1 className="text-3xl font-black tracking-tight mt-2">{job.title}</h1>
-            <div className="flex items-center gap-2 text-slate-600 mt-2">
-              <Building2 className="w-5 h-5" />
-              <span className="text-lg">{job.company_name}</span>
-            </div>
-          </div>
-        </div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex gap-2 mb-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700">
+                        {JOB_TYPE_LABELS[job.job_type]}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                        {EXPERIENCE_LABELS[job.experience_level]}
+                      </span>
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight mt-2">{job.title}</h1>
+                    <div className="flex items-center gap-2 text-slate-600 mt-2">
+                      <Building2 className="w-5 h-5" />
+                      <span className="text-lg">{job.company_name}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleToggleTracking}
+                    disabled={trackingLoading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                      isTracked
+                        ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
+                        : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    } disabled:opacity-50`}
+                  >
+                    <Bookmark className={`w-4 h-4 ${isTracked ? 'fill-current' : ''}`} />
+                    {trackingLoading ? 'Saving...' : isTracked ? 'Saved' : 'Save'}
+                  </button>
+                </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">

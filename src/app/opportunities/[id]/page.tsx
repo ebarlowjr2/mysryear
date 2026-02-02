@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Calendar, ExternalLink, Building2, Mail, Users } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, ExternalLink, Building2, Mail, Users, Bookmark } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { isOpportunityTracked, trackOpportunity, untrackOpportunity } from '@mysryear/shared'
 import type { Opportunity, OpportunityType } from '@mysryear/shared'
 
 const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
@@ -19,10 +20,12 @@ const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
 export default function OpportunityDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const [loading, setLoading] = useState(true)
-  const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
+    const [isTracked, setIsTracked] = useState(false)
+    const [trackingLoading, setTrackingLoading] = useState(false)
 
-  const supabase = createClient()
+    const supabase = createClient()
 
   useEffect(() => {
     const loadData = async () => {
@@ -58,14 +61,17 @@ export default function OpportunityDetailPage() {
           return
         }
 
-        setOpportunity({
-          ...opp,
-          business_name: opp.profiles?.org_name || 'Unknown Business',
-          business_state: opp.profiles?.org_state || null,
-          profiles: undefined
-        } as Opportunity)
+                setOpportunity({
+                  ...opp,
+                  business_name: opp.profiles?.org_name || 'Unknown Business',
+                  business_state: opp.profiles?.org_state || null,
+                  profiles: undefined
+                } as Opportunity)
 
-        setLoading(false)
+                const tracked = await isOpportunityTracked(supabase, opp.id)
+                setIsTracked(tracked)
+
+                setLoading(false)
       } catch (err) {
         console.error('Error loading opportunity:', err)
         router.push('/opportunities')
@@ -75,10 +81,23 @@ export default function OpportunityDetailPage() {
     loadData()
   }, [router, supabase, params.id])
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return null
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  }
+    const formatDate = (dateStr: string | null) => {
+      if (!dateStr) return null
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    }
+
+    const handleToggleTracking = async () => {
+      if (!opportunity) return
+      setTrackingLoading(true)
+      if (isTracked) {
+        const success = await untrackOpportunity(supabase, opportunity.id)
+        if (success) setIsTracked(false)
+      } else {
+        const success = await trackOpportunity(supabase, opportunity.id)
+        if (success) setIsTracked(true)
+      }
+      setTrackingLoading(false)
+    }
 
   if (loading || !opportunity) {
     return (
@@ -96,21 +115,33 @@ export default function OpportunityDetailPage() {
           Back to Opportunities
         </Link>
 
-        <div className="flex justify-between items-start">
-          <div>
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700 mb-2 inline-block">
-              {OPPORTUNITY_TYPE_LABELS[opportunity.opportunity_type]}
-            </span>
-            <h1 className="text-3xl font-black tracking-tight mt-2">{opportunity.title}</h1>
-            <div className="flex items-center gap-2 text-slate-600 mt-2">
-              <Building2 className="w-5 h-5" />
-              <span className="text-lg">{opportunity.business_name}</span>
-              {opportunity.business_state && (
-                <span className="text-slate-400">• {opportunity.business_state}</span>
-              )}
-            </div>
-          </div>
-        </div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700 mb-2 inline-block">
+                      {OPPORTUNITY_TYPE_LABELS[opportunity.opportunity_type]}
+                    </span>
+                    <h1 className="text-3xl font-black tracking-tight mt-2">{opportunity.title}</h1>
+                    <div className="flex items-center gap-2 text-slate-600 mt-2">
+                      <Building2 className="w-5 h-5" />
+                      <span className="text-lg">{opportunity.business_name}</span>
+                      {opportunity.business_state && (
+                        <span className="text-slate-400">• {opportunity.business_state}</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleToggleTracking}
+                    disabled={trackingLoading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                      isTracked
+                        ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
+                        : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    } disabled:opacity-50`}
+                  >
+                    <Bookmark className={`w-4 h-4 ${isTracked ? 'fill-current' : ''}`} />
+                    {trackingLoading ? 'Saving...' : isTracked ? 'Saved' : 'Save'}
+                  </button>
+                </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">

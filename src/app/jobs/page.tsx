@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Briefcase, MapPin, Calendar, ExternalLink, ArrowLeft, DollarSign, Building2 } from 'lucide-react'
+import { Briefcase, MapPin, Calendar, ExternalLink, ArrowLeft, DollarSign, Building2, Bookmark } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { listTrackedJobs } from '@mysryear/shared'
 import type { Job, JobType, ExperienceLevel } from '@mysryear/shared'
 
 const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -24,11 +25,13 @@ const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
 
 export default function JobsPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [jobs, setJobs] = useState<Job[]>([])
+    const [loading, setLoading] = useState(true)
+    const [jobs, setJobs] = useState<Job[]>([])
     const [filterType, setFilterType] = useState<JobType | 'all'>('all')
+    const [viewMode, setViewMode] = useState<'all' | 'saved'>('all')
+    const [trackedJobIds, setTrackedJobIds] = useState<Set<string>>(new Set())
 
-  const supabase = createClient()
+    const supabase = createClient()
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,8 +64,12 @@ export default function JobsPage() {
           .eq('is_active', true)
           .order('created_at', { ascending: false })
 
-        setJobs(jobsData as Job[] || [])
-        setLoading(false)
+                setJobs(jobsData as Job[] || [])
+
+                const trackedIds = await listTrackedJobs(supabase)
+                setTrackedJobIds(new Set(trackedIds))
+
+                setLoading(false)
       } catch (err) {
         console.error('Error loading jobs:', err)
         setLoading(false)
@@ -72,9 +79,13 @@ export default function JobsPage() {
     loadData()
   }, [router, supabase])
 
-  const filteredJobs = filterType === 'all'
-    ? jobs
-    : jobs.filter(j => j.job_type === filterType)
+    const baseJobs = viewMode === 'saved'
+      ? jobs.filter(j => trackedJobIds.has(j.id))
+      : jobs
+
+    const filteredJobs = filterType === 'all'
+      ? baseJobs
+      : baseJobs.filter(j => j.job_type === filterType)
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null
@@ -109,33 +120,57 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              filterType === 'all'
-                ? 'bg-brand-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            All
-          </button>
-          {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filterType === type
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              {JOB_TYPE_LABELS[type]}
-            </button>
-          ))}
-        </div>
-      </div>
+            <div className="mb-6 space-y-4">
+              <div className="flex gap-2 border-b border-slate-200">
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`px-4 py-2 font-medium transition border-b-2 -mb-px ${
+                    viewMode === 'all'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All Jobs
+                </button>
+                <button
+                  onClick={() => setViewMode('saved')}
+                  className={`px-4 py-2 font-medium transition border-b-2 -mb-px flex items-center gap-2 ${
+                    viewMode === 'saved'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Saved ({trackedJobIds.size})
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    filterType === 'all'
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  All Types
+                </button>
+                {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setFilterType(type)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      filterType === type
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {JOB_TYPE_LABELS[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
 
       {filteredJobs.length === 0 ? (
         <div className="card p-12 text-center">

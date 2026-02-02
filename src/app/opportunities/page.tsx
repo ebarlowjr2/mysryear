@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Briefcase, MapPin, Calendar, ExternalLink, ArrowLeft, Building2 } from 'lucide-react'
+import { Briefcase, MapPin, Calendar, ExternalLink, ArrowLeft, Building2, Bookmark } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { listTrackedOpportunities } from '@mysryear/shared'
 import type { Opportunity, OpportunityType } from '@mysryear/shared'
 
 const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
@@ -18,11 +19,13 @@ const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
 
 export default function OpportunitiesPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+    const [loading, setLoading] = useState(true)
+    const [opportunities, setOpportunities] = useState<Opportunity[]>([])
     const [filterType, setFilterType] = useState<OpportunityType | 'all'>('all')
+    const [viewMode, setViewMode] = useState<'all' | 'saved'>('all')
+    const [trackedOppIds, setTrackedOppIds] = useState<Set<string>>(new Set())
 
-  const supabase = createClient()
+    const supabase = createClient()
 
   useEffect(() => {
     const loadData = async () => {
@@ -65,8 +68,12 @@ export default function OpportunitiesPage() {
           profiles: undefined
         })) as Opportunity[]
 
-        setOpportunities(mappedOpps)
-        setLoading(false)
+                setOpportunities(mappedOpps)
+
+                const trackedIds = await listTrackedOpportunities(supabase)
+                setTrackedOppIds(new Set(trackedIds))
+
+                setLoading(false)
       } catch (err) {
         console.error('Error loading opportunities:', err)
         setLoading(false)
@@ -76,9 +83,13 @@ export default function OpportunitiesPage() {
     loadData()
   }, [router, supabase])
 
-  const filteredOpportunities = filterType === 'all'
-    ? opportunities
-    : opportunities.filter(o => o.opportunity_type === filterType)
+    const baseOpportunities = viewMode === 'saved'
+      ? opportunities.filter(o => trackedOppIds.has(o.id))
+      : opportunities
+
+    const filteredOpportunities = filterType === 'all'
+      ? baseOpportunities
+      : baseOpportunities.filter(o => o.opportunity_type === filterType)
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null
@@ -105,33 +116,57 @@ export default function OpportunitiesPage() {
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              filterType === 'all'
-                ? 'bg-brand-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            All
-          </button>
-          {(Object.keys(OPPORTUNITY_TYPE_LABELS) as OpportunityType[]).map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filterType === type
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              {OPPORTUNITY_TYPE_LABELS[type]}
-            </button>
-          ))}
-        </div>
-      </div>
+            <div className="mb-6 space-y-4">
+              <div className="flex gap-2 border-b border-slate-200">
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`px-4 py-2 font-medium transition border-b-2 -mb-px ${
+                    viewMode === 'all'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All Opportunities
+                </button>
+                <button
+                  onClick={() => setViewMode('saved')}
+                  className={`px-4 py-2 font-medium transition border-b-2 -mb-px flex items-center gap-2 ${
+                    viewMode === 'saved'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Saved ({trackedOppIds.size})
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    filterType === 'all'
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  All Types
+                </button>
+                {(Object.keys(OPPORTUNITY_TYPE_LABELS) as OpportunityType[]).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setFilterType(type)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      filterType === type
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {OPPORTUNITY_TYPE_LABELS[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
 
       {filteredOpportunities.length === 0 ? (
         <div className="card p-12 text-center">
