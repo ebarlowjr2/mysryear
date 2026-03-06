@@ -1,20 +1,34 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+function requireEnv(name: string) {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`)
+  }
+  return value
+}
+
+export function getSupabaseEnv() {
+  return {
+    url: requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
+    anonKey: requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  }
+}
 
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  const { url, anonKey } = getSupabaseEnv()
+  return createBrowserClient(url, anonKey)
 }
 
 export async function createServerSupabaseClient() {
   const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
-  
+
+  const { url, anonKey } = getSupabaseEnv()
   return createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {

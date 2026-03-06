@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from './supabase'
+import type { UserRole } from './roles'
 
 export type Session = { 
   user: { 
@@ -6,7 +7,7 @@ export type Session = {
     name?: string | null
     email?: string | null
     image?: string | null
-    role?: 'student' | 'parent' | 'counselor'
+    role?: UserRole
   } 
 }
 
@@ -31,7 +32,7 @@ export async function getSession(): Promise<Session | null> {
       email: session.user.email || null,
       name: session.user.user_metadata?.name || null,
       image: session.user.user_metadata?.avatar_url || null,
-      role: userData?.role || 'student'
+      role: (userData?.role as UserRole) || 'student'
     }
   }
 }
