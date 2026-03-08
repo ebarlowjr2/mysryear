@@ -26,22 +26,20 @@ export default function Signup() {
         options: {
           data: {
             role: role,
-          }
-        }
+          },
+        },
       })
 
       if (error) {
         setError(error.message)
       } else if (data.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: data.user.email!,
-              role: role,
-            }
-          ])
+        const { error: profileError } = await supabase.from('users').insert([
+          {
+            id: data.user.id,
+            email: data.user.email!,
+            role: role,
+          },
+        ])
 
         if (profileError) {
           setError('Failed to create user profile')
@@ -60,7 +58,7 @@ export default function Signup() {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-900/50 to-slate-900"></div>
-      
+
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-32 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-0 -left-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -68,12 +66,8 @@ export default function Signup() {
 
       <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold gradient-text">
-            Create your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Join My Senior Year platform
-          </p>
+          <h2 className="mt-6 text-3xl font-extrabold gradient-text">Create your account</h2>
+          <p className="mt-2 text-sm text-gray-400">Join My Senior Year platform</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSignup}>
           <div className="space-y-4">
@@ -128,11 +122,15 @@ export default function Signup() {
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-900/20 border border-red-500/20">{error}</div>
+            <div className="text-red-400 text-sm text-center p-3 rounded-lg bg-red-900/20 border border-red-500/20">
+              {error}
+            </div>
           )}
 
           {message && (
-            <div className="text-green-400 text-sm text-center p-3 rounded-lg bg-green-900/20 border border-green-500/20">{message}</div>
+            <div className="text-green-400 text-sm text-center p-3 rounded-lg bg-green-900/20 border border-green-500/20">
+              {message}
+            </div>
           )}
 
           <div>

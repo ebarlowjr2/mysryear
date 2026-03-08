@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+apps/*/node_modules
+apps/*/.next
+apps/*/out
+supabase/migrations/*.sql
+supabase/.temp

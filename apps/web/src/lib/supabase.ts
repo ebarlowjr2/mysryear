@@ -26,25 +26,18 @@ export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
 
   const { url, anonKey } = getSupabaseEnv()
-  return createServerClient(
-    url,
-    anonKey,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-          }
-        },
+  return createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+        } catch {}
+      },
+    },
+  })
 }
 
 export type Database = {
@@ -238,7 +231,14 @@ export type Database = {
           id: string
           user_id: string
           state: string | null
-          path: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          path:
+            | 'College'
+            | 'Trade/Apprenticeship'
+            | 'Military'
+            | 'Gap Year'
+            | 'Workforce'
+            | 'Entrepreneurship'
+            | null
           testing: 'SAT' | 'ACT' | 'Both' | 'None' | null
           early_action: boolean
           created_at: string
@@ -248,7 +248,14 @@ export type Database = {
           id?: string
           user_id: string
           state?: string | null
-          path?: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          path?:
+            | 'College'
+            | 'Trade/Apprenticeship'
+            | 'Military'
+            | 'Gap Year'
+            | 'Workforce'
+            | 'Entrepreneurship'
+            | null
           testing?: 'SAT' | 'ACT' | 'Both' | 'None' | null
           early_action?: boolean
           created_at?: string
@@ -258,7 +265,14 @@ export type Database = {
           id?: string
           user_id?: string
           state?: string | null
-          path?: 'College' | 'Trade/Apprenticeship' | 'Military' | 'Gap Year' | 'Workforce' | 'Entrepreneurship' | null
+          path?:
+            | 'College'
+            | 'Trade/Apprenticeship'
+            | 'Military'
+            | 'Gap Year'
+            | 'Workforce'
+            | 'Entrepreneurship'
+            | null
           testing?: 'SAT' | 'ACT' | 'Both' | 'None' | null
           early_action?: boolean
           created_at?: string
@@ -270,7 +284,17 @@ export type Database = {
           id: string
           user_id: string
           title: string
-          category: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          category:
+            | 'Applications'
+            | 'Essays'
+            | 'Testing'
+            | 'Scholarships'
+            | 'Financial Aid'
+            | 'Campus Visits'
+            | 'Housing'
+            | 'Enrollment'
+            | 'Documents'
+            | 'Admin/Other'
           status: 'todo' | 'doing' | 'done'
           month: string
           due_date: string | null
@@ -283,7 +307,17 @@ export type Database = {
           id?: string
           user_id: string
           title: string
-          category: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          category:
+            | 'Applications'
+            | 'Essays'
+            | 'Testing'
+            | 'Scholarships'
+            | 'Financial Aid'
+            | 'Campus Visits'
+            | 'Housing'
+            | 'Enrollment'
+            | 'Documents'
+            | 'Admin/Other'
           status?: 'todo' | 'doing' | 'done'
           month: string
           due_date?: string | null
@@ -296,7 +330,17 @@ export type Database = {
           id?: string
           user_id?: string
           title?: string
-          category?: 'Applications' | 'Essays' | 'Testing' | 'Scholarships' | 'Financial Aid' | 'Campus Visits' | 'Housing' | 'Enrollment' | 'Documents' | 'Admin/Other'
+          category?:
+            | 'Applications'
+            | 'Essays'
+            | 'Testing'
+            | 'Scholarships'
+            | 'Financial Aid'
+            | 'Campus Visits'
+            | 'Housing'
+            | 'Enrollment'
+            | 'Documents'
+            | 'Admin/Other'
           status?: 'todo' | 'doing' | 'done'
           month?: string
           due_date?: string | null

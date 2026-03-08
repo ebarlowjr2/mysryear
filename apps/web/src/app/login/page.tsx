@@ -106,19 +106,17 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-black text-slate-900">
-            Welcome to My Senior Year
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Sign in to manage your graduation journey
-          </p>
+          <h2 className="mt-6 text-3xl font-black text-slate-900">Welcome to My Senior Year</h2>
+          <p className="mt-2 text-sm text-slate-600">Sign in to manage your graduation journey</p>
         </div>
-        
-        <Suspense fallback={
-          <div className="card p-8">
-            <div className="text-center">Loading...</div>
-          </div>
-        }>
+
+        <Suspense
+          fallback={
+            <div className="card p-8">
+              <div className="text-center">Loading...</div>
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </div>

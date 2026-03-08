@@ -1,6 +1,16 @@
-import React from "react";
+import React from 'react'
 
-export default function Section({ id, title, subtitle, children }:{ id?: string; title: string; subtitle?: string; children: React.ReactNode; }) {
+export default function Section({
+  id,
+  title,
+  subtitle,
+  children,
+}: {
+  id?: string
+  title: string
+  subtitle?: string
+  children: React.ReactNode
+}) {
   return (
     <section id={id} className="container-prose py-16">
       <div className="max-w-3xl mb-8">
@@ -9,5 +19,5 @@ export default function Section({ id, title, subtitle, children }:{ id?: string;
       </div>
       {children}
     </section>
-  );
+  )
 }
