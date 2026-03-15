@@ -1,6 +1,6 @@
 # Authentication Setup Guide
 
-This document explains how to configure Supabase authentication for the MySRYear application.
+This document explains how to configure Supabase authentication for the MySRYear web app.
 
 ## Prerequisites
 
@@ -15,11 +15,15 @@ This document explains how to configure Supabase authentication for the MySRYear
 2. Create a new project
 3. Wait for the project to be provisioned
 
-### 2. Run Database Schema
+### 2. Apply Database Schema
 
-1. In your Supabase project dashboard, go to the SQL Editor
-2. Copy the contents of `supabase-schema.sql` from this repository
-3. Run the SQL script to create all necessary tables and Row Level Security policies
+This repo is moving to migrations-first.
+
+- Migrations live in `supabase/migrations/`
+- A legacy schema snapshot is in `docs/legacy/supabase-schema.sql` (reference only)
+
+If you have an existing SQL migration file (Sprint 3), place it in
+`supabase/migrations/<timestamp>_sprint3_notifications_tracking.sql` and apply it.
 
 ### 3. Configure Environment Variables
 
@@ -32,11 +36,7 @@ This document explains how to configure Supabase authentication for the MySRYear
    - Go to Project Settings > API in your Supabase dashboard
    - Copy the Project URL and anon/public key
 
-3. Update `.env.local` with your credentials:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   ```
+3. Update `.env.local` with your credentials.
 
 ### 4. Configure Supabase Authentication
 
@@ -44,8 +44,8 @@ This document explains how to configure Supabase authentication for the MySRYear
 2. Enable Email provider (enabled by default)
 3. Configure email templates if desired
 4. Set up redirect URLs:
-   - Add your local development URL: `http://localhost:3000/**`
-   - Add your production URL when deploying
+   - `http://localhost:3000/**`
+   - Your production URL when deploying
 
 ### 5. Test Authentication
 
@@ -63,18 +63,22 @@ This document explains how to configure Supabase authentication for the MySRYear
 
 ### User Roles
 
-The application supports three user roles:
-- **Student**: Can manage their own academic journey, applications, and tasks
-- **Parent**: Can create journeys for students and view/verify their data
-- **Counselor**: Read-only access to all student data
+The application currently supports three user roles:
+- **student**
+- **parent**
+- **counselor**
+
+> Note: these roles are wired into the current tables and RLS policies.
 
 ### Protected Routes
 
-The following routes require authentication:
-- `/dashboard` - Main dashboard
-- `/open-dashboard` - Enhanced dashboard with advanced features
-- `/planner` - Senior year planner and task management
-- `/applications` - Application tracking
+The middleware currently protects:
+- `/dashboard`
+- `/open-dashboard`
+- `/planner`
+- `/applications`
+
+If you expand protected routes later, update middleware and this doc together.
 
 ### Row Level Security (RLS)
 
@@ -88,6 +92,7 @@ All data is protected by Supabase Row Level Security policies:
 
 Each authenticated user's data is stored in Supabase:
 
+- **users**: Auth profile + role
 - **user_profiles**: User preferences (state, path, testing plan)
 - **user_tasks**: Senior year tasks and deadlines
 - **user_documents**: Document completion tracking
@@ -111,7 +116,7 @@ Each authenticated user's data is stored in Supabase:
 - Check Supabase logs for email delivery errors
 
 ### RLS policy errors
-- Ensure you ran the complete `supabase-schema.sql` script
+- Ensure you ran the complete migration(s)
 - Check that RLS is enabled on all tables
 - Verify the user has the correct role assigned
 
@@ -122,16 +127,7 @@ Each authenticated user's data is stored in Supabase:
 
 ## Development Notes
 
-- The application uses Supabase SSR for proper server-side rendering support
+- The application uses Supabase SSR for server-side rendering support
 - Authentication state is managed through Supabase Auth
 - Middleware protects routes and handles redirects
 - The Navbar component shows/hides login/logout buttons based on auth state
-
-## Security Best Practices
-
-1. Never commit `.env.local` to version control
-2. Use different Supabase projects for development and production
-3. Regularly rotate your API keys
-4. Review RLS policies to ensure proper data access control
-5. Enable email verification for all users
-6. Consider enabling 2FA for admin accounts

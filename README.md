@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MySRYear
+
+MySRYear helps students and parents begin preparing for college as early as grade 9. This repo is now
+structured as a monorepo to support web + mobile + shared packages over time.
+
+## Repo Structure
+
+- `apps/web` — Next.js web app
+- `apps/mobile` — intentionally not tracked yet (will be added when the real mobile source is confirmed)
+- `packages/*` — shared packages (planned)
+- `supabase/` — Supabase config + migrations
+- `docs/` — handoff and legacy references
+
+## Requirements
+
+- Node.js 20+ recommended
+- npm 9+ recommended
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install --workspaces
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Common Scripts (from repo root)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — start web app
+- `npm run build` — build web app
+- `npm run lint` — lint web app
+- `npm run typecheck` — TypeScript typecheck
+- `npm run test` — unit tests (Vitest)
+- `npm run test:e2e` — Playwright smoke tests
+- `npm run verify` — lint + typecheck + tests + build
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Copy `.env.local.example` to `.env.local` and fill values:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cp .env.local.example .env.local
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Minimum required for local dev:
 
-## Deploy on Vercel
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `CRON_SECRET`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Optional but used by routes:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `NEXT_PUBLIC_BASE_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+## Supabase
+
+- Supabase config lives in `supabase/config.toml`
+- Migrations belong in `supabase/migrations/`
+- Legacy schema snapshot is in `docs/legacy/supabase-schema.sql`
+
+## CI
+
+GitHub Actions runs:
+- install (`npm ci`)
+- lint
+- typecheck
+- unit tests
+- build
+- Playwright smoke test
+
+CI uses placeholder env vars so the build can run in isolation.
+
+## Deployment Notes
+
+If deploying with Vercel, set the **Root Directory** to `apps/web` after merge.
+
+## Support
+
+See `AUTHENTICATION_SETUP.md` and `docs/HANDOFF_CHECKLIST.md` for handoff details.
