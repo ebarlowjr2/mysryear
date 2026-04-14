@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import ScholarshipFilters, { type Filters } from './ScholarshipFilters'
 import ScholarshipRow, { type Row } from './ScholarshipRow'
 
@@ -44,18 +44,22 @@ export default function ClientArea({ initialDiscover }: { initialDiscover: Row[]
     setTodo(todo.filter((x) => x.id !== r.id))
   }
 
-  const filterFn = (rows: Row[]) =>
-    rows.filter((r) => {
-      const q = filters.q.trim().toLowerCase()
-      const matchesQ = !q || [r.name, r.tags?.join(' ') || ''].join(' ').toLowerCase().includes(q)
-      const amtNum = parseInt((r.amount || '').replace(/[^0-9]/g, '')) || 0
-      const matchesAmt = filters.minAmount == null || amtNum >= (filters.minAmount || 0)
-      const matchesState =
-        !filters.state || (r.state || '').toUpperCase() === filters.state.toUpperCase()
-      const matchesDeadline =
-        !filters.deadlineBefore || normalizeDeadline(r.deadline) <= filters.deadlineBefore
-      return matchesQ && matchesAmt && matchesState && matchesDeadline
-    })
+  const filterFn = useCallback(
+    (rows: Row[]) =>
+      rows.filter((r) => {
+        const q = filters.q.trim().toLowerCase()
+        const matchesQ =
+          !q || [r.name, r.tags?.join(' ') || ''].join(' ').toLowerCase().includes(q)
+        const amtNum = parseInt((r.amount || '').replace(/[^0-9]/g, '')) || 0
+        const matchesAmt = filters.minAmount == null || amtNum >= (filters.minAmount || 0)
+        const matchesState =
+          !filters.state || (r.state || '').toUpperCase() === filters.state.toUpperCase()
+        const matchesDeadline =
+          !filters.deadlineBefore || normalizeDeadline(r.deadline) <= filters.deadlineBefore
+        return matchesQ && matchesAmt && matchesState && matchesDeadline
+      }),
+    [filters],
+  )
 
   const filteredDiscover = useMemo(() => filterFn(initialDiscover), [initialDiscover, filterFn])
   const filteredTodo = useMemo(() => filterFn(todo), [todo, filterFn])

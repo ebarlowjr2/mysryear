@@ -24,6 +24,13 @@ import {
 
 const MONTHS = ['Aug–Sep', 'Oct', 'Nov–Dec', 'Jan–Mar', 'Apr–May', 'Summer']
 
+const DEFAULT_PROFILE: Profile = {
+  state: '',
+  path: 'College',
+  testing: 'None',
+  earlyAction: true,
+}
+
 const CATS: Category[] = [
   'Applications',
   'Essays',
@@ -194,12 +201,7 @@ function download(filename: string, content: string, mime = 'text/plain') {
 }
 
 export default function PlannerPage() {
-  const [profile, setProfile] = useState<Profile>({
-    state: '',
-    path: 'College',
-    testing: 'None',
-    earlyAction: true,
-  })
+  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [tasks, setTasks] = useState<Task[]>([])
   const [docs, setDocs] = useState<DocKit>({
     idCard: false,
@@ -232,7 +234,7 @@ export default function PlannerPage() {
         if (savedTasks.length > 0) {
           setTasks(savedTasks)
         } else {
-          const defaultTasks = baseTasks(savedProfile || profile)
+          const defaultTasks = baseTasks(savedProfile || DEFAULT_PROFILE)
           setTasks(defaultTasks)
           await saveTasks(defaultTasks)
         }
