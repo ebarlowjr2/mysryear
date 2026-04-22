@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Logo from './Logo'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '../lib/utils'
-import { createClient } from '@/lib/supabase'
+import { createWebSupabaseClient } from '@mysryear/shared'
 
 const links = [
   { href: '/planner', label: 'Planner' },
@@ -19,7 +19,7 @@ export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createWebSupabaseClient()
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session)
@@ -35,7 +35,7 @@ export default function Navbar() {
   }, [])
 
   const handleLogout = async () => {
-    const supabase = createClient()
+    const supabase = createWebSupabaseClient()
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()

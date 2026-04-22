@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { ScrapedScholarship } from './scholarship-scraper'
+import { getSupabaseEnv } from '@mysryear/shared'
 
 export class ScholarshipDB {
-  private supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
-  )
+  private supabase = (() => {
+    const { url, anonKey } = getSupabaseEnv()
+    return createClient(url, anonKey)
+  })()
 
   async storeScrapedData(scholarships: ScrapedScholarship[]): Promise<void> {
     await this.supabase

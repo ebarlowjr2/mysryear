@@ -7,7 +7,7 @@ structured as a monorepo to support web + mobile + shared packages over time.
 
 - `apps/web` — Next.js web app
 - `apps/mobile` — intentionally not tracked yet (will be added when the real mobile source is confirmed)
-- `packages/*` — shared packages (planned)
+- `packages/shared` — shared types + Supabase helpers (source of truth)
 - `supabase/` — Supabase config + migrations
 - `docs/` — handoff and legacy references
 
@@ -60,6 +60,10 @@ Optional but used by routes:
 - Supabase config lives in `supabase/config.toml`
 - Migrations belong in `supabase/migrations/`
 - Legacy schema snapshot is in `docs/legacy/supabase-schema.sql`
+
+Canonical entry points:
+- Supabase env/client helpers: `packages/shared/src/supabase/*`
+- Server-side session/profile helper: `apps/web/src/lib/auth.ts`
 
 ## CI
 
