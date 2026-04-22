@@ -19,6 +19,10 @@
 - Legacy schema snapshot is in `docs/legacy/supabase-schema.sql` (reference only)
 - If you have the Sprint 3 SQL script, convert it into a timestamped migration
 
+Canonical code entry points:
+- Supabase env/client helpers: `packages/shared/src/supabase/*`
+- Session/profile helper: `apps/web/src/lib/auth.ts`
+
 ## CI & Verification
 
 Run locally:

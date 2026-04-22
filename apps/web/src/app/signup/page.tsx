@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createWebSupabaseClient } from '@mysryear/shared'
 import type { UserRole } from '@mysryear/shared'
 
 export default function Signup() {
@@ -19,7 +19,7 @@ export default function Signup() {
     setMessage('')
 
     try {
-      const supabase = createClient()
+      const supabase = createWebSupabaseClient()
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -33,19 +33,7 @@ export default function Signup() {
       if (error) {
         setError(error.message)
       } else if (data.user) {
-        const { error: profileError } = await supabase.from('users').insert([
-          {
-            id: data.user.id,
-            email: data.user.email!,
-            role: role,
-          },
-        ])
-
-        if (profileError) {
-          setError('Failed to create user profile')
-        } else {
-          setMessage('Check your email for the confirmation link!')
-        }
+        setMessage('Check your email for the confirmation link!')
       }
     } catch {
       setError('An unexpected error occurred')

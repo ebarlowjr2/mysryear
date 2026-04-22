@@ -1,27 +1,23 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getSupabaseEnv } from '@/lib/supabase'
+import { createWebSupabaseServerClient } from '@mysryear/shared'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  const { url, anonKey } = getSupabaseEnv()
-  const supabase = createServerClient(url, anonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        supabaseResponse = NextResponse.next({
-          request,
-        })
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
-        )
-      },
+  const supabase = createWebSupabaseServerClient({
+    getAll() {
+      return request.cookies.getAll()
+    },
+    setAll(cookiesToSet) {
+      cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+      supabaseResponse = NextResponse.next({
+        request,
+      })
+      cookiesToSet.forEach(({ name, value, options }) =>
+        supabaseResponse.cookies.set(name, value, options),
+      )
     },
   })
 
@@ -29,19 +25,22 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const protectedRoutes = ['/dashboard', '/open-dashboard', '/planner', '/applications']
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
-  )
+  const pathname = request.nextUrl.pathname
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api')
 
-  if (isProtectedRoute && !session) {
+  if (!isPublicRoute && !session) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/login'
-    redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
+    redirectUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (request.nextUrl.pathname === '/login' && session) {
+  if ((pathname === '/login' || pathname === '/signup') && session) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/dashboard'
     return NextResponse.redirect(redirectUrl)

@@ -1,5 +1,9 @@
-import { createServerSupabaseClient } from './supabase'
 import { getSession } from './auth'
+import { createNextServerSupabaseClient } from '@mysryear/shared'
+
+async function getSupabase() {
+  return createNextServerSupabaseClient()
+}
 
 export type Path =
   | 'College'
@@ -75,7 +79,7 @@ export async function saveProfile(profile: Profile): Promise<void> {
   const session = await getSession()
   if (!session?.user?.id) throw new Error('Not authenticated')
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { error } = await supabase.from('user_profiles').upsert({
     user_id: session.user.id,
     state: profile.state,
@@ -92,7 +96,7 @@ export async function loadProfile(): Promise<Profile | null> {
   const session = await getSession()
   if (!session?.user?.id) return null
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -114,7 +118,7 @@ export async function saveTasks(tasks: Task[]): Promise<void> {
   const session = await getSession()
   if (!session?.user?.id) throw new Error('Not authenticated')
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   await supabase.from('user_tasks').delete().eq('user_id', session.user.id)
 
   if (tasks.length > 0) {
@@ -140,7 +144,7 @@ export async function loadTasks(): Promise<Task[]> {
   const session = await getSession()
   if (!session?.user?.id) return []
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { data, error } = await supabase
     .from('user_tasks')
     .select('*')
@@ -171,7 +175,7 @@ export async function saveDocuments(docs: DocKit): Promise<void> {
     completed: completed as boolean,
   }))
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   await supabase.from('user_documents').delete().eq('user_id', session.user.id)
 
   const { error } = await supabase.from('user_documents').insert(docEntries)
@@ -197,7 +201,7 @@ export async function loadDocuments(): Promise<DocKit> {
     }
   }
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { data, error } = await supabase
     .from('user_documents')
     .select('*')
@@ -232,7 +236,7 @@ export async function saveRecommenders(recommenders: Recommender[]): Promise<voi
   const session = await getSession()
   if (!session?.user?.id) throw new Error('Not authenticated')
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   await supabase.from('user_recommenders').delete().eq('user_id', session.user.id)
 
   if (recommenders.length > 0) {
@@ -257,7 +261,7 @@ export async function loadRecommenders(): Promise<Recommender[]> {
   const session = await getSession()
   if (!session?.user?.id) return []
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { data, error } = await supabase
     .from('user_recommenders')
     .select('*')
@@ -281,7 +285,7 @@ export async function saveVisits(visits: Visit[]): Promise<void> {
   const session = await getSession()
   if (!session?.user?.id) throw new Error('Not authenticated')
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   await supabase.from('user_visits').delete().eq('user_id', session.user.id)
 
   if (visits.length > 0) {
@@ -304,7 +308,7 @@ export async function loadVisits(): Promise<Visit[]> {
   const session = await getSession()
   if (!session?.user?.id) return []
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = await getSupabase()
   const { data, error } = await supabase
     .from('user_visits')
     .select('*')

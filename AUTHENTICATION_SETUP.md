@@ -131,3 +131,7 @@ Each authenticated user's data is stored in Supabase:
 - Authentication state is managed through Supabase Auth
 - Middleware protects routes and handles redirects
 - The Navbar component shows/hides login/logout buttons based on auth state
+
+Canonical entry points:
+- Supabase env/client helpers live in `packages/shared/src/supabase/*`
+- Server-side session/profile helper lives in `apps/web/src/lib/auth.ts`
