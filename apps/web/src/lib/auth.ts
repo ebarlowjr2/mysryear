@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from './supabase'
-import type { UserRole } from './roles'
+import type { UserRole } from '@mysryear/shared'
 
 export type Session = {
   user: {

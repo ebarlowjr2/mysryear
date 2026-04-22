@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import type { UserRole } from '@/lib/roles'
+import type { UserRole } from '@mysryear/shared'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
