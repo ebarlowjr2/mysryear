@@ -11,6 +11,7 @@ const links = [
   { href: '/open-dashboard/applications', label: 'Applications' },
   { href: '/scholarships', label: 'Scholarships' },
   { href: '/resources', label: 'Resources' },
+  { href: '/aura', label: 'A.U.R.A' },
 ]
 
 export default function Navbar() {
