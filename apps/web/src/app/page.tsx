@@ -144,6 +144,12 @@ export default function Home() {
             desc="Optional shared view with weekly summaries (no student surveillance)."
             href="/dashboard"
           />
+          <FeatureCard
+            icon={<Layers />}
+            title="A.U.R.A LifePath"
+            desc="A guided career pathway simulation with cost, debt, and a Career Health score you can improve."
+            href="/aura/lifepath"
+          />
         </div>
       </Section>
 
