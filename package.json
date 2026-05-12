@@ -15,7 +15,11 @@
     "typecheck": "npm --workspace packages/shared run typecheck && npm --workspace apps/web run typecheck",
     "test": "npm --workspace packages/shared run test && npm --workspace apps/web run test",
     "test:e2e": "npm --workspace apps/web run test:e2e",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset"
   },
   "packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
   "devDependencies": {

@@ -42,6 +42,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# mobile app will be reintroduced intentionally later
+apps/mobile/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
