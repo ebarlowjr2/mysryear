@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { requireSessionProfile } from '@/lib/auth'
 
-export default function AuraPage() {
+export default async function AuraPage() {
+  await requireSessionProfile('/aura')
   return (
     <section className="container-prose pt-10 pb-20">
       <div className="card p-8">

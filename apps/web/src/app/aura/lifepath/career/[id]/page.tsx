@@ -1,7 +1,9 @@
 import LifePathCareerDetail from '@/features/aura/lifepath/components/LifePathCareerDetail'
 import { CAREERS } from '@/features/aura/lifepath/data/careers'
+import { requireSessionProfile } from '@/lib/auth'
 
 export default async function LifePathCareerPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireSessionProfile('/aura/lifepath/compare')
   const { id } = await params
   const career = CAREERS.find((c) => c.id === id)
 
