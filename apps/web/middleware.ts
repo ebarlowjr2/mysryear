@@ -26,12 +26,18 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession()
 
   const pathname = request.nextUrl.pathname
+  const isPublicApiRoute =
+    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/integrations/google/authorize') ||
+    pathname.startsWith('/api/scholarships')
+
   const isPublicRoute =
     pathname === '/' ||
+    pathname.startsWith('/resources') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/auth') ||
-    pathname.startsWith('/api')
+    (pathname.startsWith('/api') && isPublicApiRoute)
 
   if (!isPublicRoute && !session) {
     const redirectUrl = request.nextUrl.clone()

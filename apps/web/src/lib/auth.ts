@@ -1,5 +1,6 @@
 import { USER_ROLES, createNextServerSupabaseClient, type UserRole } from '@mysryear/shared'
 import type { User } from '@supabase/supabase-js'
+import { redirect } from 'next/navigation'
 
 export type ProfileRow = Record<string, unknown> & {
   id?: string
@@ -78,4 +79,12 @@ export async function getSession(): Promise<Session | null> {
     profile: sp.profile,
     onboardingComplete: sp.onboardingComplete,
   }
+}
+
+export async function requireSessionProfile(redirectTo: string): Promise<SessionProfile> {
+  const sp = await getSessionProfile()
+  if (!sp) {
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`)
+  }
+  return sp
 }

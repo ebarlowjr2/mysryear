@@ -1,0 +1,30 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { createWebSupabaseClient } from '@mysryear/shared'
+
+export function useAuthSession() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createWebSupabaseClient()
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { session, loading, isAuthenticated: !!session }
+}
+
