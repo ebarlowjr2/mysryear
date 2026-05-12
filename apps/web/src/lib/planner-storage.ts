@@ -80,8 +80,8 @@ export async function saveProfile(profile: Profile): Promise<void> {
   if (!session?.user?.id) throw new Error('Not authenticated')
 
   const supabase = await getSupabase()
-  const { error } = await supabase.from('user_profiles').upsert({
-    user_id: session.user.id,
+  const { error } = await supabase.from('profiles').upsert({
+    id: session.user.id,
     state: profile.state,
     path: profile.path,
     testing: profile.testing,
@@ -98,9 +98,9 @@ export async function loadProfile(): Promise<Profile | null> {
 
   const supabase = await getSupabase()
   const { data, error } = await supabase
-    .from('user_profiles')
+    .from('profiles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('id', session.user.id)
     .single()
 
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows returned
