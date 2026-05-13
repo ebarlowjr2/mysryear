@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       .insert({
         user_id: session.user.id,
         student_profile_id: studentProfileId,
+        uploaded_by_user_id: session.user.id,
         file_name: originalName,
         file_path: path,
         file_type: f.type || null,
