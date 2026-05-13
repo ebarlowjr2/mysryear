@@ -11,21 +11,25 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
 
   if (!session) return null
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .maybeSingle()
 
+  // If schema isn't fully migrated yet, don't crash server routes.
+  if (profileError) return null
+
   const role = (profile?.role as UserRole | undefined) || 'student'
 
   if (role === 'student') {
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('student_profiles')
       .select('id,student_user_id')
       .eq('student_user_id', session.user.id)
       .maybeSingle()
 
+    if (existingError) return null
     if (existing?.id) return existing.id
 
     const { data: created, error: createError } = await supabase
@@ -34,19 +38,20 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
       .select('id,student_user_id')
       .single()
 
-    if (createError) throw createError
+    if (createError) return null
     const sp = created as StudentProfileRow
 
-    await supabase.from('family_relationships').insert({
+    const { error: relError } = await supabase.from('family_relationships').insert({
       student_profile_id: sp.id,
       user_id: session.user.id,
       role: 'student',
     })
+    if (relError) return null
 
     return sp.id
   }
 
-  const { data: rel } = await supabase
+  const { data: rel, error: relError } = await supabase
     .from('family_relationships')
     .select('student_profile_id')
     .eq('user_id', session.user.id)
@@ -54,6 +59,6 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
     .limit(1)
     .maybeSingle()
 
+  if (relError) return null
   return (rel?.student_profile_id as string | undefined) || null
 }
-

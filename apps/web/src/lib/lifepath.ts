@@ -13,14 +13,14 @@ export async function getLifePathCareerIdsForActiveStudent(): Promise<string[]> 
   const studentProfileId = await getActiveStudentProfileId()
   if (!studentProfileId) return []
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('student_career_interests')
     .select('career_id,rank')
     .eq('student_profile_id', studentProfileId)
     .order('rank', { ascending: true, nullsFirst: false })
 
+  if (error) return []
   return (data || [])
     .map((r) => r.career_id as string)
     .filter((id) => typeof id === 'string' && id.length > 0)
 }
-
