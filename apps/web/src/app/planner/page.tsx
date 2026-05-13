@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { useRequireAuth } from '@/lib/use-require-auth'
 import {
   saveProfile,
   loadProfile,
@@ -201,6 +202,8 @@ function download(filename: string, content: string, mime = 'text/plain') {
 }
 
 export default function PlannerPage() {
+  const { isAuthenticated, loading: authLoading } = useRequireAuth()
+
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [tasks, setTasks] = useState<Task[]>([])
   const [docs, setDocs] = useState<DocKit>({
@@ -222,6 +225,10 @@ export default function PlannerPage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
+      }
       try {
         setLoading(true)
 
@@ -256,7 +263,7 @@ export default function PlannerPage() {
     }
 
     loadData()
-  }, [])
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (loading) return
@@ -406,6 +413,14 @@ export default function PlannerPage() {
       }
     }
     reader.readAsText(file)
+  }
+
+  if (authLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   if (loading) {
