@@ -223,6 +223,30 @@ begin
   end if;
 end $$;
 
+-- Prevent scope/role escalation via updates (RLS policies cannot restrict columns).
+-- This trigger applies to *all* updates (creator + invited) and keeps key fields immutable.
+create or replace function public.spri_enforce_immutable_fields()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.student_profile_id is distinct from old.student_profile_id then
+    raise exception 'student_profile_id is immutable';
+  end if;
+  if new.relationship_role is distinct from old.relationship_role then
+    raise exception 'relationship_role is immutable';
+  end if;
+  if new.created_by_user_id is distinct from old.created_by_user_id then
+    raise exception 'created_by_user_id is immutable';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists spri_immutable_fields on public.student_profile_relationship_invites;
+create trigger spri_immutable_fields
+before update on public.student_profile_relationship_invites
+for each row execute function public.spri_enforce_immutable_fields();
+
 -- 5) Allow adding family_relationships entries based on accepted invites (no triggers yet; app will insert)
 do $$
 begin
