@@ -89,8 +89,11 @@ Notes:
 
 ### Counselor support (later)
 
-- Counselor relationship is supported by the same invite/request mechanism
-- Specific approval rules are to be confirmed (see Open Questions)
+- Counselor relationship is supported by the same invite/request mechanism.
+- **Current decision (May 13, 2026): counselors are approved read/support access only.**
+  - Counselors can view linked student profiles and related planning data.
+  - Counselors should **not** be able to edit core student profile fields by default.
+  - Future counselor write access should be permission-based and scoped (comments, task recommendations, milestone verification, counselor-reviewed flags).
 
 ## 6. Required Canonical Tables
 
@@ -196,4 +199,3 @@ Canonical flow ownership for the web rebuild:
 - Do counselors require approval from the student only, or student + parent, or either?
 - How should `business/recruiter` roles map later (opportunity posting, visibility, verification)?
 - Parent permissions: can parents edit core student fields by default, or only assist (suggest/assign) unless explicitly granted?
-
