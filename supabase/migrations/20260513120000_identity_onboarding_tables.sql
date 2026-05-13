@@ -62,31 +62,51 @@ alter table public.family_relationships
 -- - invites will be handled by invite-specific policy below
 drop policy if exists family_relationships_insert_self on public.family_relationships;
 
-create policy family_relationships_insert_student_self
-on public.family_relationships for insert
-with check (
-  user_id = auth.uid()
-  and role = 'student'
-  and exists (
-    select 1
-    from public.student_profiles sp
-    where sp.id = family_relationships.student_profile_id
-      and sp.student_user_id = auth.uid()
-  )
-);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_relationships'
+      and policyname = 'family_relationships_insert_student_self'
+  ) then
+    create policy family_relationships_insert_student_self
+    on public.family_relationships for insert
+    with check (
+      user_id = auth.uid()
+      and role = 'student'
+      and exists (
+        select 1
+        from public.student_profiles sp
+        where sp.id = family_relationships.student_profile_id
+          and sp.student_user_id = auth.uid()
+      )
+    );
+  end if;
+end $$;
 
-create policy family_relationships_insert_creator_admin
-on public.family_relationships for insert
-with check (
-  user_id = auth.uid()
-  and role = 'admin'
-  and exists (
-    select 1
-    from public.student_profiles sp
-    where sp.id = family_relationships.student_profile_id
-      and sp.created_by_user_id = auth.uid()
-  )
-);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_relationships'
+      and policyname = 'family_relationships_insert_creator_admin'
+  ) then
+    create policy family_relationships_insert_creator_admin
+    on public.family_relationships for insert
+    with check (
+      user_id = auth.uid()
+      and role = 'admin'
+      and exists (
+        select 1
+        from public.student_profiles sp
+        where sp.id = family_relationships.student_profile_id
+          and sp.created_by_user_id = auth.uid()
+      )
+    );
+  end if;
+end $$;
 
 -- 4) Invite/request workflow entity
 create table if not exists public.student_profile_relationship_invites (
@@ -204,21 +224,30 @@ begin
 end $$;
 
 -- 5) Allow adding family_relationships entries based on accepted invites (no triggers yet; app will insert)
-create policy family_relationships_insert_via_invite
-on public.family_relationships for insert
-with check (
-  user_id = auth.uid()
-  and role in ('parent','guardian','counselor')
-  and exists (
-    select 1
-    from public.student_profile_relationship_invites i
-    where i.student_profile_id = family_relationships.student_profile_id
-      and i.status = 'accepted'
-      and (
-        i.invited_user_id = auth.uid()
-        or (i.invited_user_id is null and i.invited_email is not null and lower(i.invited_email) = lower((auth.jwt() ->> 'email')))
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_relationships'
+      and policyname = 'family_relationships_insert_via_invite'
+  ) then
+    create policy family_relationships_insert_via_invite
+    on public.family_relationships for insert
+    with check (
+      user_id = auth.uid()
+      and role in ('parent','guardian','counselor')
+      and exists (
+        select 1
+        from public.student_profile_relationship_invites i
+        where i.student_profile_id = family_relationships.student_profile_id
+          and i.status = 'accepted'
+          and (
+            i.invited_user_id = auth.uid()
+            or (i.invited_user_id is null and i.invited_email is not null and lower(i.invited_email) = lower((auth.jwt() ->> 'email')))
+          )
+          and i.relationship_role = family_relationships.role
       )
-      and i.relationship_role = family_relationships.role
-  )
-);
-
+    );
+  end if;
+end $$;
