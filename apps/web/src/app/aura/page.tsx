@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { requireSessionProfile } from '@/lib/auth'
+import { getLifePathCareerIdsForActiveStudent } from '@/lib/lifepath'
 
 export default async function AuraPage() {
   await requireSessionProfile('/aura')
+  const careerIds = await getLifePathCareerIdsForActiveStudent()
+  const hasLifePath = careerIds.length > 0
   return (
     <section className="container-prose pt-10 pb-20">
       <div className="card p-8">
@@ -23,21 +26,21 @@ export default async function AuraPage() {
             </p>
             <div className="mt-4">
               <Link href="/aura/lifepath" className="btn-primary">
-                Open LifePath
+                {hasLifePath ? 'Open LifePath Dashboard' : 'Start LifePath'}
               </Link>
             </div>
           </div>
 
           <div className="card p-6">
             <div className="text-sm font-semibold text-slate-600">Coming Soon</div>
-            <div className="mt-1 text-2xl font-black">More A.U.R.A Modules</div>
+            <div className="mt-1 text-2xl font-black">A.U.R.A Guidance Counselor</div>
             <p className="mt-2 text-slate-700">
-              We&apos;ll add more guided experiences here as the redesign evolves.
+              A guided planning assistant that helps families choose next steps and stay on track.
             </p>
             <div className="mt-4">
-              <Link href="/dashboard" className="btn-secondary">
-                Back to Dashboard
-              </Link>
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                Coming Soon
+              </span>
             </div>
           </div>
         </div>

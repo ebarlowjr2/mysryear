@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { CAREERS } from '../data/careers'
-import { loadTopFive } from '../lib/storage'
 import CareerComparisonCard from './CareerComparisonCard'
 import type { LifePathScenarioId } from '../lib/types'
+import { useCareerInterests } from '../lib/use-career-interests'
 
 export default function LifePathCompareDashboard() {
   const [scenario] = useState<LifePathScenarioId>('baseline')
-  const selectedIds = loadTopFive()
+  const { selected: selectedIds, loading } = useCareerInterests(5)
 
   const selected = useMemo(() => {
     const map = new Map(CAREERS.map((c) => [c.id, c]))
@@ -35,7 +35,11 @@ export default function LifePathCompareDashboard() {
         </div>
       </div>
 
-      {selected.length === 0 ? (
+      {loading ? (
+        <div className="card p-8 text-center">
+          <div className="text-xl font-black">Loading…</div>
+        </div>
+      ) : selected.length === 0 ? (
         <div className="card p-8 text-center">
           <div className="text-2xl font-black">No careers selected yet</div>
           <p className="mt-2 text-slate-700">Pick at least one career to generate your LifePath.</p>
