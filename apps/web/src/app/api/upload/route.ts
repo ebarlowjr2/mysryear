@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
+import { getActiveStudentProfileId } from '@/lib/student-profile'
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
     const form = await req.formData()
     const file = form.get('file')
     const uploadContext = form.get('upload_context')
+    const studentProfileIdFromForm = form.get('student_profile_id')
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file received' }, { status: 400 })
@@ -24,7 +26,19 @@ export async function POST(req: Request) {
     const originalName = f.name || 'uploaded.file'
     const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, '_')
     const timestamp = Date.now()
-    const path = `${session.user.id}/${timestamp}-${safeName}`
+
+    const studentProfileId =
+      (typeof studentProfileIdFromForm === 'string' && studentProfileIdFromForm) ||
+      (await getActiveStudentProfileId())
+
+    if (!studentProfileId) {
+      return NextResponse.json(
+        { error: 'No student profile linked. Link or create a student profile first.' },
+        { status: 400 },
+      )
+    }
+
+    const path = `${studentProfileId}/${timestamp}-${safeName}`
 
     const { error: uploadError } = await supabase.storage
       .from('user-uploads')
@@ -38,6 +52,7 @@ export async function POST(req: Request) {
       .from('uploaded_files')
       .insert({
         user_id: session.user.id,
+        student_profile_id: studentProfileId,
         file_name: originalName,
         file_path: path,
         file_type: f.type || null,
