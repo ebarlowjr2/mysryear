@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 import CareerSelectionCard from './CareerSelectionCard'
 import TopFiveProgress from './TopFiveProgress'
 import { CAREERS, CATEGORIES } from '../data/careers'
-import { loadTopFive, saveTopFive, toggleTopFive } from '../lib/storage'
 import Link from 'next/link'
+import { useCareerInterests } from '../lib/use-career-interests'
 
 export default function CareerSelectionGrid() {
-  const [selected, setSelected] = useState<string[]>(() => loadTopFive())
+  const { selected, selectedCount, canContinue, toggle, clear, error } = useCareerInterests(5)
   const [q, setQ] = useState('')
   const [category, setCategory] = useState('')
   const max = 5
@@ -25,9 +25,7 @@ export default function CareerSelectionGrid() {
   }, [q, category])
 
   function onToggle(id: string) {
-    const next = toggleTopFive(selected, id, max)
-    setSelected(next)
-    saveTopFive(next)
+    void toggle(id)
   }
 
   return (
@@ -40,7 +38,7 @@ export default function CareerSelectionGrid() {
             Choose up to 5. You can change these anytime.
           </p>
         </div>
-        <TopFiveProgress selectedCount={selected.length} max={max} />
+        <TopFiveProgress selectedCount={selectedCount} max={max} />
       </div>
 
       <div className="card p-4">
@@ -71,8 +69,8 @@ export default function CareerSelectionGrid() {
           </div>
           <div className="flex items-end gap-3">
             <Link
-              href="/aura/lifepath/compare"
-              className={`btn-primary w-full justify-center ${selected.length < 1 ? 'pointer-events-none opacity-50' : ''}`}
+              href="/aura/lifepath"
+              className={`btn-primary w-full justify-center ${!canContinue ? 'pointer-events-none opacity-50' : ''}`}
             >
               Continue
             </Link>
@@ -80,8 +78,7 @@ export default function CareerSelectionGrid() {
               type="button"
               className="btn-secondary"
               onClick={() => {
-                setSelected([])
-                saveTopFive([])
+                void clear()
               }}
             >
               Clear
@@ -90,10 +87,12 @@ export default function CareerSelectionGrid() {
         </div>
       </div>
 
+      {error && <div className="text-sm text-rose-700">{error}</div>}
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((career) => {
           const isSelected = selected.includes(career.id)
-          const isAtMax = selected.length >= max
+          const isAtMax = selectedCount >= max
           return (
             <CareerSelectionCard
               key={career.id}
