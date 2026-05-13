@@ -68,6 +68,9 @@ export default function Navbar() {
               <Link href="/dashboard" className="btn-secondary">
                 Dashboard
               </Link>
+              <Link href="/profile" className="btn-secondary">
+                Profile
+              </Link>
               <Link href="/open-dashboard" className="btn-primary">
                 Open Dashboard
               </Link>
