@@ -6,7 +6,7 @@ structured as a monorepo to support web + mobile + shared packages over time.
 ## Repo Structure
 
 - `apps/web` — Next.js web app
-- `apps/mobile` — intentionally not tracked yet (will be added when the real mobile source is confirmed)
+- `apps/mobile` — Expo (Expo Router) mobile app (preservation mode)
 - `packages/shared` — shared types + Supabase helpers (source of truth)
 - `supabase/` — Supabase config + migrations
 - `docs/` — handoff and legacy references
@@ -34,6 +34,10 @@ Open http://localhost:3000
 - `npm run test` — unit tests (Vitest)
 - `npm run test:e2e` — Playwright smoke tests
 - `npm run verify` — lint + typecheck + tests + build
+- `npm run mobile:start` — start Expo dev server
+- `npm run mobile:ios` — start Expo + open iOS simulator
+- `npm run mobile:android` — start Expo + open Android emulator
+- `npm run mobile:verify` — quick non-interactive Expo check
 
 ## Environment Variables
 
@@ -54,6 +58,13 @@ Optional but used by routes:
 - `NEXT_PUBLIC_BASE_URL`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+
+## Mobile
+
+Mobile lives under `apps/mobile/`. This sprint preserves the recovered app and ensures it can run; deeper refactors and cross-platform packages come later.
+
+- Mobile env vars: see `apps/mobile/.env.example`
+- Current mobile structure + known alignment gaps: `docs/MOBILE_STATUS.md`
 
 ## Supabase
 
