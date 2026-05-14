@@ -4,8 +4,29 @@ import Link from 'next/link'
 import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-react'
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
+import { useAuthSession } from '@/lib/use-auth-session'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
+  const router = useRouter()
+  const { isAuthenticated } = useAuthSession()
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    // Ensure first-time users land in a fully initialized state even if email-confirm redirects
+    // bypass middleware session detection (common with verify links).
+    fetch('/api/bootstrap', { method: 'POST' }).then(async (res) => {
+      if (res.ok) return
+      const json = (await res.json().catch(() => null)) as { error?: string } | null
+      // If bootstrap cannot complete from metadata, send user to /onboarding to finish.
+      if (json?.error) {
+        router.push('/onboarding')
+        router.refresh()
+      }
+    })
+  }, [isAuthenticated, router])
+
   const upcomingDates = [
     { date: 'Oct 15', event: 'FAFSA opens' },
     { date: 'Nov 1', event: 'Early Action deadline' },
