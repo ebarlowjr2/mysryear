@@ -60,7 +60,10 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle()
 
-    if (!profileError && profileRow && profileRow.onboarding_complete === false) {
+    // If the profile row doesn't exist yet (rare race on first login), the column is missing,
+    // RLS blocks the read, or onboarding is incomplete, force the user through /onboarding.
+    // Worst-case this sends the user to onboarding where we can surface a clearer error.
+    if (profileError || !profileRow || profileRow.onboarding_complete === false) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/onboarding'
       return NextResponse.redirect(redirectUrl)

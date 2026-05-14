@@ -2,12 +2,10 @@
 
 import React, { useState } from 'react'
 import { createWebSupabaseClient } from '@mysryear/shared'
-import type { UserRole } from '@mysryear/shared'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<UserRole>('student')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -23,11 +21,6 @@ export default function Signup() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            role: role,
-          },
-        },
       })
 
       if (error) {
@@ -92,21 +85,10 @@ export default function Signup() {
               />
             </div>
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-2">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                className="input w-full px-4 py-3 rounded-lg"
-                value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-              >
-                <option value="student">Student</option>
-                <option value="parent">Parent</option>
-                <option value="guardian">Guardian</option>
-                <option value="counselor">Counselor</option>
-              </select>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
+                You’ll choose your account type (Student/Parent/Guardian/Counselor) and set up your
+                student profile in the onboarding step after you verify your email.
+              </div>
             </div>
           </div>
 

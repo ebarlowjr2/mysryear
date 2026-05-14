@@ -86,9 +86,16 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
+  const studentProfileId = await getActiveStudentProfileId()
+  if (!studentProfileId) {
+    // No linked/active student profile means there is no planning container to scope uploads to.
+    return NextResponse.json({ ok: true, files: [] })
+  }
+
   const { data, error } = await supabase
     .from('uploaded_files')
     .select('*')
+    .eq('student_profile_id', studentProfileId)
     .order('created_at', { ascending: false })
 
   if (error) {

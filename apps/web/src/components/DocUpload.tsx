@@ -34,7 +34,11 @@ export default function DocUpload() {
     try {
       const res = await fetch('/api/upload', { method: 'GET' })
       const data = (await res.json()) as { ok?: boolean; files?: UploadedFileRow[]; error?: string }
-      if (data.ok && data.files) setFiles(data.files)
+      if (data.ok && data.files) {
+        setFiles(data.files)
+      } else if (data.error) {
+        setMessage(`Error: ${data.error}`)
+      }
     } finally {
       setLoadingList(false)
     }
@@ -141,6 +145,12 @@ export default function DocUpload() {
       {message && <p className="mt-3 text-sm">{message}</p>}
 
       {isAuthenticated && loadingList && <p className="mt-4 text-sm text-slate-600">Loading…</p>}
+
+      {isAuthenticated && !loadingList && files.length === 0 && (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          No uploaded files for the active student profile yet.
+        </div>
+      )}
 
       {isAuthenticated && files.length > 0 && (
         <div className="mt-4">
