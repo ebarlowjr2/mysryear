@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (!body) return jsonError('Invalid JSON')
 
   const studentProfileId = body.studentProfileId
-  const invitedEmail = (body.invitedEmail || '').trim()
+  const invitedEmail = (body.invitedEmail || '').trim().toLowerCase()
   const relationshipRole = body.relationshipRole
 
   if (!studentProfileId) return jsonError('Missing studentProfileId')
@@ -87,4 +87,3 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json({ ok: true, invite })
 }
-

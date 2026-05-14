@@ -78,10 +78,13 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
+  const email = (sp.user.email || '').trim()
+  const invitedEmailFilter = email ? `,and(invited_user_id.is.null,invited_email.ilike.${email})` : ''
   const { data: invitesReceived } = await supabase
     .from('student_profile_relationship_invites')
     .select('*')
-    .eq('invited_user_id', sp.user.id)
+    // Show invites linked directly to the user_id OR invites issued to this user's email before they had an account.
+    .or(`invited_user_id.eq.${sp.user.id}${invitedEmailFilter}`)
     .order('created_at', { ascending: false })
     .limit(50)
 
