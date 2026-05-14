@@ -61,6 +61,31 @@ alter table public.family_relationships
 -- - creators can add themselves as admin on profiles they created
 -- - invites will be handled by invite-specific policy below
 drop policy if exists family_relationships_insert_self on public.family_relationships;
+drop policy if exists family_relationships_select_member on public.family_relationships;
+
+-- NOTE: We re-create the SELECT policy here to avoid RLS recursion.
+-- Never reference `family_relationships` within its own RLS policy expressions.
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_relationships'
+      and policyname = 'family_relationships_select_member'
+  ) then
+    create policy family_relationships_select_member
+    on public.family_relationships for select
+    using (
+      user_id = auth.uid()
+      or exists (
+        select 1
+        from public.student_profiles sp
+        where sp.id = family_relationships.student_profile_id
+          and (sp.student_user_id = auth.uid() or sp.created_by_user_id = auth.uid())
+      )
+    );
+  end if;
+end $$;
 
 do $$
 begin

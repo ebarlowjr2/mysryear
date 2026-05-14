@@ -115,12 +115,15 @@ begin
     create policy family_relationships_select_member
     on public.family_relationships for select
     using (
+      -- Always allow a user to see their own relationship rows.
       user_id = auth.uid()
+      -- Allow the student (student_user_id) and the profile creator (created_by_user_id)
+      -- to list all relationships for that student profile.
       or exists (
         select 1
-        from public.family_relationships fr2
-        where fr2.student_profile_id = family_relationships.student_profile_id
-          and fr2.user_id = auth.uid()
+        from public.student_profiles sp
+        where sp.id = family_relationships.student_profile_id
+          and (sp.student_user_id = auth.uid() or sp.created_by_user_id = auth.uid())
       )
     );
   end if;
