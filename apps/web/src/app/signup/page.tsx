@@ -1,14 +1,46 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createWebSupabaseClient } from '@mysryear/shared'
+import { USER_ROLES, type UserRole } from '@mysryear/shared'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<UserRole>('student')
+  const [graduationYear, setGraduationYear] = useState<number | ''>('')
+  const [schoolId, setSchoolId] = useState<string>('')
+  const [schoolQuery, setSchoolQuery] = useState('')
+  const [schools, setSchools] = useState<
+    { id: string; name: string; city: string | null; state: string | null }[]
+  >([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    // Schools are public-readable by design (RLS allows select all).
+    const supabase = createWebSupabaseClient()
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('schools')
+          .select('id,name,city,state')
+          .order('name', { ascending: true })
+          .limit(5000)
+        if (data) setSchools(data)
+      } catch {
+        // ignore
+      }
+    }
+    void load()
+  }, [])
+
+  const filteredSchools = useMemo(() => {
+    const q = schoolQuery.trim().toLowerCase()
+    if (!q) return schools.slice(0, 50)
+    return schools.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 50)
+  }, [schoolQuery, schools])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,10 +49,28 @@ export default function Signup() {
     setMessage('')
 
     try {
+      if (role === 'student') {
+        if (typeof graduationYear !== 'number' || !graduationYear) {
+          setError('Please enter your graduation year.')
+          return
+        }
+        if (!schoolId) {
+          setError('Please select your high school from the list.')
+          return
+        }
+      }
+
       const supabase = createWebSupabaseClient()
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            role,
+            graduation_year: typeof graduationYear === 'number' ? graduationYear : null,
+            school_id: schoolId || null,
+          },
+        },
       })
 
       if (error) {
@@ -85,11 +135,93 @@ export default function Signup() {
               />
             </div>
             <div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
-                You’ll choose your account type (Student/Parent/Guardian/Counselor) and set up your
-                student profile in the onboarding step after you verify your email.
-              </div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-2">
+                Account type
+              </label>
+              <select
+                id="role"
+                name="role"
+                className="input w-full px-4 py-3 rounded-lg"
+                value={role}
+                onChange={(e) => setRole(e.target.value as UserRole)}
+              >
+                {USER_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {role === 'student' && (
+              <>
+                <div>
+                  <label
+                    htmlFor="graduationYear"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Graduation year
+                  </label>
+                  <input
+                    id="graduationYear"
+                    name="graduationYear"
+                    className="input w-full px-4 py-3 rounded-lg"
+                    value={graduationYear}
+                    onChange={(e) => setGraduationYear(e.target.value ? Number(e.target.value) : '')}
+                    placeholder="e.g. 2030"
+                    inputMode="numeric"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="school"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    High school
+                  </label>
+                  <input
+                    id="school"
+                    name="school"
+                    className="input w-full px-4 py-3 rounded-lg"
+                    value={schoolQuery}
+                    onChange={(e) => {
+                      setSchoolQuery(e.target.value)
+                      setSchoolId('')
+                    }}
+                    placeholder="Search your school"
+                    required
+                  />
+                  <div className="mt-2 max-h-48 overflow-auto border border-white/10 rounded-lg bg-black/20">
+                    {filteredSchools.length === 0 ? (
+                      <div className="p-3 text-sm text-gray-300">No matches</div>
+                    ) : (
+                      filteredSchools.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${
+                            schoolId === s.id ? 'bg-white/10' : ''
+                          }`}
+                          onClick={() => {
+                            setSchoolId(s.id)
+                            setSchoolQuery(
+                              `${s.name}${s.city ? `, ${s.city}` : ''}${s.state ? `, ${s.state}` : ''}`,
+                            )
+                          }}
+                        >
+                          <div className="font-semibold text-gray-100">{s.name}</div>
+                          <div className="text-xs text-gray-400">
+                            {[s.city, s.state].filter(Boolean).join(', ')}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {error && (
