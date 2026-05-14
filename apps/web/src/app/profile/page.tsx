@@ -78,13 +78,12 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  const email = (sp.user.email || '').trim()
-  const invitedEmailFilter = email ? `,and(invited_user_id.is.null,invited_email.ilike.${email})` : ''
   const { data: invitesReceived } = await supabase
     .from('student_profile_relationship_invites')
     .select('*')
-    // Show invites linked directly to the user_id OR invites issued to this user's email before they had an account.
-    .or(`invited_user_id.eq.${sp.user.id}${invitedEmailFilter}`)
+    // Rely on RLS to only return invites meant for this user:
+    // - invited_user_id = auth.uid()
+    // - or invited_email matches auth.jwt email (for invites created before account existed)
     .order('created_at', { ascending: false })
     .limit(50)
 
