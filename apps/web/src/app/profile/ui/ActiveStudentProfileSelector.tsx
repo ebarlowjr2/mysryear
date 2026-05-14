@@ -19,16 +19,27 @@ export default function ActiveStudentProfileSelector({
   studentProfiles: StudentProfileRow[]
 }) {
   const router = useRouter()
+  const [selectedId, setSelectedId] = useState(activeStudentProfileId || '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function setActive(studentProfileId: string) {
     setSaving(true)
+    setError(null)
+    const prev = selectedId
+    setSelectedId(studentProfileId)
     try {
-      await fetch('/api/profile/active-student-profile', {
+      const res = await fetch('/api/profile/active-student-profile', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ studentProfileId }),
       })
+      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+      if (!res.ok || !json?.ok) {
+        setError(json?.error || 'Failed to set active student profile')
+        setSelectedId(prev)
+        return
+      }
       router.refresh()
     } finally {
       setSaving(false)
@@ -51,7 +62,7 @@ export default function ActiveStudentProfileSelector({
         </label>
         <select
           className="input w-full px-4 py-3 rounded-lg"
-          value={activeStudentProfileId || ''}
+          value={selectedId}
           onChange={(e) => setActive(e.target.value)}
           disabled={saving}
         >
@@ -71,8 +82,12 @@ export default function ActiveStudentProfileSelector({
         <p className="mt-2 text-xs text-slate-600">
           This selection controls which student’s LifePath, uploads, and planning data you’re viewing.
         </p>
+        {error && (
+          <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   )
 }
-

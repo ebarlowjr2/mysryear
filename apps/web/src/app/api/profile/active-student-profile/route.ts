@@ -24,9 +24,13 @@ export async function PATCH(req: Request) {
     .eq('id', session.user.id)
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 400 })
+    // Common failure: column missing if migration wasn't applied in this environment.
+    const message =
+      /active_student_profile_id/i.test(error.message) || /column .* does not exist/i.test(error.message)
+        ? 'Active student profile selection is not available yet (missing migration).'
+        : error.message
+    return NextResponse.json({ ok: false, error: message }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true })
 }
-
