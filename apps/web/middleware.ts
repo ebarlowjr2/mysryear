@@ -60,7 +60,9 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle()
 
-    if (!profileError && profileRow && profileRow.onboarding_complete === false) {
+    // If the profile row doesn't exist yet (rare race on first login) OR onboarding is incomplete,
+    // force the user through /onboarding.
+    if (!profileError && (!profileRow || profileRow.onboarding_complete === false)) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/onboarding'
       return NextResponse.redirect(redirectUrl)

@@ -33,7 +33,12 @@ export default function OnboardingForm({
 
   const needsStudentProfile = role === 'student' || role === 'parent' || role === 'guardian'
 
-  const canSubmit = !loading && USER_ROLES.includes(role) && (!needsStudentProfile || Boolean(graduationYear))
+  const needsSchoolAndGradYear = role === 'student'
+  const canSubmit =
+    !loading &&
+    USER_ROLES.includes(role) &&
+    (!needsStudentProfile || Boolean(graduationYear)) &&
+    (!needsSchoolAndGradYear || Boolean(schoolId))
 
   async function submit() {
     setLoading(true)
@@ -138,6 +143,9 @@ export default function OnboardingForm({
                 }}
                 placeholder="Search your school"
               />
+              {role === 'student' && !schoolId && (
+                <p className="mt-2 text-xs text-slate-600">Required for student onboarding.</p>
+              )}
               <div className="mt-2 max-h-48 overflow-auto border border-slate-200 rounded-lg bg-white">
                 {filteredSchools.length === 0 ? (
                   <div className="p-3 text-sm text-slate-600">No matches</div>
@@ -189,4 +197,3 @@ export default function OnboardingForm({
     </div>
   )
 }
-
