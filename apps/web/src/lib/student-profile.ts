@@ -13,7 +13,7 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role,active_student_profile_id')
     .eq('id', session.user.id)
     .maybeSingle()
 
@@ -21,6 +21,10 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
   if (profileError) return null
 
   const role = (profile?.role as UserRole | undefined) || 'student'
+
+  // Preferred: explicit user-selected active student profile.
+  const explicitActive = (profile?.active_student_profile_id as string | undefined) || null
+  if (explicitActive) return explicitActive
 
   if (role === 'student') {
     const { data: existing, error: existingError } = await supabase
@@ -61,4 +65,17 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
 
   if (relError) return null
   return (rel?.student_profile_id as string | undefined) || null
+}
+
+export async function setActiveStudentProfileId(studentProfileId: string | null): Promise<void> {
+  const supabase = await createNextServerSupabaseClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return
+
+  await supabase
+    .from('profiles')
+    .update({ active_student_profile_id: studentProfileId })
+    .eq('id', session.user.id)
 }

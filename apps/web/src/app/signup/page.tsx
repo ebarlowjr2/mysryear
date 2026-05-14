@@ -104,6 +104,7 @@ export default function Signup() {
               >
                 <option value="student">Student</option>
                 <option value="parent">Parent</option>
+                <option value="guardian">Guardian</option>
                 <option value="counselor">Counselor</option>
               </select>
             </div>

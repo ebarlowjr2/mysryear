@@ -46,6 +46,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // If the user is authenticated but has not completed onboarding, route them through onboarding
+  // for any authenticated, non-public page. This prevents "half-set-up" sessions from drifting.
+  if (
+    session &&
+    !pathname.startsWith('/onboarding') &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/auth')
+  ) {
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('onboarding_complete')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    if (!profileError && profileRow && profileRow.onboarding_complete === false) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/onboarding'
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
   if ((pathname === '/login' || pathname === '/signup') && session) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/dashboard'
