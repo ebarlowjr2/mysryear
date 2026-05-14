@@ -44,6 +44,28 @@ create table if not exists public.family_relationships (
 
 alter table public.family_relationships enable row level security;
 
+-- Helper used in RLS policies to avoid mutual-recursion between student_profiles <-> family_relationships.
+-- Runs as table owner (SQL editor migration context) and bypasses RLS by default.
+create or replace function public.is_student_profile_member(p_student_profile_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.student_profiles sp
+    where sp.id = p_student_profile_id
+      and (sp.student_user_id = auth.uid() or sp.created_by_user_id = auth.uid())
+  )
+  or exists (
+    select 1
+    from public.family_relationships fr
+    where fr.student_profile_id = p_student_profile_id
+      and fr.user_id = auth.uid()
+  );
+$$;
+
 -- Student profile policies (defined after family_relationships exists)
 do $$
 begin
@@ -57,12 +79,7 @@ begin
     on public.student_profiles for select
     using (
       student_user_id = auth.uid()
-      or exists (
-        select 1
-        from public.family_relationships fr
-        where fr.student_profile_id = student_profiles.id
-          and fr.user_id = auth.uid()
-      )
+      or public.is_student_profile_member(student_profiles.id)
     );
   end if;
 end $$;
@@ -119,12 +136,7 @@ begin
       user_id = auth.uid()
       -- Allow the student (student_user_id) and the profile creator (created_by_user_id)
       -- to list all relationships for that student profile.
-      or exists (
-        select 1
-        from public.student_profiles sp
-        where sp.id = family_relationships.student_profile_id
-          and (sp.student_user_id = auth.uid() or sp.created_by_user_id = auth.uid())
-      )
+      or public.is_student_profile_member(family_relationships.student_profile_id)
     );
   end if;
 end $$;

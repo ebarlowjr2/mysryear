@@ -77,12 +77,7 @@ begin
     on public.family_relationships for select
     using (
       user_id = auth.uid()
-      or exists (
-        select 1
-        from public.student_profiles sp
-        where sp.id = family_relationships.student_profile_id
-          and (sp.student_user_id = auth.uid() or sp.created_by_user_id = auth.uid())
-      )
+      or public.is_student_profile_member(family_relationships.student_profile_id)
     );
   end if;
 end $$;
