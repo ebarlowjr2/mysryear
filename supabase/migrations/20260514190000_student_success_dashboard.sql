@@ -41,6 +41,20 @@ create table if not exists public.academic_records (
   updated_at timestamptz default now()
 );
 
+-- If a partial/legacy academic_records table exists, ensure required columns are present.
+alter table public.academic_records
+  add column if not exists student_profile_id uuid,
+  add column if not exists uploaded_file_id uuid,
+  add column if not exists uploaded_by_user_id uuid,
+  add column if not exists document_type text,
+  add column if not exists school_year text,
+  add column if not exists grading_period text,
+  add column if not exists grade_level text,
+  add column if not exists gpa numeric,
+  add column if not exists notes text,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
 create index if not exists academic_records_student_created_idx
 on public.academic_records(student_profile_id, created_at desc);
 
@@ -121,6 +135,21 @@ create table if not exists public.student_success_tasks (
   updated_at timestamptz default now()
 );
 
+-- If a partial/legacy student_success_tasks table exists, ensure required columns are present.
+alter table public.student_success_tasks
+  add column if not exists student_profile_id uuid,
+  add column if not exists title text,
+  add column if not exists description text,
+  add column if not exists grade_level text,
+  add column if not exists school_year text,
+  add column if not exists category text,
+  add column if not exists status text,
+  add column if not exists due_date date,
+  add column if not exists upload_required boolean default false,
+  add column if not exists uploaded_file_id uuid,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
 create index if not exists student_success_tasks_student_idx
 on public.student_success_tasks(student_profile_id, created_at desc);
 
@@ -179,4 +208,3 @@ drop trigger if exists set_student_success_tasks_updated_at on public.student_su
 create trigger set_student_success_tasks_updated_at
 before update on public.student_success_tasks
 for each row execute function public.set_updated_at();
-
