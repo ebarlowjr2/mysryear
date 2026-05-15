@@ -16,6 +16,12 @@ export async function POST(req: Request) {
     const form = await req.formData()
     const file = form.get('file')
     const uploadContext = form.get('upload_context')
+    const documentType = form.get('document_type')
+    const schoolYear = form.get('school_year')
+    const gradingPeriod = form.get('grading_period')
+    const gradeLevel = form.get('grade_level')
+    const gpa = form.get('gpa')
+    const notes = form.get('notes')
     const studentProfileIdFromForm = form.get('student_profile_id')
 
     if (!file || typeof file === 'string') {
@@ -67,6 +73,25 @@ export async function POST(req: Request) {
       // Best-effort cleanup so the bucket doesn't accumulate orphan files.
       await supabase.storage.from('user-uploads').remove([path])
       return NextResponse.json({ error: insertError.message }, { status: 400 })
+    }
+
+    // If this upload is an academic document, also create an academic_records row.
+    const isAcademic =
+      typeof uploadContext === 'string' && uploadContext.startsWith('academic_')
+    if (isAcademic) {
+      const parsedGpa =
+        typeof gpa === 'string' && gpa.trim() ? Number(gpa) : null
+      await supabase.from('academic_records').insert({
+        student_profile_id: studentProfileId,
+        uploaded_file_id: row.id,
+        uploaded_by_user_id: session.user.id,
+        document_type: typeof documentType === 'string' && documentType ? documentType : 'general',
+        school_year: typeof schoolYear === 'string' ? schoolYear : null,
+        grading_period: typeof gradingPeriod === 'string' ? gradingPeriod : null,
+        grade_level: typeof gradeLevel === 'string' ? gradeLevel : null,
+        gpa: typeof parsedGpa === 'number' && !Number.isNaN(parsedGpa) ? parsedGpa : null,
+        notes: typeof notes === 'string' ? notes : null,
+      })
     }
 
     return NextResponse.json({ ok: true, file: row })

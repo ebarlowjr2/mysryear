@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-react'
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
+import ReportCardVault from '@/components/ReportCardVault'
 import { useAuthSession } from '@/lib/use-auth-session'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,31 +39,31 @@ export default function Dashboard() {
     <div className="container-prose py-14">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-black tracking-tight">Dashboard</h1>
-          <p className="text-slate-700 mt-2">Your senior year, organized and stress-less</p>
+          <h1 className="text-4xl font-black tracking-tight">Student Success Dashboard</h1>
+          <p className="text-slate-700 mt-2">Check in each grading period—track progress year-round.</p>
         </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatTile
-          label="Scholarships"
-          value="12 matches"
-          desc="Filtered by GPA, state, and interests"
+          label="Academic Health"
+          value="—"
+          desc="Based on GPA, recent uploads, and checklist"
         />
         <StatTile
-          label="Admissions Deadlines"
-          value="4 upcoming"
-          desc="Early Action and Regular Decision"
+          label="Report Card Vault"
+          value="—"
+          desc="Upload records each grading period"
         />
         <StatTile
-          label="Application Tasks"
-          value="7 pending"
-          desc="Essays, recommendations, transcripts"
+          label="LifePath Progress"
+          value="—"
+          desc="Careers selected + next action"
         />
         <StatTile
-          label="Checklist Items"
-          value="15 completed"
-          desc="Senior year milestones on track"
+          label="Grade-Level Checklist"
+          value="—"
+          desc="9th–11th grade success steps"
         />
       </div>
 
@@ -83,6 +84,25 @@ export default function Dashboard() {
         </div>
 
         <DocUpload />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8 mb-8">
+        <ReportCardVault />
+        <div className="card p-6">
+          <h3 className="text-lg font-bold">Parent Action Center</h3>
+          <p className="mt-2 text-sm text-slate-700">
+            Quick actions to support the active student profile.
+          </p>
+          <ul className="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
+            <li>Review the latest report card upload.</li>
+            <li>Confirm LifePath career picks match goals.</li>
+            <li>Help schedule a career conversation this week.</li>
+            <li>Upload a transcript or test score document.</li>
+          </ul>
+          <div className="mt-4 text-xs text-slate-500">
+            (We’ll personalize this by role and grade level next.)
+          </div>
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
