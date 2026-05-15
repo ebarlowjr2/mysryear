@@ -5,12 +5,13 @@ import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-re
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
 import { useAuthSession } from '@/lib/use-auth-session'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
   const router = useRouter()
   const { isAuthenticated } = useAuthSession()
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -19,11 +20,7 @@ export default function Dashboard() {
     fetch('/api/bootstrap', { method: 'POST' }).then(async (res) => {
       if (res.ok) return
       const json = (await res.json().catch(() => null)) as { error?: string } | null
-      // If bootstrap cannot complete from metadata, send user to /onboarding to finish.
-      if (json?.error) {
-        router.push('/onboarding')
-        router.refresh()
-      }
+      if (json?.error) setBootstrapError(json.error)
     })
   }, [isAuthenticated, router])
 
@@ -42,6 +39,18 @@ export default function Dashboard() {
           <p className="text-slate-700 mt-2">Your senior year, organized and stress-less</p>
         </div>
       </div>
+
+      {bootstrapError && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="font-semibold">Finish setup</div>
+          <div className="mt-1">{bootstrapError}</div>
+          <div className="mt-3">
+            <Link href="/onboarding" className="btn-secondary inline-flex">
+              Continue Setup
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatTile

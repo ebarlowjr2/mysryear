@@ -51,6 +51,7 @@ export async function middleware(request: NextRequest) {
   if (
     session &&
     !pathname.startsWith('/onboarding') &&
+    pathname !== '/dashboard' &&
     !pathname.startsWith('/api') &&
     !pathname.startsWith('/auth')
   ) {
@@ -65,7 +66,9 @@ export async function middleware(request: NextRequest) {
     // Worst-case this sends the user to onboarding where we can surface a clearer error.
     if (profileError || !profileRow || profileRow.onboarding_complete === false) {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/onboarding'
+      // Prefer /dashboard for first-time initialization: dashboard runs /api/bootstrap on mount,
+      // which can complete setup from auth metadata even when middleware can't yet see everything.
+      redirectUrl.pathname = '/dashboard'
       return NextResponse.redirect(redirectUrl)
     }
   }
