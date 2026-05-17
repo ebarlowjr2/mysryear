@@ -46,6 +46,8 @@ export default function OnboardingForm({
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
+        // Explicitly include cookies so the route handler can authenticate consistently in all browsers/environments.
+        credentials: 'include',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           role,

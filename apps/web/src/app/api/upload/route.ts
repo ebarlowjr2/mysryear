@@ -76,22 +76,32 @@ export async function POST(req: Request) {
     }
 
     // If this upload is an academic document, also create an academic_records row.
-    const isAcademic =
-      typeof uploadContext === 'string' && uploadContext.startsWith('academic_')
+    const isAcademic = typeof uploadContext === 'string' && uploadContext.startsWith('academic_')
     if (isAcademic) {
-      const parsedGpa =
-        typeof gpa === 'string' && gpa.trim() ? Number(gpa) : null
-      await supabase.from('academic_records').insert({
+      const parsedGpa = typeof gpa === 'string' && gpa.trim() ? Number(gpa) : null
+      const record = {
         student_profile_id: studentProfileId,
         uploaded_file_id: row.id,
         uploaded_by_user_id: session.user.id,
         document_type: typeof documentType === 'string' && documentType ? documentType : 'general',
+        // Some DBs still have a legacy `subject` column (previous schema). We populate it when present.
+        subject: typeof uploadContext === 'string' ? uploadContext : 'general',
         school_year: typeof schoolYear === 'string' ? schoolYear : null,
         grading_period: typeof gradingPeriod === 'string' ? gradingPeriod : null,
         grade_level: typeof gradeLevel === 'string' ? gradeLevel : null,
         gpa: typeof parsedGpa === 'number' && !Number.isNaN(parsedGpa) ? parsedGpa : null,
         notes: typeof notes === 'string' ? notes : null,
-      })
+      }
+
+      // Best-effort. If the environment doesn't have academic_records yet or doesn't have `subject`,
+      // we still want the upload to succeed.
+      const { error: recError } = await supabase.from('academic_records').insert(record as never)
+      if (recError && /column .*subject.* does not exist/i.test(recError.message)) {
+        // Retry without subject
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { subject: _ignoredSubject, ...withoutSubject } = record
+        await supabase.from('academic_records').insert(withoutSubject as never)
+      }
     }
 
     return NextResponse.json({ ok: true, file: row })
