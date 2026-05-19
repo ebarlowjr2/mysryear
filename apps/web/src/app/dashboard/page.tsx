@@ -5,14 +5,39 @@ import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-re
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
 import ReportCardVault from '@/components/ReportCardVault'
+import StudentSuccessChecklist from '@/components/StudentSuccessChecklist'
 import { useAuthSession } from '@/lib/use-auth-session'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+type DashboardTask = {
+  id: string
+  title: string
+  description: string | null
+  category: string | null
+  status: 'not_started' | 'in_progress' | 'done'
+  upload_required: boolean | null
+}
+
+type DashboardSummary = {
+  ok: boolean
+  studentProfileId: string | null
+  viewerRole: string | null
+  latestAcademicRecordAt: string | null
+  checklist?: { done: number; total: number }
+  tasks?: DashboardTask[]
+  academicHealth?: { score: number; label: string; nextAction: string }
+  lifepath?: { selectedCareersCount: number }
+  error?: string
+}
 
 export default function Dashboard() {
   const router = useRouter()
   const { isAuthenticated } = useAuthSession()
   const [bootstrapError, setBootstrapError] = useState<string | null>(null)
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [loadingSummary, setLoadingSummary] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -25,12 +50,61 @@ export default function Dashboard() {
     })
   }, [isAuthenticated, router])
 
+  async function loadSummary() {
+    if (!isAuthenticated) return
+    setLoadingSummary(true)
+    setSummaryError(null)
+    try {
+      const res = await fetch('/api/dashboard/summary')
+      const json = (await res.json().catch(() => null)) as DashboardSummary | null
+      if (!res.ok || !json?.ok) {
+        setSummaryError(json?.error || 'Failed to load dashboard')
+        return
+      }
+      setSummary(json)
+    } finally {
+      setLoadingSummary(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadSummary()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
+
   const upcomingDates = [
     { date: 'Oct 15', event: 'FAFSA opens' },
     { date: 'Nov 1', event: 'Early Action deadline' },
     { date: 'Nov 15', event: 'Scholarship applications due' },
     { date: 'Dec 1', event: 'Regular decision apps open' },
   ]
+
+  const checklistDone = summary?.checklist?.done ?? null
+  const checklistTotal = summary?.checklist?.total ?? null
+  const checklistValue =
+    typeof checklistDone === 'number' && typeof checklistTotal === 'number'
+      ? `${checklistDone}/${checklistTotal}`
+      : '—'
+
+  const academicHealthValue =
+    typeof summary?.academicHealth?.score === 'number' ? `${summary.academicHealth.score}/100` : '—'
+  const academicHealthDesc =
+    typeof summary?.academicHealth?.label === 'string'
+      ? `${summary.academicHealth.label} • ${summary.academicHealth.nextAction || ''}`.trim()
+      : 'Based on GPA, recent uploads, and checklist'
+
+  const reportCardValue = summary?.latestAcademicRecordAt ? 'Updated' : 'Missing'
+  const reportCardDesc = summary?.latestAcademicRecordAt
+    ? `Latest upload: ${new Date(summary.latestAcademicRecordAt).toLocaleDateString()}`
+    : 'Upload records each grading period'
+
+  const lifepathValue =
+    typeof summary?.lifepath?.selectedCareersCount === 'number'
+      ? String(summary.lifepath.selectedCareersCount)
+      : '—'
+
+  const viewerRole = (summary?.viewerRole as string | null) || null
+  const showParentActionCenter = viewerRole === 'parent' || viewerRole === 'guardian' || viewerRole === 'admin'
 
   return (
     <div className="container-prose py-14">
@@ -53,25 +127,31 @@ export default function Dashboard() {
         </div>
       )}
 
+      {summaryError ? (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          {summaryError}
+        </div>
+      ) : null}
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatTile
           label="Academic Health"
-          value="—"
-          desc="Based on GPA, recent uploads, and checklist"
+          value={loadingSummary ? '…' : academicHealthValue}
+          desc={academicHealthDesc}
         />
         <StatTile
           label="Report Card Vault"
-          value="—"
-          desc="Upload records each grading period"
+          value={loadingSummary ? '…' : reportCardValue}
+          desc={reportCardDesc}
         />
         <StatTile
           label="LifePath Progress"
-          value="—"
-          desc="Careers selected + next action"
+          value={loadingSummary ? '…' : lifepathValue}
+          desc="Careers selected"
         />
         <StatTile
           label="Grade-Level Checklist"
-          value="—"
+          value={loadingSummary ? '…' : checklistValue}
           desc="9th–11th grade success steps"
         />
       </div>
@@ -98,20 +178,35 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <ReportCardVault />
         <div className="card p-6">
-          <h3 className="text-lg font-bold">Parent Action Center</h3>
+          <h3 className="text-lg font-bold">{showParentActionCenter ? 'Parent Action Center' : 'What to do next'}</h3>
           <p className="mt-2 text-sm text-slate-700">
-            Quick actions to support the active student profile.
+            Quick actions for the active student profile.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
-            <li>Review the latest report card upload.</li>
-            <li>Confirm LifePath career picks match goals.</li>
-            <li>Help schedule a career conversation this week.</li>
-            <li>Upload a transcript or test score document.</li>
+            {showParentActionCenter ? (
+              <>
+                <li>Review the latest report card upload.</li>
+                <li>Confirm LifePath career picks match goals.</li>
+                <li>Help schedule a career conversation this week.</li>
+                <li>Upload a transcript or test score document.</li>
+              </>
+            ) : (
+              <>
+                <li>Upload your latest report card or progress report.</li>
+                <li>Mark 1–2 checklist items done this week.</li>
+                <li>Pick or review your LifePath career interests.</li>
+                <li>Invite a parent/guardian/counselor to support you.</li>
+              </>
+            )}
           </ul>
           <div className="mt-4 text-xs text-slate-500">
             (We’ll personalize this by role and grade level next.)
           </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <StudentSuccessChecklist tasks={summary?.tasks || []} onChanged={loadSummary} />
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

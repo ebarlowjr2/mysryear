@@ -19,6 +19,12 @@ export async function GET() {
 
   if (!session) return error('Not authenticated', 401)
 
+  const { data: viewerProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .maybeSingle()
+
   const studentProfileId = await getActiveStudentProfileId()
   if (!studentProfileId) return ok({ studentProfileId: null })
 
@@ -42,6 +48,7 @@ export async function GET() {
 
   const latestGpa = (records || []).find((r) => typeof r.gpa === 'number')?.gpa ?? null
   const hasRecentRecord = (records || []).length > 0
+  const latestAcademicRecordAt = (records || [])[0]?.created_at ?? null
 
   // Ensure tasks exist (idempotent).
   const templates = templatesForGrade(gradeLevel)
@@ -97,9 +104,12 @@ export async function GET() {
 
   return ok({
     studentProfileId,
+    viewerRole: (viewerProfile?.role as string | null) || null,
     gradeLevel,
     academicRecords: records || [],
+    latestAcademicRecordAt,
     tasks: tasks || [],
+    checklist: { done, total },
     academicHealth: health,
     lifepath: {
       selectedCareersCount,
