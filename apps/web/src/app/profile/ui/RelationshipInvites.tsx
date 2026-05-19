@@ -145,9 +145,11 @@ export default function RelationshipInvites({
             <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
             <input
               className="input w-full px-4 py-3 rounded-lg"
+              name="invite_supporter_email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="parent@example.com"
+              autoComplete="email"
               disabled={saving}
             />
           </div>
@@ -198,6 +200,8 @@ export default function RelationshipInvites({
               value={studentClaimEmail}
               onChange={(e) => setStudentClaimEmail(e.target.value)}
               placeholder="student@example.com"
+              name="invite_claim_student_email"
+              autoComplete="email"
               disabled={saving}
             />
           </div>
@@ -280,6 +284,8 @@ export default function RelationshipInvites({
               value={requestStudentEmail}
               onChange={(e) => setRequestStudentEmail(e.target.value)}
               placeholder="student@example.com"
+              name="request_access_student_email"
+              autoComplete="email"
               disabled={saving}
             />
           </div>
@@ -304,6 +310,8 @@ export default function RelationshipInvites({
             value={requestStudentProfileId}
             onChange={(e) => setRequestStudentProfileId(e.target.value)}
             placeholder="Paste the student_profile_id (UUID)"
+            name="request_access_student_profile_id"
+            autoComplete="off"
             disabled={saving}
           />
           <p className="mt-2 text-xs text-slate-600">

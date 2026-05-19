@@ -44,6 +44,24 @@ export async function POST(req: Request) {
     .select('*')
     .single()
 
+  // Some environments may not yet have the `invite_type` column applied (Supabase schema cache / migration lag).
+  // Retry without the column so the core invite flow still works.
+  if (error && /invite_type.*schema cache|column .*invite_type.* does not exist/i.test(error.message)) {
+    const { data: data2, error: error2 } = await supabase
+      .from('student_profile_relationship_invites')
+      .insert({
+        student_profile_id: studentProfileId,
+        invited_email: invitedEmail,
+        relationship_role: relationshipRole,
+        status: 'pending',
+        created_by_user_id: session.user.id,
+      })
+      .select('*')
+      .single()
+    if (error2) return jsonError(error2.message)
+    return NextResponse.json({ ok: true, invite: data2 })
+  }
+
   if (error) return jsonError(error.message)
   return NextResponse.json({ ok: true, invite: data })
 }
@@ -78,7 +96,36 @@ export async function PATCH(req: Request) {
       .select('id,relationship_role,invite_type')
       .eq('id', inviteId)
       .single()
-    if (inviteReadErr) return jsonError(inviteReadErr.message)
+    if (inviteReadErr) {
+      // Back-compat: older envs without invite_type column.
+      if (/invite_type.*schema cache|column .*invite_type.* does not exist/i.test(inviteReadErr.message)) {
+        const { data: inviteForType2, error: inviteReadErr2 } = await supabase
+          .from('student_profile_relationship_invites')
+          .select('id,relationship_role')
+          .eq('id', inviteId)
+          .single()
+        if (inviteReadErr2) return jsonError(inviteReadErr2.message)
+
+        if (inviteForType2.relationship_role === 'student') {
+          const { error: rpcErr } = await supabase.rpc('accept_student_claim_invite', {
+            p_invite_id: inviteId,
+          })
+          if (rpcErr) return jsonError(rpcErr.message)
+
+          const { data: invite, error: reloadErr } = await supabase
+            .from('student_profile_relationship_invites')
+            .select('*')
+            .eq('id', inviteId)
+            .single()
+          if (reloadErr) return jsonError(reloadErr.message)
+          return NextResponse.json({ ok: true, invite })
+        }
+      } else {
+        return jsonError(inviteReadErr.message)
+      }
+    }
+
+    if (!inviteForType) return jsonError('Invite not found')
 
     if (inviteForType.relationship_role === 'student') {
       const { error: rpcErr } = await supabase.rpc('accept_student_claim_invite', {
