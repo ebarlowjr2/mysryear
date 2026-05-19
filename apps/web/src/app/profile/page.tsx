@@ -2,6 +2,7 @@ import { requireSessionProfile } from '@/lib/auth'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
 import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
 import RelationshipInvites from './ui/RelationshipInvites'
+import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
 
 type SchoolRow = { name: string | null } | null
 type StudentProfileRow = {
@@ -87,6 +88,12 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
+  const { data: schools } = await supabase
+    .from('schools')
+    .select('id,name,city,state')
+    .order('name', { ascending: true })
+    .limit(5000)
+
   return (
     <section className="container-prose pt-10 pb-20 space-y-6">
       <div className="card p-8">
@@ -168,6 +175,17 @@ export default async function ProfilePage() {
               <div>3. Upload documents and track milestones.</div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <StudentProfileDetailsForm
+            studentProfileId={activeStudentProfileId}
+            initialFirstName={activeStudentProfile?.first_name || null}
+            initialLastName={activeStudentProfile?.last_name || null}
+            initialGraduationYear={activeStudentProfile?.graduation_year || null}
+            initialSchoolId={activeStudentProfile?.school_id || null}
+            schools={(schools || []) as unknown as { id: string; name: string; city: string | null; state: string | null }[]}
+          />
         </div>
       </div>
 
