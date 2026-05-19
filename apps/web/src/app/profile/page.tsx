@@ -4,6 +4,7 @@ import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
 import RelationshipInvites from './ui/RelationshipInvites'
 import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
 import LinkedSupporters from './ui/LinkedSupporters'
+import CopyTextButton from '@/components/CopyTextButton'
 
 type SchoolRow = { name: string | null } | null
 type StudentProfileRow = {
@@ -195,6 +196,19 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {activeStudentProfileId ? (
+          <div className="mt-6 card p-4">
+            <div className="text-xs font-semibold text-slate-600">Student profile ID</div>
+            <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="font-mono text-xs break-all">{activeStudentProfileId}</div>
+              <CopyTextButton text={activeStudentProfileId} label="Copy ID" />
+            </div>
+            <div className="mt-2 text-xs text-slate-600">
+              Use this ID if a parent/guardian is requesting access to this student profile.
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-6">
           <StudentProfileDetailsForm
