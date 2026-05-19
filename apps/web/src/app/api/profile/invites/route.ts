@@ -47,6 +47,13 @@ export async function POST(req: Request) {
   // Some environments may not yet have the `invite_type` column applied (Supabase schema cache / migration lag).
   // Retry without the column so the core invite flow still works.
   if (error && /invite_type.*schema cache|column .*invite_type.* does not exist/i.test(error.message)) {
+    // Access requests REQUIRE invite_type + the additional RLS policy. Without it, they will be blocked by RLS.
+    if (inviteType === 'access_request') {
+      return jsonError(
+        "Access requests aren't enabled on this Supabase project yet. Run supabase/migrations/20260519133000_parent_access_requests.sql in the SQL Editor and then reload the API schema cache.",
+        400,
+      )
+    }
     const { data: data2, error: error2 } = await supabase
       .from('student_profile_relationship_invites')
       .insert({
@@ -60,6 +67,13 @@ export async function POST(req: Request) {
       .single()
     if (error2) return jsonError(error2.message)
     return NextResponse.json({ ok: true, invite: data2 })
+  }
+
+  if (error && inviteType === 'access_request' && /row-level security/i.test(error.message)) {
+    return jsonError(
+      "Access request was blocked by RLS. Confirm you've run supabase/migrations/20260519133000_parent_access_requests.sql and reloaded the Supabase API schema cache.",
+      400,
+    )
   }
 
   if (error) return jsonError(error.message)
