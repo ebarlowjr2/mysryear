@@ -16,7 +16,8 @@ export async function POST(req: Request) {
     | {
         studentProfileId?: string
         invitedEmail?: string
-        relationshipRole?: 'parent' | 'guardian' | 'counselor'
+        relationshipRole?: 'parent' | 'guardian' | 'counselor' | 'student'
+        inviteType?: 'supporter_invite' | 'access_request'
       }
     | null
   if (!body) return jsonError('Invalid JSON')
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
   const studentProfileId = body.studentProfileId
   const invitedEmail = (body.invitedEmail || '').trim().toLowerCase()
   const relationshipRole = body.relationshipRole
+  const inviteType = body.inviteType || 'supporter_invite'
 
   if (!studentProfileId) return jsonError('Missing studentProfileId')
   if (!invitedEmail) return jsonError('Missing invitedEmail')
@@ -35,11 +37,30 @@ export async function POST(req: Request) {
       student_profile_id: studentProfileId,
       invited_email: invitedEmail,
       relationship_role: relationshipRole,
+      invite_type: inviteType,
       status: 'pending',
       created_by_user_id: session.user.id,
     })
     .select('*')
     .single()
+
+  // Some environments may not yet have the `invite_type` column applied (Supabase schema cache / migration lag).
+  // Retry without the column so the core invite flow still works.
+  if (error && /invite_type.*schema cache|column .*invite_type.* does not exist/i.test(error.message)) {
+    const { data: data2, error: error2 } = await supabase
+      .from('student_profile_relationship_invites')
+      .insert({
+        student_profile_id: studentProfileId,
+        invited_email: invitedEmail,
+        relationship_role: relationshipRole,
+        status: 'pending',
+        created_by_user_id: session.user.id,
+      })
+      .select('*')
+      .single()
+    if (error2) return jsonError(error2.message)
+    return NextResponse.json({ ok: true, invite: data2 })
+  }
 
   if (error) return jsonError(error.message)
   return NextResponse.json({ ok: true, invite: data })
@@ -67,6 +88,78 @@ export async function PATCH(req: Request) {
 
   const nextStatus = action === 'accept' ? 'accepted' : 'declined'
 
+  if (action === 'accept') {
+    // If this is a student-claim invite (parent-led onboarding), accept via RPC
+    // so the student can attach to the student_profiles row even when RLS would block updates.
+    const { data: inviteForType, error: inviteReadErr } = await supabase
+      .from('student_profile_relationship_invites')
+      .select('id,relationship_role,invite_type')
+      .eq('id', inviteId)
+      .single()
+    if (inviteReadErr) {
+      // Back-compat: older envs without invite_type column.
+      if (/invite_type.*schema cache|column .*invite_type.* does not exist/i.test(inviteReadErr.message)) {
+        const { data: inviteForType2, error: inviteReadErr2 } = await supabase
+          .from('student_profile_relationship_invites')
+          .select('id,relationship_role')
+          .eq('id', inviteId)
+          .single()
+        if (inviteReadErr2) return jsonError(inviteReadErr2.message)
+
+        if (inviteForType2.relationship_role === 'student') {
+          const { error: rpcErr } = await supabase.rpc('accept_student_claim_invite', {
+            p_invite_id: inviteId,
+          })
+          if (rpcErr) return jsonError(rpcErr.message)
+
+          const { data: invite, error: reloadErr } = await supabase
+            .from('student_profile_relationship_invites')
+            .select('*')
+            .eq('id', inviteId)
+            .single()
+          if (reloadErr) return jsonError(reloadErr.message)
+          return NextResponse.json({ ok: true, invite })
+        }
+      } else {
+        return jsonError(inviteReadErr.message)
+      }
+    }
+
+    if (!inviteForType) return jsonError('Invite not found')
+
+    if (inviteForType.relationship_role === 'student') {
+      const { error: rpcErr } = await supabase.rpc('accept_student_claim_invite', {
+        p_invite_id: inviteId,
+      })
+      if (rpcErr) return jsonError(rpcErr.message)
+
+      // Return the updated invite row for UI refresh.
+      const { data: invite, error: reloadErr } = await supabase
+        .from('student_profile_relationship_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .single()
+      if (reloadErr) return jsonError(reloadErr.message)
+      return NextResponse.json({ ok: true, invite })
+    }
+
+    if (inviteForType.invite_type === 'access_request') {
+      const { error: rpcErr } = await supabase.rpc('approve_access_request', {
+        p_invite_id: inviteId,
+      })
+      if (rpcErr) return jsonError(rpcErr.message)
+
+      const { data: invite, error: reloadErr } = await supabase
+        .from('student_profile_relationship_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .single()
+      if (reloadErr) return jsonError(reloadErr.message)
+      return NextResponse.json({ ok: true, invite })
+    }
+  }
+
+  // Default path: accept/decline supporter invites, then add family_relationships row on accept.
   const { data: invite, error: updateError } = await supabase
     .from('student_profile_relationship_invites')
     .update({ status: nextStatus, invited_user_id: session.user.id })

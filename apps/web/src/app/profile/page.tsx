@@ -2,6 +2,8 @@ import { requireSessionProfile } from '@/lib/auth'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
 import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
 import RelationshipInvites from './ui/RelationshipInvites'
+import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
+import LinkedSupporters from './ui/LinkedSupporters'
 
 type SchoolRow = { name: string | null } | null
 type StudentProfileRow = {
@@ -16,6 +18,8 @@ type StudentProfileRow = {
 type RelationshipRow = {
   role: string
   student_profile_id: string
+  user_id: string
+  created_at: string
   student_profiles: StudentProfileRow | null
 }
 
@@ -24,7 +28,7 @@ type InviteRow = {
   student_profile_id: string
   invited_email: string | null
   invited_user_id: string | null
-  relationship_role: 'parent' | 'guardian' | 'counselor'
+  relationship_role: 'parent' | 'guardian' | 'counselor' | 'student'
   status: 'pending' | 'accepted' | 'declined' | 'expired'
   created_by_user_id: string
   created_at: string
@@ -50,7 +54,9 @@ export default async function ProfilePage() {
 
   const { data: relRows } = await supabase
     .from('family_relationships')
-    .select('role,student_profile_id,student_profiles(id,first_name,last_name,graduation_year,school_id,schools(name))')
+    .select(
+      'role,user_id,student_profile_id,created_at,student_profiles(id,first_name,last_name,graduation_year,school_id,schools(name))',
+    )
     .eq('user_id', sp.user.id)
     .order('created_at', { ascending: true })
 
@@ -86,6 +92,26 @@ export default async function ProfilePage() {
     // - or invited_email matches auth.jwt email (for invites created before account existed)
     .order('created_at', { ascending: false })
     .limit(50)
+
+  // Linked supporters for the active student profile (membership rows).
+  const { data: linkedRows } = activeStudentProfileId
+    ? await supabase
+        .from('family_relationships')
+        .select('user_id,role,created_at')
+        .eq('student_profile_id', activeStudentProfileId)
+        .order('created_at', { ascending: true })
+    : { data: [] as unknown[] }
+
+  const pendingInvitesForActive =
+    (invitesCreated || []).filter(
+      (i) => i.student_profile_id === activeStudentProfileId && i.status === 'pending',
+    ) || []
+
+  const { data: schools } = await supabase
+    .from('schools')
+    .select('id,name,city,state')
+    .order('name', { ascending: true })
+    .limit(5000)
 
   return (
     <section className="container-prose pt-10 pb-20 space-y-6">
@@ -169,6 +195,17 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <div className="mt-6">
+          <StudentProfileDetailsForm
+            studentProfileId={activeStudentProfileId}
+            initialFirstName={activeStudentProfile?.first_name || null}
+            initialLastName={activeStudentProfile?.last_name || null}
+            initialGraduationYear={activeStudentProfile?.graduation_year || null}
+            initialSchoolId={activeStudentProfile?.school_id || null}
+            schools={(schools || []) as unknown as { id: string; name: string; city: string | null; state: string | null }[]}
+          />
+        </div>
       </div>
 
       <div className="card p-8">
@@ -177,6 +214,14 @@ export default async function ProfilePage() {
         <p className="mt-2 text-slate-700">
           Invite supporters to help plan. Counselors are read/support access only for now.
         </p>
+
+        <div className="mt-6">
+          <LinkedSupporters
+            currentUserId={sp.user.id}
+            linked={(linkedRows || []) as unknown as { user_id: string; role: string; created_at: string }[]}
+            pendingInvites={pendingInvitesForActive as unknown as { id: string; invited_email: string | null; relationship_role: string; status: string; created_at: string }[]}
+          />
+        </div>
 
         <div className="mt-6">
           <RelationshipInvites
