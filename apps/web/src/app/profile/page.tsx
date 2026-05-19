@@ -24,7 +24,7 @@ type InviteRow = {
   student_profile_id: string
   invited_email: string | null
   invited_user_id: string | null
-  relationship_role: 'parent' | 'guardian' | 'counselor'
+  relationship_role: 'parent' | 'guardian' | 'counselor' | 'student'
   status: 'pending' | 'accepted' | 'declined' | 'expired'
   created_by_user_id: string
   created_at: string

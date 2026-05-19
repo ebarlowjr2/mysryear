@@ -7,7 +7,7 @@ type InviteRow = {
   id: string
   student_profile_id: string
   invited_email: string | null
-  relationship_role: 'parent' | 'guardian' | 'counselor'
+  relationship_role: 'parent' | 'guardian' | 'counselor' | 'student'
   status: 'pending' | 'accepted' | 'declined' | 'expired'
   created_at: string
 }
@@ -24,6 +24,7 @@ export default function RelationshipInvites({
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [relationshipRole, setRelationshipRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
+  const [studentClaimEmail, setStudentClaimEmail] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -49,6 +50,31 @@ export default function RelationshipInvites({
         return
       }
       setEmail('')
+      router.refresh()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function createStudentClaimInvite() {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/profile/invites', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          studentProfileId: activeStudentProfileId,
+          invitedEmail: studentClaimEmail,
+          relationshipRole: 'student',
+        }),
+      })
+      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+      if (!res.ok || !json?.ok) {
+        setError(json?.error || 'Invite failed')
+        return
+      }
+      setStudentClaimEmail('')
       router.refresh()
     } finally {
       setSaving(false)
@@ -124,6 +150,36 @@ export default function RelationshipInvites({
           >
             {saving ? 'Saving...' : 'Send invite'}
           </button>
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <div className="text-sm font-black">Invite student to claim this profile</div>
+        <p className="mt-1 text-sm text-slate-700">
+          For parent-led accounts: invite your student’s email so they can claim this student profile.
+        </p>
+
+        <div className="mt-4 grid sm:grid-cols-3 gap-3 items-end">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Student email</label>
+            <input
+              className="input w-full px-4 py-3 rounded-lg"
+              value={studentClaimEmail}
+              onChange={(e) => setStudentClaimEmail(e.target.value)}
+              placeholder="student@example.com"
+              disabled={saving}
+            />
+          </div>
+          <div className="sm:col-span-1">
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              disabled={!activeStudentProfileId || saving || !studentClaimEmail.trim()}
+              onClick={createStudentClaimInvite}
+            >
+              {saving ? 'Saving...' : 'Send claim invite'}
+            </button>
+          </div>
         </div>
       </div>
 

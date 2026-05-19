@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     | {
         studentProfileId?: string
         invitedEmail?: string
-        relationshipRole?: 'parent' | 'guardian' | 'counselor'
+        relationshipRole?: 'parent' | 'guardian' | 'counselor' | 'student'
       }
     | null
   if (!body) return jsonError('Invalid JSON')
@@ -67,6 +67,34 @@ export async function PATCH(req: Request) {
 
   const nextStatus = action === 'accept' ? 'accepted' : 'declined'
 
+  if (action === 'accept') {
+    // If this is a student-claim invite (parent-led onboarding), accept via RPC
+    // so the student can attach to the student_profiles row even when RLS would block updates.
+    const { data: inviteForType, error: inviteReadErr } = await supabase
+      .from('student_profile_relationship_invites')
+      .select('id,relationship_role')
+      .eq('id', inviteId)
+      .single()
+    if (inviteReadErr) return jsonError(inviteReadErr.message)
+
+    if (inviteForType.relationship_role === 'student') {
+      const { error: rpcErr } = await supabase.rpc('accept_student_claim_invite', {
+        p_invite_id: inviteId,
+      })
+      if (rpcErr) return jsonError(rpcErr.message)
+
+      // Return the updated invite row for UI refresh.
+      const { data: invite, error: reloadErr } = await supabase
+        .from('student_profile_relationship_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .single()
+      if (reloadErr) return jsonError(reloadErr.message)
+      return NextResponse.json({ ok: true, invite })
+    }
+  }
+
+  // Default path: accept/decline supporter invites, then add family_relationships row on accept.
   const { data: invite, error: updateError } = await supabase
     .from('student_profile_relationship_invites')
     .update({ status: nextStatus, invited_user_id: session.user.id })
