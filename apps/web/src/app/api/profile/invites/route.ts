@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         studentProfileId?: string
         invitedEmail?: string
         relationshipRole?: 'parent' | 'guardian' | 'counselor' | 'student'
+        inviteType?: 'supporter_invite' | 'access_request'
       }
     | null
   if (!body) return jsonError('Invalid JSON')
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
   const studentProfileId = body.studentProfileId
   const invitedEmail = (body.invitedEmail || '').trim().toLowerCase()
   const relationshipRole = body.relationshipRole
+  const inviteType = body.inviteType || 'supporter_invite'
 
   if (!studentProfileId) return jsonError('Missing studentProfileId')
   if (!invitedEmail) return jsonError('Missing invitedEmail')
@@ -35,6 +37,7 @@ export async function POST(req: Request) {
       student_profile_id: studentProfileId,
       invited_email: invitedEmail,
       relationship_role: relationshipRole,
+      invite_type: inviteType,
       status: 'pending',
       created_by_user_id: session.user.id,
     })
@@ -72,7 +75,7 @@ export async function PATCH(req: Request) {
     // so the student can attach to the student_profiles row even when RLS would block updates.
     const { data: inviteForType, error: inviteReadErr } = await supabase
       .from('student_profile_relationship_invites')
-      .select('id,relationship_role')
+      .select('id,relationship_role,invite_type')
       .eq('id', inviteId)
       .single()
     if (inviteReadErr) return jsonError(inviteReadErr.message)
@@ -84,6 +87,21 @@ export async function PATCH(req: Request) {
       if (rpcErr) return jsonError(rpcErr.message)
 
       // Return the updated invite row for UI refresh.
+      const { data: invite, error: reloadErr } = await supabase
+        .from('student_profile_relationship_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .single()
+      if (reloadErr) return jsonError(reloadErr.message)
+      return NextResponse.json({ ok: true, invite })
+    }
+
+    if (inviteForType.invite_type === 'access_request') {
+      const { error: rpcErr } = await supabase.rpc('approve_access_request', {
+        p_invite_id: inviteId,
+      })
+      if (rpcErr) return jsonError(rpcErr.message)
+
       const { data: invite, error: reloadErr } = await supabase
         .from('student_profile_relationship_invites')
         .select('*')
