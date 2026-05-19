@@ -5,6 +5,10 @@ function jsonError(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status })
 }
 
+function looksLikeUuid(v: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+}
+
 export async function POST(req: Request) {
   const supabase = await createNextServerSupabaseClient()
   const {
@@ -22,14 +26,26 @@ export async function POST(req: Request) {
     | null
   if (!body) return jsonError('Invalid JSON')
 
-  const studentProfileId = body.studentProfileId
+  const studentProfileId = (body.studentProfileId || '').trim()
   const invitedEmail = (body.invitedEmail || '').trim().toLowerCase()
   const relationshipRole = body.relationshipRole
   const inviteType = body.inviteType || 'supporter_invite'
 
   if (!studentProfileId) return jsonError('Missing studentProfileId')
+  if (!looksLikeUuid(studentProfileId)) return jsonError('studentProfileId must be a UUID')
   if (!invitedEmail) return jsonError('Missing invitedEmail')
   if (!relationshipRole) return jsonError('Missing relationshipRole')
+
+  // Preflight: give a clear error if the student_profile_id doesn't exist, instead of a FK violation.
+  // Note: we keep this best-effort; if RLS blocks this read, the insert will still be the source of truth.
+  const { data: spExists, error: spExistsErr } = await supabase
+    .from('student_profiles')
+    .select('id')
+    .eq('id', studentProfileId)
+    .maybeSingle()
+  if (!spExistsErr && !spExists) {
+    return jsonError('Student profile not found. Double-check the student_profile_id you pasted.')
+  }
 
   const { data, error } = await supabase
     .from('student_profile_relationship_invites')
