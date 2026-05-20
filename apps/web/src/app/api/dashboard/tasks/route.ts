@@ -15,6 +15,15 @@ export async function PATCH(req: Request) {
 
   if (!session) return error('Not authenticated', 401)
 
+  // Counselors are read/support only; do not allow checklist mutation.
+  const { data: viewerProfile, error: viewerErr } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .maybeSingle()
+  if (viewerErr) return error(viewerErr.message)
+  if ((viewerProfile?.role as string | null) === 'counselor') return error('Forbidden', 403)
+
   const body = (await req.json().catch(() => null)) as
     | {
         taskId?: string
@@ -40,4 +49,3 @@ export async function PATCH(req: Request) {
   if (updateError) return error(updateError.message)
   return NextResponse.json({ ok: true, task: updated })
 }
-

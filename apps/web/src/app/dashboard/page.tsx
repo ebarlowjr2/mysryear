@@ -227,7 +227,11 @@ export default function Dashboard() {
       </div>
 
       <div className="mb-8">
-        <StudentSuccessChecklist tasks={summary?.tasks || []} onChanged={loadSummary} />
+        <StudentSuccessChecklist
+          tasks={summary?.tasks || []}
+          onChanged={loadSummary}
+          readOnly={viewerRole === 'counselor'}
+        />
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

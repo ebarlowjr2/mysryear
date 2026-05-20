@@ -14,9 +14,11 @@ type Task = {
 export default function StudentSuccessChecklist({
   tasks,
   onChanged,
+  readOnly = false,
 }: {
   tasks: Task[]
   onChanged(): void
+  readOnly?: boolean
 }) {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +33,7 @@ export default function StudentSuccessChecklist({
   }, [tasks])
 
   async function setStatus(taskId: string, status: Task['status']) {
+    if (readOnly) return
     setSavingId(taskId)
     setError(null)
     try {
@@ -92,27 +95,33 @@ export default function StudentSuccessChecklist({
                       {t.description ? <div className="mt-1 text-xs text-slate-700">{t.description}</div> : null}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {t.status !== 'done' ? (
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          disabled={savingId === t.id}
-                          onClick={() => setStatus(t.id, 'done')}
-                        >
-                          {savingId === t.id ? 'Saving...' : 'Mark done'}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          disabled={savingId === t.id}
-                          onClick={() => setStatus(t.id, 'not_started')}
-                        >
-                          {savingId === t.id ? 'Saving...' : 'Undo'}
-                        </button>
-                      )}
-                    </div>
+                    {!readOnly ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        {t.status !== 'done' ? (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={savingId === t.id}
+                            onClick={() => setStatus(t.id, 'done')}
+                          >
+                            {savingId === t.id ? 'Saving...' : 'Mark done'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            disabled={savingId === t.id}
+                            onClick={() => setStatus(t.id, 'not_started')}
+                          >
+                            {savingId === t.id ? 'Saving...' : 'Undo'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="shrink-0 text-xs text-slate-600 border border-slate-200 bg-slate-50 rounded-full px-2 py-1">
+                        Read-only
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -123,4 +132,3 @@ export default function StudentSuccessChecklist({
     </div>
   )
 }
-
