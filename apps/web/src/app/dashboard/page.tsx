@@ -6,6 +6,7 @@ import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
 import ReportCardVault from '@/components/ReportCardVault'
 import StudentSuccessChecklist from '@/components/StudentSuccessChecklist'
+import ActiveStudentCard from '@/components/ActiveStudentCard'
 import { useAuthSession } from '@/lib/use-auth-session'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -23,6 +24,13 @@ type DashboardSummary = {
   ok: boolean
   studentProfileId: string | null
   viewerRole: string | null
+  activeStudentProfile?: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    graduation_year: number | null
+    schools?: { name: string | null } | null
+  } | null
   latestAcademicRecordAt: string | null
   checklist?: { done: number; total: number }
   tasks?: DashboardTask[]
@@ -105,6 +113,7 @@ export default function Dashboard() {
 
   const viewerRole = (summary?.viewerRole as string | null) || null
   const showParentActionCenter = viewerRole === 'parent' || viewerRole === 'guardian' || viewerRole === 'admin'
+  const showCounselorInfo = viewerRole === 'counselor'
 
   return (
     <div className="container-prose py-14">
@@ -114,6 +123,18 @@ export default function Dashboard() {
           <p className="text-slate-700 mt-2">Check in each grading period—track progress year-round.</p>
         </div>
       </div>
+
+      <ActiveStudentCard studentProfile={summary?.activeStudentProfile || null} />
+
+      {showCounselorInfo ? (
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
+          <div className="font-semibold">Counselor access</div>
+          <div className="mt-1">
+            Counselors currently have read/support access only. Editing core profile fields and checklist completion is
+            reserved for the student and parent/guardian.
+          </div>
+        </div>
+      ) : null}
 
       {bootstrapError && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

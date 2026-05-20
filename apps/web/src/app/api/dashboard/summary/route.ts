@@ -30,7 +30,7 @@ export async function GET() {
 
   const { data: studentProfile } = await supabase
     .from('student_profiles')
-    .select('id,graduation_year,grade_level')
+    .select('id,first_name,last_name,graduation_year,grade_level,schools(name)')
     .eq('id', studentProfileId)
     .maybeSingle()
 
@@ -105,6 +105,7 @@ export async function GET() {
   return ok({
     studentProfileId,
     viewerRole: (viewerProfile?.role as string | null) || null,
+    activeStudentProfile: studentProfile || null,
     gradeLevel,
     academicRecords: records || [],
     latestAcademicRecordAt,
