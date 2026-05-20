@@ -1,9 +1,12 @@
 import LifePathCareerDetail from '@/features/aura/lifepath/components/LifePathCareerDetail'
 import { CAREERS } from '@/features/aura/lifepath/data/careers'
 import { requireSessionProfile } from '@/lib/auth'
+import ActiveStudentHeader from '@/components/ActiveStudentHeader'
+import { getActiveStudentProfileSummary } from '@/lib/student-profile'
 
 export default async function LifePathCareerPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireSessionProfile('/aura/lifepath/compare')
+  await requireSessionProfile('/aura/lifepath/career')
+  const studentProfile = await getActiveStudentProfileSummary()
   const { id } = await params
   const career = CAREERS.find((c) => c.id === id)
 
@@ -20,6 +23,7 @@ export default async function LifePathCareerPage({ params }: { params: Promise<{
 
   return (
     <section className="container-prose pt-10 pb-20">
+      <ActiveStudentHeader studentProfile={studentProfile} />
       <LifePathCareerDetail career={career} />
     </section>
   )

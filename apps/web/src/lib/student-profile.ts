@@ -1,6 +1,13 @@
 import { createNextServerSupabaseClient, type UserRole } from '@mysryear/shared'
 
 type StudentProfileRow = { id: string; student_user_id: string | null }
+export type ActiveStudentProfileSummary = {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  graduation_year: number | null
+  schools: { name: string | null } | null
+}
 
 export async function getActiveStudentProfileId(): Promise<string | null> {
   const supabase = await createNextServerSupabaseClient()
@@ -78,4 +85,23 @@ export async function setActiveStudentProfileId(studentProfileId: string | null)
     .from('profiles')
     .update({ active_student_profile_id: studentProfileId })
     .eq('id', session.user.id)
+}
+
+export async function getActiveStudentProfileSummary(): Promise<ActiveStudentProfileSummary | null> {
+  const supabase = await createNextServerSupabaseClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return null
+
+  const id = await getActiveStudentProfileId()
+  if (!id) return null
+
+  const { data } = await supabase
+    .from('student_profiles')
+    .select('id,first_name,last_name,graduation_year,schools(name)')
+    .eq('id', id)
+    .maybeSingle()
+
+  return (data as unknown as ActiveStudentProfileSummary | null) || null
 }
