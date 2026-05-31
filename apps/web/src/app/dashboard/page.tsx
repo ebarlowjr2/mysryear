@@ -10,6 +10,7 @@ import ActiveStudentCard from '@/components/ActiveStudentCard'
 import { useAuthSession } from '@/lib/use-auth-session'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { BookOpenCheck, FileSignature } from 'lucide-react'
 
 type DashboardTask = {
   id: string
@@ -251,6 +252,18 @@ export default function Dashboard() {
           <CalendarClock className="w-8 h-8 text-brand-600 mb-4" />
           <h3 className="text-lg font-bold mb-2">Planner</h3>
           <p className="text-slate-600 text-sm">Senior year timeline and tasks</p>
+        </Link>
+
+        <Link href="/test-prep" className="card p-6 hover:shadow-lg transition">
+          <BookOpenCheck className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Test Prep</h3>
+          <p className="text-slate-600 text-sm">Plan PSAT/SAT/ACT and track prep</p>
+        </Link>
+
+        <Link href="/vault" className="card p-6 hover:shadow-lg transition">
+          <FileSignature className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Essays & Resume Vault</h3>
+          <p className="text-slate-600 text-sm">Store essays, resumes, and key documents</p>
         </Link>
 
         <Link href="/resources" className="card p-6 hover:shadow-lg transition">
