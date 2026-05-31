@@ -4,6 +4,7 @@ import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
 import RelationshipInvites from './ui/RelationshipInvites'
 import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
 import LinkedSupporters from './ui/LinkedSupporters'
+import { CalendarDays, Megaphone, Users } from 'lucide-react'
 
 type SchoolRow = { name: string | null } | null
 type StudentProfileRow = {
@@ -205,6 +206,73 @@ export default async function ProfilePage() {
             initialSchoolId={activeStudentProfile?.school_id || null}
             schools={(schools || []) as unknown as { id: string; name: string; city: string | null; state: string | null }[]}
           />
+        </div>
+      </div>
+
+      <div className="card p-8">
+        <div className="badge">School</div>
+        <h2 className="mt-3 text-2xl font-black tracking-tight">School Hub</h2>
+        <p className="mt-2 text-slate-700">
+          These modules will connect to your school and student directory data. (Coming soon on web—already listed on mobile.)
+        </p>
+
+        <div className="mt-6 grid md:grid-cols-3 gap-4">
+          <div className="card p-5">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <Megaphone className="h-5 w-5 text-slate-700" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg font-black">School Announcements</div>
+                <div className="mt-1 text-sm text-slate-700">
+                  Updates from your school and district—deadlines, reminders, and key info.
+                </div>
+                <div className="mt-3">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <CalendarDays className="h-5 w-5 text-slate-700" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg font-black">Events Calendar</div>
+                <div className="mt-1 text-sm text-slate-700">
+                  Track school events, testing dates, and important milestones in one place.
+                </div>
+                <div className="mt-3">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <Users className="h-5 w-5 text-slate-700" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg font-black">Student Directory</div>
+                <div className="mt-1 text-sm text-slate-700">
+                  Connect with classmates, cohorts, and verified school groups (privacy-safe).
+                </div>
+                <div className="mt-3">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
