@@ -45,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local asset backups
+apps/mobile/assets/images/_pre_resize_backup/
