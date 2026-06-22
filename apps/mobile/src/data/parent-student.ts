@@ -1,4 +1,16 @@
-import { supabase } from '../lib/supabase'
+// Legacy compatibility wrapper.
+// The recovered mobile app originally used parent_student_links. The canonical rebuild model is now:
+// student_profiles + family_relationships + student_profile_relationship_invites.
+// Do not add new primary logic to parent_student_links.
+
+import {
+  acceptRelationshipInvite,
+  createRelationshipInvite,
+  declineRelationshipInvite,
+  getLinkedStudentProfiles,
+  requestStudentAccessByProfileId,
+  type StudentProfile,
+} from './identity'
 
 export type ParentStudentLink = {
   id: string
@@ -19,221 +31,62 @@ export type LinkedStudent = {
   status: 'pending' | 'accepted' | 'declined'
 }
 
-export async function getLinkedStudents(parentUserId: string): Promise<LinkedStudent[]> {
-  const { data, error } = await supabase
-    .from('parent_student_links')
-    .select(`
-      id,
-      student_user_id,
-      relationship,
-      status,
-      profiles!parent_student_links_student_user_id_fkey (
-        user_id,
-        full_name,
-        school,
-        graduation_year
-      )
-    `)
-    .eq('parent_user_id', parentUserId)
-
-  if (error || !data) {
-    console.warn('Failed to get linked students:', error?.message)
-    return []
+function toLinkedStudent(profile: StudentProfile): LinkedStudent {
+  return {
+    id: profile.id,
+    link_id: profile.id,
+    user_id: profile.student_user_id || profile.id,
+    full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || null,
+    school: profile.schools?.name || null,
+    graduation_year: profile.graduation_year,
+    status: 'accepted',
   }
-
-  return data.map((link: Record<string, unknown>) => {
-    const profile = link.profiles as Record<string, unknown> | null
-    return {
-      id: link.id as string,
-      link_id: link.id as string,
-      user_id: link.student_user_id as string,
-      full_name: profile?.full_name as string | null ?? null,
-      school: profile?.school as string | null ?? null,
-      graduation_year: profile?.graduation_year as number | null ?? null,
-      status: link.status as 'pending' | 'accepted' | 'declined',
-    }
-  })
 }
 
-export async function getPendingLinkRequests(studentUserId: string): Promise<ParentStudentLink[]> {
-  const { data, error } = await supabase
-    .from('parent_student_links')
-    .select('*')
-    .eq('student_user_id', studentUserId)
-    .eq('status', 'pending')
+export async function getLinkedStudents(parentUserId: string): Promise<LinkedStudent[]> {
+  return (await getLinkedStudentProfiles(parentUserId)).map(toLinkedStudent)
+}
 
-  if (error || !data) {
-    console.warn('Failed to get pending link requests:', error?.message)
-    return []
-  }
-
-  return data as ParentStudentLink[]
+export async function getPendingLinkRequests(_studentUserId: string): Promise<ParentStudentLink[]> {
+  // Pending requests now live in student_profile_relationship_invites and are loaded in identity helpers.
+  return []
 }
 
 export async function sendLinkRequest(
   parentUserId: string,
-  studentEmail: string,
-  relationship?: string
+  studentProfileId: string,
+  relationship?: string,
 ): Promise<{ success: boolean; error: string | null }> {
-  const { data: studentProfile, error: profileError } = await supabase
-    .from('profiles')
-    .select('user_id, role')
-    .eq('user_id', (
-      await supabase.auth.admin.listUsers()
-    ).data?.users?.find(u => u.email === studentEmail)?.id ?? '')
-    .single()
-
-  if (profileError || !studentProfile) {
-    const { data: authUser } = await supabase
-      .rpc('get_user_id_by_email', { email_input: studentEmail })
-
-    if (!authUser) {
-      return { success: false, error: 'No student found with that email address' }
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_id, role')
-      .eq('user_id', authUser)
-      .single()
-
-    if (!profile) {
-      return { success: false, error: 'No student found with that email address' }
-    }
-
-    if (profile.role !== 'student') {
-      return { success: false, error: 'That account is not a student account' }
-    }
-
-    const { error: insertError } = await supabase
-      .from('parent_student_links')
-      .insert({
-        parent_user_id: parentUserId,
-        student_user_id: profile.user_id,
-        relationship: relationship || null,
-        status: 'pending',
-      })
-
-    if (insertError) {
-      if (insertError.code === '23505') {
-        return { success: false, error: 'You have already sent a link request to this student' }
-      }
-      return { success: false, error: insertError.message }
-    }
-
-    return { success: true, error: null }
-  }
-
-  if (studentProfile.role !== 'student') {
-    return { success: false, error: 'That account is not a student account' }
-  }
-
-  const { error: insertError } = await supabase
-    .from('parent_student_links')
-    .insert({
-      parent_user_id: parentUserId,
-      student_user_id: studentProfile.user_id,
-      relationship: relationship || null,
-      status: 'pending',
-    })
-
-  if (insertError) {
-    if (insertError.code === '23505') {
-      return { success: false, error: 'You have already sent a link request to this student' }
-    }
-    return { success: false, error: insertError.message }
-  }
-
-  return { success: true, error: null }
+  return requestStudentAccessByProfileId({
+    userId: parentUserId,
+    studentProfileId,
+    relationshipRole: relationship === 'guardian' ? 'guardian' : 'parent',
+  })
 }
 
 export async function respondToLinkRequest(
   linkId: string,
-  accept: boolean
+  accept: boolean,
 ): Promise<{ success: boolean; error: string | null }> {
-  const { error } = await supabase
-    .from('parent_student_links')
-    .update({ status: accept ? 'accepted' : 'declined' })
-    .eq('id', linkId)
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, error: null }
+  return accept ? acceptRelationshipInvite(linkId) : declineRelationshipInvite(linkId)
 }
 
 export async function removeLinkRequest(linkId: string): Promise<{ success: boolean; error: string | null }> {
-  const { error } = await supabase
-    .from('parent_student_links')
-    .delete()
-    .eq('id', linkId)
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, error: null }
+  return declineRelationshipInvite(linkId)
 }
 
-export async function getStudentTasks(studentUserId: string) {
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('user_id', studentUserId)
-    .order('due_date', { ascending: true })
-
-  if (error) {
-    console.warn('Failed to get student tasks:', error.message)
-    return []
-  }
-
-  return data
+export async function getStudentTasks(_studentUserId: string) {
+  // Legacy user-owned task reads intentionally disabled for parent links.
+  return []
 }
 
-export async function getStudentSavedScholarships(studentUserId: string) {
-  const { data, error } = await supabase
-    .from('saved_scholarships')
-    .select(`
-      *,
-      scholarships (*)
-    `)
-    .eq('user_id', studentUserId)
-
-  if (error) {
-    console.warn('Failed to get student saved scholarships:', error.message)
-    return []
-  }
-
-  return data
+export async function getStudentSavedScholarships(_studentUserId: string) {
+  // Future sprint: replace with student-profile-owned scholarship saves.
+  return []
 }
 
-export async function assignTaskToStudent(
-  parentUserId: string,
-  studentUserId: string,
-  task: {
-    title: string
-    description?: string
-    due_date?: string
-    category?: string
-  }
-): Promise<{ success: boolean; error: string | null }> {
-  const { error } = await supabase
-    .from('tasks')
-    .insert({
-      user_id: studentUserId,
-      title: task.title,
-      description: task.description || null,
-      due_date: task.due_date || null,
-      category: task.category || 'general',
-      completed: false,
-      created_by: parentUserId,
-      assigned_by_role: 'parent',
-    })
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, error: null }
+export async function assignTaskToStudent(): Promise<{ success: boolean; error: string | null }> {
+  return { success: false, error: 'Parent-assigned tasks must be rebuilt on student_profiles before use.' }
 }
+
+export { createRelationshipInvite }

@@ -20,7 +20,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, configError } = useAuth()
 
     const handleLogin = async () => {
       if (!email || !password) {
@@ -88,6 +88,7 @@ export default function LoginScreen() {
             autoComplete="password"
           />
 
+          {configError ? <Text style={styles.error}>{configError}</Text> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
                   <TouchableOpacity

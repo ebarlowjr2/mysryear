@@ -45,7 +45,7 @@ export default function SignupScreen() {
     password?: string
     confirmPassword?: string
   }>({})
-  const { signUp, signInWithGoogle } = useAuth()
+  const { signUp, signInWithGoogle, configError } = useAuth()
   const [googleLoading, setGoogleLoading] = useState(false)
 
   const validateForm = (): boolean => {
@@ -141,6 +141,7 @@ export default function SignupScreen() {
           <Text style={styles.subtitle}>Join My SR Year to manage your graduation journey</Text>
 
           <View style={styles.form}>
+            {configError ? <Text style={styles.error}>{configError}</Text> : null}
             <View>
               <TextInput
                 style={[styles.input, fieldErrors.email && styles.inputError]}

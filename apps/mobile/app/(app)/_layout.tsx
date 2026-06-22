@@ -10,8 +10,9 @@ export default function AppLayout() {
 
   const isStudent = role === 'student'
   const isParent = role === 'parent'
-  const isTeacher = role === 'teacher'
-  const isBusiness = role === 'business'
+  const isCounselor = role === 'counselor'
+  // Legacy teacher/business mobile roles are intentionally not canonical yet.
+  const isBusiness = false
 
   return (
     <Tabs
@@ -81,7 +82,7 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="business" size={size} color={color} />
           ),
-          href: isTeacher ? ('/school' as const) : null,
+          href: isCounselor ? ('/school' as const) : null,
         }}
       />
       

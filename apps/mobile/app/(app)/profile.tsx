@@ -21,6 +21,14 @@ import {
   type ProfileUpdate,
   type UserRole,
 } from '../../src/data/profile'
+import {
+  acceptRelationshipInvite,
+  createRelationshipInvite,
+  declineRelationshipInvite,
+  getPendingRelationshipInvites,
+  setActiveStudentProfile,
+  type RelationshipInvite,
+} from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 const US_STATES = [
@@ -37,8 +45,8 @@ const US_STATES = [
 const ROLE_LABELS: Record<UserRole, string> = {
   student: 'Student',
   parent: 'Parent',
-  teacher: 'Teacher / Staff',
-  business: 'Business',
+  guardian: 'Guardian',
+  counselor: 'Counselor',
 }
 
 const GRADUATION_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 2)
@@ -64,6 +72,9 @@ export default function ProfileScreen() {
   const [notificationsDeadlines, setNotificationsDeadlines] = useState(true)
   const [showStatePicker, setShowStatePicker] = useState(false)
   const [showYearPicker, setShowYearPicker] = useState(false)
+  const [pendingInvites, setPendingInvites] = useState<RelationshipInvite[]>([])
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -77,11 +88,12 @@ export default function ProfileScreen() {
       if (data) {
         setFirstName(data.first_name || '')
         setLastName(data.last_name || '')
-        setGraduationYear(data.graduation_year)
+        setGraduationYear(data.activeStudentProfile?.graduation_year ?? data.graduation_year ?? null)
         setState(data.state || '')
         setCounty(data.county || '')
         setNotificationsTasks(data.notifications_tasks ?? true)
         setNotificationsDeadlines(data.notifications_deadlines ?? true)
+        setPendingInvites(await getPendingRelationshipInvites(user.id))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile')
@@ -161,7 +173,7 @@ export default function ProfileScreen() {
       return
     }
 
-    const { success, error: updateError } = await updateMyProfile(user.id, updates)
+    const { success, error: updateError } = await updateMyProfile(user.id, updates, profile?.activeStudentProfile?.id)
     
     setSaving(false)
 
@@ -181,7 +193,7 @@ export default function ProfileScreen() {
     if (profile) {
       setFirstName(profile.first_name || '')
       setLastName(profile.last_name || '')
-      setGraduationYear(profile.graduation_year)
+      setGraduationYear(profile.activeStudentProfile?.graduation_year ?? profile.graduation_year ?? null)
       setState(profile.state || '')
       setCounty(profile.county || '')
       setNotificationsTasks(profile.notifications_tasks ?? true)
@@ -195,6 +207,46 @@ export default function ProfileScreen() {
       return [profile.first_name, profile.last_name].filter(Boolean).join(' ')
     }
     return profile?.full_name || user?.email?.split('@')[0] || 'User'
+  }
+
+
+  const handleSelectStudentProfile = async (studentProfileId: string) => {
+    if (!user?.id) return
+    const result = await setActiveStudentProfile(user.id, studentProfileId)
+    if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to switch student profile')
+      return
+    }
+    await fetchProfile()
+  }
+
+  const handleInviteSupporter = async () => {
+    if (!user?.id || !profile?.activeStudentProfile?.id) return
+    if (!inviteEmail.trim()) {
+      Alert.alert('Email required', 'Enter the parent, guardian, or counselor email.')
+      return
+    }
+    const result = await createRelationshipInvite({
+      userId: user.id,
+      studentProfileId: profile.activeStudentProfile.id,
+      invitedEmail: inviteEmail,
+      relationshipRole: inviteRole,
+    })
+    if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to send invite')
+      return
+    }
+    setInviteEmail('')
+    Alert.alert('Invite sent', 'The supporter invite has been created.')
+  }
+
+  const handleInviteResponse = async (inviteId: string, accept: boolean) => {
+    const result = accept ? await acceptRelationshipInvite(inviteId) : await declineRelationshipInvite(inviteId)
+    if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to update invite')
+      return
+    }
+    await fetchProfile()
   }
 
   const getInitials = () => {
@@ -328,6 +380,103 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+
+      {/* Active Student Profile */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Active Student Profile</Text>
+        {profile?.activeStudentProfile ? (
+          <View style={styles.studentProfileCard}>
+            <Text style={styles.studentProfileName}>
+              {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+            </Text>
+            <Text style={styles.studentProfileMeta}>
+              {profile.activeStudentProfile.graduation_year ? `Class of ${profile.activeStudentProfile.graduation_year}` : 'Graduation year not set'}
+              {profile.activeStudentProfile.schools?.name ? ` • ${profile.activeStudentProfile.schools.name}` : ''}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.infoValue}>No active student profile yet.</Text>
+        )}
+
+        {(profile?.linkedStudentProfiles?.length || 0) > 1 && (
+          <View style={styles.profileSwitchList}>
+            {profile?.linkedStudentProfiles.map((studentProfile) => (
+              <TouchableOpacity
+                key={studentProfile.id}
+                style={[
+                  styles.switchProfileButton,
+                  profile.activeStudentProfile?.id === studentProfile.id && styles.switchProfileButtonActive,
+                ]}
+                onPress={() => handleSelectStudentProfile(studentProfile.id)}
+              >
+                <Text style={styles.switchProfileText}>
+                  {[studentProfile.first_name, studentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+                  {studentProfile.graduation_year ? ` • ${studentProfile.graduation_year}` : ''}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Relationship Invites */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Supporters</Text>
+        {profile?.activeStudentProfile ? (
+          <>
+            <Text style={styles.toggleDesc}>Invite a parent, guardian, or counselor to support this student profile.</Text>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                placeholder="supporter@email.com"
+                placeholderTextColor={ui.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.inviteRoleRow}>
+              {(['parent', 'guardian', 'counselor'] as const).map((roleOption) => (
+                <TouchableOpacity
+                  key={roleOption}
+                  style={[styles.inviteRoleButton, inviteRole === roleOption && styles.inviteRoleButtonActive]}
+                  onPress={() => setInviteRole(roleOption)}
+                >
+                  <Text style={styles.inviteRoleText}>{roleOption}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.changeButton} onPress={handleInviteSupporter}>
+              <Text style={styles.changeButtonText}>Send Invite</Text>
+              <Ionicons name="send-outline" size={16} color={ui.primary} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={styles.infoValue}>Create or select a student profile before inviting supporters.</Text>
+        )}
+
+        {pendingInvites.length > 0 && (
+          <View style={styles.pendingInviteList}>
+            <Text style={styles.inputLabel}>Pending invites for you</Text>
+            {pendingInvites.map((invite) => (
+              <View key={invite.id} style={styles.pendingInviteCard}>
+                <Text style={styles.studentProfileName}>{invite.relationship_role} invite</Text>
+                <Text style={styles.studentProfileMeta}>{invite.invited_email || 'Sent to your account'}</Text>
+                <View style={styles.editActions}>
+                  <TouchableOpacity style={styles.cancelButton} onPress={() => handleInviteResponse(invite.id, false)}>
+                    <Text style={styles.cancelButtonText}>Decline</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.saveButton} onPress={() => handleInviteResponse(invite.id, true)}>
+                    <Text style={styles.saveButtonText}>Accept</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
       {/* B) School Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>School</Text>
@@ -335,7 +484,7 @@ export default function ProfileScreen() {
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Current School</Text>
           <Text style={styles.infoValue}>
-            {profile?.schoolMembership?.school?.name || 'Not set'}
+            {profile?.activeStudentProfile?.schools?.name || profile?.schoolMembership?.school?.name || 'Not set'}
           </Text>
         </View>
         
@@ -422,7 +571,7 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Graduation Year</Text>
             <Text style={styles.infoValue}>
-              {profile?.graduation_year || 'Not set'}
+              {profile?.activeStudentProfile?.graduation_year || profile?.graduation_year || 'Not set'}
             </Text>
           </View>
         )}
@@ -835,6 +984,77 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  studentProfileCard: {
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    marginBottom: 12,
+  },
+  studentProfileName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: ui.text,
+  },
+  studentProfileMeta: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    marginTop: 4,
+  },
+  profileSwitchList: {
+    gap: 8,
+    marginTop: 8,
+  },
+  switchProfileButton: {
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: ui.border,
+    backgroundColor: ui.backgroundSecondary,
+  },
+  switchProfileButtonActive: {
+    borderColor: ui.primary,
+    backgroundColor: ui.primaryLight,
+  },
+  switchProfileText: {
+    color: ui.text,
+    fontWeight: '600',
+  },
+  inviteRoleRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  inviteRoleButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: ui.border,
+    backgroundColor: ui.backgroundSecondary,
+  },
+  inviteRoleButtonActive: {
+    borderColor: ui.primary,
+    backgroundColor: ui.primaryLight,
+  },
+  inviteRoleText: {
+    color: ui.text,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  pendingInviteList: {
+    marginTop: 16,
+    gap: 8,
+  },
+  pendingInviteCard: {
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: ui.border,
   },
   bottomSpacer: {
     height: 32,

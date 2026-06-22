@@ -14,23 +14,23 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useSession } from '../../src/hooks/useSession'
-import { getLinkedStudents, type LinkedStudent } from '../../src/data/parent-student'
+import { getLinkedStudentProfiles, requestStudentAccessByProfileId, type StudentProfile } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function StudentsScreen() {
   const { user, loading: sessionLoading } = useSession()
   const router = useRouter()
-  const [students, setStudents] = useState<LinkedStudent[]>([])
+  const [students, setStudents] = useState<StudentProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
-  const [linkEmail, setLinkEmail] = useState('')
+  const [studentProfileId, setStudentProfileId] = useState('')
   const [linkLoading, setLinkLoading] = useState(false)
 
   const fetchStudents = useCallback(async () => {
     if (!user?.id) return
     try {
-      const data = await getLinkedStudents(user.id)
+      const data = await getLinkedStudentProfiles(user.id)
       setStudents(data)
     } catch (err) {
       console.warn('Failed to fetch students:', err)
@@ -55,24 +55,24 @@ export default function StudentsScreen() {
   }, [fetchStudents])
 
   const handleLinkStudent = async () => {
-    if (!linkEmail.trim()) {
-      Alert.alert('Error', 'Please enter a student email address')
+    if (!studentProfileId.trim()) {
+      Alert.alert('Student profile required', 'Enter the student profile ID provided by the student or guardian.')
       return
     }
 
+    if (!user?.id) return
     setLinkLoading(true)
     try {
-      Alert.alert(
-        'Link Request Sent',
-        'A link request has been sent to the student. They will need to accept it before you can view their data.',
-        [{ text: 'OK', onPress: () => {
-          setShowLinkModal(false)
-          setLinkEmail('')
-          fetchStudents()
-        }}]
-      )
-    } catch (err) {
-      Alert.alert('Error', 'Failed to send link request. Please try again.')
+      const result = await requestStudentAccessByProfileId({
+        userId: user.id,
+        studentProfileId: studentProfileId.trim(),
+        relationshipRole: 'parent',
+      })
+      if (!result.success) {
+        Alert.alert('Error', result.error || 'Failed to send access request')
+        return
+      }
+      Alert.alert('Access Request Sent', 'The student or an approved guardian can approve your request.', [{ text: 'OK', onPress: () => { setShowLinkModal(false); setStudentProfileId(''); fetchStudents() }}])
     } finally {
       setLinkLoading(false)
     }
@@ -91,8 +91,7 @@ export default function StudentsScreen() {
     }
   }
 
-  const acceptedStudents = students.filter(s => s.status === 'accepted')
-  const pendingStudents = students.filter(s => s.status === 'pending')
+  const acceptedStudents = students
 
   if (sessionLoading || loading) {
     return (
@@ -167,17 +166,17 @@ export default function StudentsScreen() {
                   <TouchableOpacity 
                     key={student.id} 
                     style={styles.studentCard}
-                    onPress={() => router.push(`/student/${student.user_id}` as never)}
+                    onPress={() => router.push('/(app)' as never)}
                   >
                     <View style={styles.studentAvatar}>
                       <Text style={styles.studentAvatarText}>
-                        {(student.full_name || 'S').charAt(0).toUpperCase()}
+                        {([student.first_name, student.last_name].filter(Boolean).join(' ') || 'S').charAt(0).toUpperCase()}
                       </Text>
                     </View>
                     <View style={styles.studentInfo}>
-                      <Text style={styles.studentName}>{student.full_name || 'Student'}</Text>
+                      <Text style={styles.studentName}>{[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Student'}</Text>
                       <Text style={styles.studentDetails}>
-                        {student.school || 'No school'} {student.graduation_year ? `• Class of ${student.graduation_year}` : ''}
+                        {student.schools?.name || 'No school'} {student.graduation_year ? `• Class of ${student.graduation_year}` : ''}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
@@ -186,28 +185,6 @@ export default function StudentsScreen() {
               </View>
             )}
 
-            {pendingStudents.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Pending Requests</Text>
-                {pendingStudents.map((student) => {
-                  const badge = getStatusBadge(student.status)
-                  return (
-                    <View key={student.id} style={styles.studentCard}>
-                      <View style={styles.studentAvatar}>
-                        <Ionicons name="time-outline" size={24} color={ui.textMuted} />
-                      </View>
-                      <View style={styles.studentInfo}>
-                        <Text style={styles.studentName}>Awaiting Response</Text>
-                        <Text style={styles.studentDetails}>Request sent to student</Text>
-                      </View>
-                      <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-                        <Text style={[styles.statusText, { color: badge.color }]}>{badge.label}</Text>
-                      </View>
-                    </View>
-                  )
-                })}
-              </View>
-            )}
           </>
         )}
       </ScrollView>
@@ -229,18 +206,18 @@ export default function StudentsScreen() {
 
           <View style={styles.modalContent}>
             <Text style={styles.modalDescription}>
-              Enter your student's email address to send them a link request. They will need to accept it before you can view their data.
+              Enter the student profile ID provided by the student/guardian to request access. Email lookup was removed from mobile because admin user lookup is not safe on the client.
             </Text>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Student Email</Text>
+              <Text style={styles.label}>Student Profile ID</Text>
               <TextInput
                 style={styles.input}
-                placeholder="student@email.com"
+                placeholder="student_profile_id"
                 placeholderTextColor={ui.inputPlaceholder}
-                value={linkEmail}
-                onChangeText={setLinkEmail}
-                keyboardType="email-address"
+                value={studentProfileId}
+                onChangeText={setStudentProfileId}
+                keyboardType="default"
                 autoCapitalize="none"
                 autoCorrect={false}
               />

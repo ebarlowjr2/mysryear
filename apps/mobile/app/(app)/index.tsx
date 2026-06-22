@@ -1,16 +1,33 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import * as DocumentPicker from 'expo-document-picker'
 import { useSession } from '../../src/hooks/useSession'
-import { getDashboardMetrics, getNextDeadline, DashboardMetrics, NextDeadline } from '../../src/data/dashboard'
+import { getDashboardMetrics, getStudentSuccessDashboard, DashboardMetrics } from '../../src/data/dashboard'
+import {
+  DOCUMENT_TYPE_OPTIONS,
+  deleteStudentDocument,
+  uploadStudentDocument,
+  type MobileDocumentType,
+  type StudentSuccessSummary,
+} from '../../src/data/academic'
+import { getActiveStudentProfile, type StudentProfile } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
   const router = useRouter()
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
-  const [nextDeadline, setNextDeadline] = useState<NextDeadline>(null)
+  const [activeStudentProfile, setActiveStudentProfile] = useState<StudentProfile | null>(null)
+  const [successSummary, setSuccessSummary] = useState<StudentSuccessSummary | null>(null)
+  const [documentType, setDocumentType] = useState<MobileDocumentType>('report_card')
+  const [schoolYear, setSchoolYear] = useState('2025-2026')
+  const [gradingPeriod, setGradingPeriod] = useState('')
+  const [gpa, setGpa] = useState('')
+  const [notes, setNotes] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -18,12 +35,14 @@ export default function DashboardScreen() {
   const fetchData = useCallback(async (userId: string) => {
     try {
       setError(null)
-      const [metricsData, deadlineData] = await Promise.all([
+      const [metricsData, studentProfile, successData] = await Promise.all([
         getDashboardMetrics(userId),
-        getNextDeadline(userId)
+        getActiveStudentProfile(userId),
+        getStudentSuccessDashboard(userId),
       ])
       setMetrics(metricsData)
-      setNextDeadline(deadlineData)
+      setActiveStudentProfile(studentProfile)
+      setSuccessSummary(successData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
     } finally {
@@ -47,9 +66,62 @@ export default function DashboardScreen() {
     fetchData(user.id)
   }, [fetchData, user?.id])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+  const refreshDashboard = useCallback(() => {
+    if (!user?.id) return
+    fetchData(user.id)
+  }, [fetchData, user?.id])
+
+  const handlePickAndUpload = async () => {
+    if (!user?.id || !activeStudentProfile?.id) {
+      setUploadMessage('Select or create an active student profile before uploading.')
+      return
+    }
+
+    setUploadMessage(null)
+    const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true })
+    if (result.canceled || !result.assets?.[0]) return
+
+    const asset = result.assets[0]
+    setUploading(true)
+    try {
+      const upload = await uploadStudentDocument({
+        userId: user.id,
+        studentProfileId: activeStudentProfile.id,
+        fileUri: asset.uri,
+        fileName: asset.name,
+        fileType: asset.mimeType || null,
+        fileSize: asset.size || null,
+        documentType,
+        schoolYear: schoolYear || null,
+        gradingPeriod: gradingPeriod || null,
+        gradeLevel: activeStudentProfile.grade_level || null,
+        gpa: gpa ? Number(gpa) : null,
+        notes: notes || null,
+      })
+      if (upload.error) {
+        setUploadMessage(upload.error)
+        return
+      }
+      setUploadMessage('Upload complete.')
+      setGpa('')
+      setNotes('')
+      refreshDashboard()
+    } catch (err) {
+      setUploadMessage(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteDocument = async (fileId: string) => {
+    const result = await deleteStudentDocument(fileId)
+    if (!result.success) {
+      setUploadMessage(result.error || 'Delete failed')
+      return
+    }
+    setUploadMessage('Document deleted.')
+    refreshDashboard()
   }
 
   if (sessionLoading || loading) {
@@ -91,32 +163,127 @@ export default function DashboardScreen() {
         <Text style={styles.heroSubtitle}>
           Manage applications, track scholarships, and plan life after high school.
         </Text>
+        {activeStudentProfile && (
+          <View style={styles.activeStudentCard}>
+            <Text style={styles.activeStudentLabel}>Active student profile</Text>
+            <Text style={styles.activeStudentName}>
+              {[activeStudentProfile.first_name, activeStudentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+            </Text>
+            <Text style={styles.activeStudentMeta}>
+              {activeStudentProfile.graduation_year ? `Class of ${activeStudentProfile.graduation_year}` : 'Graduation year not set'}
+              {activeStudentProfile.schools?.name ? ` • ${activeStudentProfile.schools.name}` : ''}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Next Deadline</Text>
+          <Text style={styles.statLabel}>Academic Health</Text>
           <Text style={styles.statValue}>
-            {nextDeadline ? nextDeadline.title.substring(0, 20) + (nextDeadline.title.length > 20 ? '...' : '') : 'None'}
+            {metrics?.academicHealthScore ?? 0}/100
           </Text>
           <Text style={styles.statDesc}>
-            {nextDeadline ? formatDate(nextDeadline.dueDate) : 'Add tasks to see deadlines'}
+            {metrics?.academicHealthLabel || 'Needs Attention'}
           </Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Scholarships</Text>
-          <Text style={styles.statValue}>{metrics?.scholarshipsCount ?? 0} available</Text>
-          <Text style={styles.statDesc}>Filtered by your profile</Text>
+          <Text style={styles.statLabel}>Report Card</Text>
+          <Text style={styles.statValue}>{metrics?.reportCardStatus === 'updated' ? 'Updated' : 'Missing'}</Text>
+          <Text style={styles.statDesc}>Latest academic record</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Tasks</Text>
-          <Text style={styles.statValue}>{metrics?.pendingTasks ?? 0} pending</Text>
-          <Text style={styles.statDesc}>{metrics?.completedTasks ?? 0} completed</Text>
+          <Text style={styles.statLabel}>Checklist</Text>
+          <Text style={styles.statValue}>{metrics?.checklistDone ?? 0}/{metrics?.checklistTotal ?? 0}</Text>
+          <Text style={styles.statDesc}>Grade-level success tasks</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Deadlines</Text>
-          <Text style={styles.statValue}>{metrics?.upcomingDeadlines ?? 0} upcoming</Text>
-          <Text style={styles.statDesc}>This month</Text>
+          <Text style={styles.statLabel}>LifePath</Text>
+          <Text style={styles.statValue}>{metrics?.lifePathCareersCount ?? 0} careers</Text>
+          <Text style={styles.statDesc}>Selected pathways</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Parent Action Center</Text>
+        <Text style={styles.sectionSubtitle}>{successSummary?.academicHealth.nextAction || 'Upload records and complete one checklist item this week.'}</Text>
+        <View style={styles.featureGrid}>
+          {(successSummary?.tasks || []).slice(0, 3).map((task) => (
+            <View key={task.id} style={styles.featureCard}>
+              <View style={styles.featureIcon}>
+                <Ionicons name={task.upload_required ? 'document-attach-outline' : 'checkmark-circle-outline'} size={24} color={ui.primary} />
+              </View>
+              <Text style={styles.featureTitle}>{task.title}</Text>
+              <Text style={styles.featureDesc}>{task.description || 'Student success task'}</Text>
+              <Text style={styles.featureLink}>{task.status.replace('_', ' ')}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Document Upload</Text>
+        <Text style={styles.sectionSubtitle}>Upload report cards, transcripts, test scores, resumes, and certifications for the active student profile.</Text>
+        <View style={styles.uploadCard}>
+          <Text style={styles.uploadLabel}>Document type</Text>
+          <View style={styles.chipRow}>
+            {DOCUMENT_TYPE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[styles.chip, documentType === option.value && styles.chipActive]}
+                onPress={() => setDocumentType(option.value)}
+              >
+                <Text style={[styles.chipText, documentType === option.value && styles.chipTextActive]}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.formRow}>
+            <View style={styles.formField}>
+              <Text style={styles.uploadLabel}>School year</Text>
+              <TextInput style={styles.uploadInput} value={schoolYear} onChangeText={setSchoolYear} placeholder="2025-2026" />
+            </View>
+            <View style={styles.formField}>
+              <Text style={styles.uploadLabel}>Grading period</Text>
+              <TextInput style={styles.uploadInput} value={gradingPeriod} onChangeText={setGradingPeriod} placeholder="Q1" />
+            </View>
+          </View>
+
+          <View style={styles.formRow}>
+            <View style={styles.formField}>
+              <Text style={styles.uploadLabel}>GPA optional</Text>
+              <TextInput style={styles.uploadInput} value={gpa} onChangeText={setGpa} placeholder="3.5" keyboardType="decimal-pad" />
+            </View>
+            <View style={styles.formField}>
+              <Text style={styles.uploadLabel}>Notes optional</Text>
+              <TextInput style={styles.uploadInput} value={notes} onChangeText={setNotes} placeholder="Notes" />
+            </View>
+          </View>
+
+          <TouchableOpacity style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]} onPress={handlePickAndUpload} disabled={uploading}>
+            <Ionicons name="cloud-upload-outline" size={20} color={colors.white} />
+            <Text style={styles.uploadButtonText}>{uploading ? 'Uploading...' : 'Choose File & Upload'}</Text>
+          </TouchableOpacity>
+          {uploadMessage && <Text style={styles.uploadMessage}>{uploadMessage}</Text>}
+        </View>
+
+        <View style={styles.recentDocs}>
+          <Text style={styles.uploadLabel}>Recent documents</Text>
+          {(successSummary?.uploadedFiles || []).slice(0, 5).length === 0 ? (
+            <Text style={styles.sectionSubtitle}>No documents uploaded yet.</Text>
+          ) : (
+            (successSummary?.uploadedFiles || []).slice(0, 5).map((file) => (
+              <View key={file.id} style={styles.documentRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.documentName}>{file.file_name}</Text>
+                  <Text style={styles.documentMeta}>{file.upload_context || 'document'} • {new Date(file.created_at).toLocaleDateString()}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDeleteDocument(file.id)}>
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
         </View>
       </View>
 
@@ -243,6 +410,30 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 24,
   },
+  activeStudentCard: {
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    marginTop: 16,
+  },
+  activeStudentLabel: {
+    fontSize: 12,
+    color: ui.textSecondary,
+    fontWeight: '600',
+  },
+  activeStudentName: {
+    fontSize: 17,
+    color: ui.text,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  activeStudentMeta: {
+    fontSize: 13,
+    color: ui.textSecondary,
+    marginTop: 2,
+  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -288,6 +479,108 @@ const styles = StyleSheet.create({
     color: ui.textSecondary,
     marginTop: 4,
     marginBottom: 20,
+  },
+
+  uploadCard: {
+    backgroundColor: ui.card,
+    borderRadius: radius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    ...shadow.card,
+  },
+  uploadLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: ui.textSecondary,
+    marginBottom: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: ui.border,
+    backgroundColor: ui.backgroundSecondary,
+  },
+  chipActive: {
+    borderColor: ui.primary,
+    backgroundColor: ui.primaryLight,
+  },
+  chipText: {
+    color: ui.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chipTextActive: {
+    color: ui.primary,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  formField: {
+    flex: 1,
+  },
+  uploadInput: {
+    borderWidth: 1,
+    borderColor: ui.inputBorder,
+    backgroundColor: ui.inputBackground,
+    borderRadius: radius.md,
+    padding: 10,
+    color: ui.inputText,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: ui.primary,
+    borderRadius: radius.md,
+    padding: 14,
+    marginTop: 4,
+  },
+  uploadButtonDisabled: {
+    opacity: 0.7,
+  },
+  uploadButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+  },
+  uploadMessage: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  recentDocs: {
+    marginTop: 14,
+  },
+  documentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ui.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    padding: 12,
+    marginTop: 8,
+  },
+  documentName: {
+    color: ui.text,
+    fontWeight: '700',
+  },
+  documentMeta: {
+    color: ui.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
   },
   featureGrid: {
     gap: 12,

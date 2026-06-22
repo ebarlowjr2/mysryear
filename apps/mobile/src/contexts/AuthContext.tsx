@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
-import { supabase } from '../lib/supabase'
+import { mobileSupabaseConfigError, supabase } from '../lib/supabase'
 import { ensureProfile, getProfile, type Profile } from '../data/profile'
 
 type AuthContextType = {
@@ -15,6 +15,7 @@ type AuthContextType = {
   signInWithGoogle: () => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  configError: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -79,17 +80,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    if (mobileSupabaseConfigError) return { error: new Error(mobileSupabaseConfigError) }
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error: error as Error | null }
   }
 
     const signUp = async (email: string, password: string) => {
+      if (mobileSupabaseConfigError) return { error: new Error(mobileSupabaseConfigError) }
       const { error } = await supabase.auth.signUp({ email, password })
       return { error: error as Error | null }
     }
 
                                                     const signInWithGoogle = async () => {
                   try {
+                    if (mobileSupabaseConfigError) return { error: new Error(mobileSupabaseConfigError) }
                     const redirectUrl = Linking.createURL('auth/callback')
         
                     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -162,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-      <AuthContext.Provider value={{ session, user, profile, loading, signIn, signUp, signInWithGoogle, signOut, refreshProfile }}>
+      <AuthContext.Provider value={{ session, user, profile, loading, signIn, signUp, signInWithGoogle, signOut, refreshProfile, configError: mobileSupabaseConfigError }}>
       {children}
     </AuthContext.Provider>
   )

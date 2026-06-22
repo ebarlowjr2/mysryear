@@ -1,79 +1,50 @@
-import { supabase } from '../lib/supabase'
+import {
+  ensureCurrentProfile,
+  getCurrentProfile,
+  getActiveStudentProfile,
+  getLinkedStudentProfiles,
+  updateAccountProfile,
+  updateStudentProfile,
+  type AccountProfile,
+  type CanonicalRole,
+  type StudentProfile,
+} from './identity'
 import { getUserSchoolMembership, type SchoolMembership } from './schools'
 
-export type UserRole = 'student' | 'parent' | 'teacher' | 'business'
+export type UserRole = CanonicalRole
 
-export type Profile = {
-  id: string
-  user_id: string
-  full_name: string | null
-  first_name: string | null
-  last_name: string | null
-  role: UserRole | null
-  school: string | null
-  graduation_year: number | null
-  graduation_date: string | null
-  state: string | null
-  county: string | null
-  org_name: string | null
-  website: string | null
-  notifications_tasks: boolean
-  notifications_deadlines: boolean
-  onboarding_complete: boolean
-  created_at: string
-  updated_at: string
+export type Profile = AccountProfile & {
+  // Legacy mobile fields remain optional display fallbacks only.
+  school?: string | null
+  graduation_year?: number | null
+  graduation_date?: string | null
+  org_name?: string | null
+  website?: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export type ProfileWithSchool = Profile & {
   schoolMembership: SchoolMembership | null
+  activeStudentProfile: StudentProfile | null
+  linkedStudentProfiles: StudentProfile[]
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-
-  if (error || !data) return null
-  return data as Profile
+  return getCurrentProfile(userId) as Promise<Profile | null>
 }
 
 export async function ensureProfile(userId: string, email?: string): Promise<{ profile: Profile | null; error: Error | null }> {
-  const existingProfile = await getProfile(userId)
-  
-  if (existingProfile) {
-    return { profile: existingProfile, error: null }
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .insert({
-      user_id: userId,
-      full_name: email?.split('@')[0] || null,
-      onboarding_complete: false
-    })
-    .select()
-    .single()
-
-  if (error) {
-    console.warn('Failed to create profile:', error.message)
-    return { profile: null, error: error as Error }
-  }
-
-  return { profile: data as Profile, error: null }
+  const profile = await ensureCurrentProfile(userId, email)
+  return { profile: profile as Profile | null, error: null }
 }
 
-export async function updateProfile(userId: string, updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<{ error: Error | null }> {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString()
-    })
-    .eq('user_id', userId)
-
-  return { error: error as Error | null }
+export async function updateProfile(
+  userId: string,
+  updates: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>,
+): Promise<{ error: Error | null }> {
+  const { success, error } = await updateAccountProfile(userId, updates as Partial<AccountProfile>)
+  return { error: success ? null : new Error(error || 'Failed to update profile') }
 }
 
 export async function completeOnboarding(userId: string): Promise<{ error: Error | null }> {
@@ -81,14 +52,21 @@ export async function completeOnboarding(userId: string): Promise<{ error: Error
 }
 
 export async function getMyProfile(userId: string): Promise<ProfileWithSchool | null> {
-  const profile = await getProfile(userId)
+  const [profile, schoolMembership, activeStudentProfile, linkedStudentProfiles] = await Promise.all([
+    getCurrentProfile(userId),
+    // Legacy/reference only. Canonical school is activeStudentProfile.school_id.
+    getUserSchoolMembership(userId),
+    getActiveStudentProfile(userId),
+    getLinkedStudentProfiles(userId),
+  ])
   if (!profile) return null
 
-  const schoolMembership = await getUserSchoolMembership(userId)
-  
   return {
-    ...profile,
+    ...(profile as Profile),
     schoolMembership,
+    activeStudentProfile,
+    linkedStudentProfiles,
+    graduation_year: activeStudentProfile?.graduation_year ?? null,
   }
 }
 
@@ -108,23 +86,21 @@ export type ProfileUpdate = Partial<{
 
 export async function updateMyProfile(
   userId: string,
-  updates: ProfileUpdate
+  updates: ProfileUpdate,
+  activeStudentProfileId?: string | null,
 ): Promise<{ success: boolean; error: string | null }> {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
+  const { graduation_year: graduationYear, ...profileUpdates } = updates
+  const profileResult = await updateAccountProfile(userId, profileUpdates as Partial<AccountProfile>)
+  if (!profileResult.success) return profileResult
 
-  if (error) {
-    return { success: false, error: error.message }
+  if (graduationYear !== undefined && activeStudentProfileId) {
+    return updateStudentProfile(activeStudentProfileId, { graduation_year: graduationYear })
   }
 
   return { success: true, error: null }
 }
 
 export async function getMySchool(userId: string): Promise<SchoolMembership | null> {
+  // Legacy/reference only. New code should prefer activeStudentProfile.schools.
   return getUserSchoolMembership(userId)
 }

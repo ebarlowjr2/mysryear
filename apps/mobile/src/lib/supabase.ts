@@ -18,17 +18,20 @@ function envSummary() {
   return `SUPABASE_URL_HOST=${host} SUPABASE_ANON_KEY_PREFIX=${keyPrefix} KEY_LEN=${supabaseAnonKey.length}`
 }
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    `Missing required mobile env vars. Expected EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY. ${envSummary()}`,
-  )
-}
+export const mobileSupabaseConfigError = !supabaseUrl || !supabaseAnonKey
+  ? `Missing required mobile env vars. Expected EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY. ${envSummary()}`
+  : null
 
-// This log helps debug "Invalid API key" without leaking the secret.
+// Avoid a top-level throw in production/TestFlight. If EAS env injection fails, the app should render
+// a useful error instead of crashing before React Native can show anything.
+const runtimeSupabaseUrl = supabaseUrl || 'https://placeholder.supabase.co'
+const runtimeSupabaseAnonKey = supabaseAnonKey || 'placeholder-anon-key'
+
+// This log helps debug env issues without leaking the secret.
 // eslint-disable-next-line no-console
 console.log(`[mysryear-mobile] Supabase env: ${envSummary()}`)
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(runtimeSupabaseUrl, runtimeSupabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
