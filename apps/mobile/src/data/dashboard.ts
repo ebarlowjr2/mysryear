@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { getStudentSuccessSummary, type StudentSuccessSummary } from './academic'
+import { listStudentPortfolio } from './portfolio'
 
 export type DashboardMetrics = {
   scholarshipsCount: number
@@ -13,6 +14,10 @@ export type DashboardMetrics = {
   checklistTotal?: number
   lifePathCareersCount?: number
   parentNextAction?: string
+  portfolioActivitiesCount?: number
+  portfolioServiceHoursTotal?: number
+  portfolioAchievementsCount?: number
+  portfolioCertificationsCompleted?: number
 }
 
 export type NextDeadline = {
@@ -51,6 +56,7 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
   }).length
 
   const success = await getStudentSuccessSummary(userId)
+  const portfolio = success.studentProfileId ? await listStudentPortfolio(success.studentProfileId) : null
 
   return {
     scholarshipsCount,
@@ -64,6 +70,10 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     checklistTotal: success.checklist.total,
     lifePathCareersCount: success.lifepath.selectedCareersCount,
     parentNextAction: success.academicHealth.nextAction,
+    portfolioActivitiesCount: portfolio?.summary.activitiesCount || 0,
+    portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,
+    portfolioAchievementsCount: portfolio?.summary.achievementsCount || 0,
+    portfolioCertificationsCompleted: portfolio?.summary.certificationsCompleted || 0,
   }
 }
 

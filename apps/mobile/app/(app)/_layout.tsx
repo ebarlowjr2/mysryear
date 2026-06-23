@@ -99,6 +99,18 @@ export default function AppLayout() {
       />
       
       {/* Profile tab for all roles */}
+
+      <Tabs.Screen
+        name="portfolio"
+        options={{
+          title: 'Portfolio',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trophy" size={size} color={color} />
+          ),
+          href: isStudent || isParent ? ('/portfolio' as never) : null,
+        }}
+      />
+      
       <Tabs.Screen
         name="profile"
         options={{

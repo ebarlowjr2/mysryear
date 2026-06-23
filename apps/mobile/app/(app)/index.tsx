@@ -204,6 +204,29 @@ export default function DashboardScreen() {
         </View>
       </View>
 
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Activities</Text>
+          <Text style={styles.statValue}>{metrics?.portfolioActivitiesCount ?? 0}</Text>
+          <Text style={styles.statDesc}>Portfolio entries</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Service Hours</Text>
+          <Text style={styles.statValue}>{metrics?.portfolioServiceHoursTotal ?? 0}</Text>
+          <Text style={styles.statDesc}>Volunteer/service</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Achievements</Text>
+          <Text style={styles.statValue}>{metrics?.portfolioAchievementsCount ?? 0}</Text>
+          <Text style={styles.statDesc}>Awards and honors</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Certifications</Text>
+          <Text style={styles.statValue}>{metrics?.portfolioCertificationsCompleted ?? 0}</Text>
+          <Text style={styles.statDesc}>Completed credentials</Text>
+        </View>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Parent Action Center</Text>
         <Text style={styles.sectionSubtitle}>{successSummary?.academicHealth.nextAction || 'Upload records and complete one checklist item this week.'}</Text>

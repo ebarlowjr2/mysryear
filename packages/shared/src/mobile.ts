@@ -13,3 +13,5 @@ export type {
   LifePathScenarioId,
   PathwayType,
 } from './lifepath'
+export { computePortfolioSummary } from './portfolio'
+export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'

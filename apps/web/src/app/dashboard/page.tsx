@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { GraduationCap, CalendarClock, ClipboardList, FileText } from 'lucide-react'
+import { GraduationCap, CalendarClock, ClipboardList, Trophy } from 'lucide-react'
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
 import ReportCardVault from '@/components/ReportCardVault'
@@ -36,6 +36,7 @@ type DashboardSummary = {
   tasks?: DashboardTask[]
   academicHealth?: { score: number; label: string; nextAction: string }
   lifepath?: { selectedCareersCount: number }
+  portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; readinessLabel: string; nextAction: string }
   error?: string
 }
 
@@ -177,6 +178,13 @@ export default function Dashboard() {
         />
       </div>
 
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatTile label="Activities" value={loadingSummary ? '…' : String(summary?.portfolio?.activitiesCount ?? 0)} desc="Clubs, jobs, sports, leadership" />
+        <StatTile label="Service Hours" value={loadingSummary ? '…' : String(summary?.portfolio?.serviceHoursTotal ?? 0)} desc="Volunteer and community work" />
+        <StatTile label="Achievements" value={loadingSummary ? '…' : String(summary?.portfolio?.achievementsCount ?? 0)} desc="Awards and honors" />
+        <StatTile label="Certifications" value={loadingSummary ? '…' : String(summary?.portfolio?.certificationsCompleted ?? 0)} desc={summary?.portfolio?.readinessLabel || 'Portfolio progress'} />
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <div className="card p-6">
           <h3 className="text-lg font-bold mb-4">Upcoming Dates</h3>
@@ -253,10 +261,10 @@ export default function Dashboard() {
           <p className="text-slate-600 text-sm">Senior year timeline and tasks</p>
         </Link>
 
-        <Link href="/resources" className="card p-6 hover:shadow-lg transition">
-          <FileText className="w-8 h-8 text-brand-600 mb-4" />
-          <h3 className="text-lg font-bold mb-2">Resources</h3>
-          <p className="text-slate-600 text-sm">Essays, resumes, and guides</p>
+        <Link href="/portfolio" className="card p-6 hover:shadow-lg transition">
+          <Trophy className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Portfolio</h3>
+          <p className="text-slate-600 text-sm">Activities, service, awards, certifications</p>
         </Link>
 
         <Link href="/open-dashboard/scholarships" className="card p-6 hover:shadow-lg transition">

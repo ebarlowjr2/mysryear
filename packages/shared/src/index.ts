@@ -10,3 +10,5 @@ export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from '.
 export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
 export { scoreCareerHealth } from './lifepath'
 export type { CareerHealthBreakdown, CareerHealthResult, CareerPathForScoring, DebtRisk, LifePathScenarioId, PathwayType } from './lifepath'
+export { computePortfolioSummary } from './portfolio'
+export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
