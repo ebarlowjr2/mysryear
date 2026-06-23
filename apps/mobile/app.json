@@ -43,7 +43,10 @@
           "project": "mysryear-mobile",
           "organization": "one-circle-solutions-llc"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "@sentry/react-native",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
