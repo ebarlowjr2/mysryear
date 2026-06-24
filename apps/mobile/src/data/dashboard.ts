@@ -1,10 +1,23 @@
 import { supabase } from '../lib/supabase'
+import { getStudentSuccessSummary, type StudentSuccessSummary } from './academic'
+import { listStudentPortfolio } from './portfolio'
 
 export type DashboardMetrics = {
   scholarshipsCount: number
   upcomingDeadlines: number
   pendingTasks: number
   completedTasks: number
+  academicHealthScore?: number
+  academicHealthLabel?: string
+  reportCardStatus?: 'updated' | 'missing'
+  checklistDone?: number
+  checklistTotal?: number
+  lifePathCareersCount?: number
+  parentNextAction?: string
+  portfolioActivitiesCount?: number
+  portfolioServiceHoursTotal?: number
+  portfolioAchievementsCount?: number
+  portfolioCertificationsCompleted?: number
 }
 
 export type NextDeadline = {
@@ -12,6 +25,10 @@ export type NextDeadline = {
   dueDate: string
   category: string
 } | null
+
+export async function getStudentSuccessDashboard(userId: string): Promise<StudentSuccessSummary> {
+  return getStudentSuccessSummary(userId)
+}
 
 export async function getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
   const [scholarshipsResult, tasksResult] = await Promise.all([
@@ -38,11 +55,25 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     return dueDate >= now && t.status !== 'done'
   }).length
 
+  const success = await getStudentSuccessSummary(userId)
+  const portfolio = success.studentProfileId ? await listStudentPortfolio(success.studentProfileId) : null
+
   return {
     scholarshipsCount,
     upcomingDeadlines,
     pendingTasks,
-    completedTasks
+    completedTasks,
+    academicHealthScore: success.academicHealth.score,
+    academicHealthLabel: success.academicHealth.label,
+    reportCardStatus: success.reportCardStatus,
+    checklistDone: success.checklist.done,
+    checklistTotal: success.checklist.total,
+    lifePathCareersCount: success.lifepath.selectedCareersCount,
+    parentNextAction: success.academicHealth.nextAction,
+    portfolioActivitiesCount: portfolio?.summary.activitiesCount || 0,
+    portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,
+    portfolioAchievementsCount: portfolio?.summary.achievementsCount || 0,
+    portfolioCertificationsCompleted: portfolio?.summary.certificationsCompleted || 0,
   }
 }
 

@@ -14,13 +14,14 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useAuth } from '../../src/contexts/AuthContext'
-import { updateProfile, completeOnboarding, type UserRole } from '../../src/data/profile'
+import { completeCanonicalOnboarding, type CanonicalRole } from '../../src/data/identity'
+import { searchSchools, type School } from '../../src/data/schools'
 import { colors, ui, radius } from '../../src/theme'
 
 type OnboardingStep = 1 | 2 | 3
 
 type RoleOption = {
-  value: UserRole
+  value: CanonicalRole
   label: string
   description: string
   icon: keyof typeof Ionicons.glyphMap
@@ -40,16 +41,16 @@ const ROLE_OPTIONS: RoleOption[] = [
     icon: 'people-outline',
   },
   {
-    value: 'teacher',
-    label: 'Teacher / Staff',
-    description: 'Connect with students and share opportunities',
-    icon: 'briefcase-outline',
+    value: 'guardian',
+    label: 'Guardian',
+    description: 'Support and manage a student profile',
+    icon: 'people-outline',
   },
   {
-    value: 'business',
-    label: 'Business',
-    description: 'Post internships, webinars, and opportunities',
-    icon: 'business-outline',
+    value: 'counselor',
+    label: 'Counselor',
+    description: 'Support students by invitation',
+    icon: 'briefcase-outline',
   },
 ]
 
@@ -58,10 +59,14 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<OnboardingStep>(1)
   const [loading, setLoading] = useState(false)
   
-  const [fullName, setFullName] = useState('')
-  const [school, setSchool] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [schoolQuery, setSchoolQuery] = useState('')
+  const [schoolId, setSchoolId] = useState<string | null>(null)
+  const [schoolResults, setSchoolResults] = useState<School[]>([])
+  const [searchingSchools, setSearchingSchools] = useState(false)
   const [graduationYear, setGraduationYear] = useState('')
-  const [role, setRole] = useState<UserRole | null>(null)
+  const [role, setRole] = useState<CanonicalRole | null>(null)
 
   const handleNext = () => {
     if (step < 3) {
@@ -80,14 +85,16 @@ export default function OnboardingScreen() {
 
     setLoading(true)
     try {
-      await updateProfile(user.id, {
-        full_name: fullName || null,
-        school: school || null,
-        graduation_year: graduationYear ? parseInt(graduationYear, 10) : null,
-        role: role || null,
+      const result = await completeCanonicalOnboarding({
+        userId: user.id,
+        email: user.email || undefined,
+        role: role || 'student',
+        firstName: firstName || null,
+        lastName: lastName || null,
+        graduationYear: graduationYear ? parseInt(graduationYear, 10) : null,
+        schoolId,
       })
-      
-      await completeOnboarding(user.id)
+      if (!result.success) throw new Error(result.error || 'Failed to complete onboarding')
       await refreshProfile()
       
       router.replace('/(app)')
@@ -103,7 +110,7 @@ export default function OnboardingScreen() {
 
     setLoading(true)
     try {
-      await completeOnboarding(user.id)
+      await completeCanonicalOnboarding({ userId: user.id, email: user.email || undefined, role: 'student' })
       await refreshProfile()
       router.replace('/(app)')
     } catch (err) {
@@ -161,37 +168,57 @@ export default function OnboardingScreen() {
     </View>
   )
 
+  const handleSchoolSearch = async (text: string) => {
+    setSchoolQuery(text)
+    setSchoolId(null)
+    if (text.trim().length < 2) {
+      setSchoolResults([])
+      return
+    }
+    setSearchingSchools(true)
+    try {
+      setSchoolResults(await searchSchools(text))
+    } finally {
+      setSearchingSchools(false)
+    }
+  }
+
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>School Information</Text>
+      <Text style={styles.stepTitle}>{role === 'counselor' ? 'Counselor Setup' : 'Student Profile'}</Text>
       <Text style={styles.stepDescription}>
-        Help us find scholarships and deadlines relevant to you.
+        {role === 'counselor'
+          ? 'Counselor access starts after a student or parent invites you.'
+          : 'Create the student planning profile used across web and mobile.'}
       </Text>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>School Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your school name"
-          placeholderTextColor={ui.inputPlaceholder}
-          value={school}
-          onChangeText={setSchool}
-          autoCapitalize="words"
-        />
-      </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Graduation Year</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., 2025"
-          placeholderTextColor={ui.inputPlaceholder}
-          value={graduationYear}
-          onChangeText={setGraduationYear}
-          keyboardType="number-pad"
-          maxLength={4}
-        />
-      </View>
+      {role !== 'counselor' && (
+        <>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Student First Name</Text>
+            <TextInput style={styles.input} placeholder="First name" placeholderTextColor={ui.inputPlaceholder} value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
+          </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Student Last Name</Text>
+            <TextInput style={styles.input} placeholder="Last name" placeholderTextColor={ui.inputPlaceholder} value={lastName} onChangeText={setLastName} autoCapitalize="words" />
+          </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>High School</Text>
+            <TextInput style={styles.input} placeholder="Search your school" placeholderTextColor={ui.inputPlaceholder} value={schoolQuery} onChangeText={handleSchoolSearch} autoCapitalize="words" />
+            {searchingSchools && <Text style={styles.helperText}>Searching...</Text>}
+            {schoolResults.slice(0, 6).map((school) => (
+              <TouchableOpacity key={school.id} style={styles.schoolResult} onPress={() => { setSchoolId(school.id); setSchoolQuery(`${school.name}${school.city ? `, ${school.city}` : ''}${school.state ? `, ${school.state}` : ''}`); setSchoolResults([]) }}>
+                <Text style={styles.schoolResultName}>{school.name}</Text>
+                <Text style={styles.schoolResultMeta}>{[school.city, school.state].filter(Boolean).join(', ')}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Graduation Year</Text>
+            <TextInput style={styles.input} placeholder="e.g., 2030" placeholderTextColor={ui.inputPlaceholder} value={graduationYear} onChangeText={setGraduationYear} keyboardType="number-pad" maxLength={4} />
+          </View>
+        </>
+      )}
     </View>
   )
 
@@ -389,6 +416,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: ui.textSecondary,
     lineHeight: 18,
+  },
+  helperText: {
+    color: ui.textMuted,
+    fontSize: 12,
+    marginTop: 6,
+  },
+  schoolResult: {
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: ui.border,
+  },
+  schoolResultName: {
+    color: ui.text,
+    fontWeight: '600',
+  },
+  schoolResultMeta: {
+    color: ui.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
   },
   footer: {
     flexDirection: 'row',

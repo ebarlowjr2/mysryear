@@ -71,7 +71,7 @@ export default function SchoolScreen() {
     if (!user?.id) return
     setJoining(true)
     try {
-      const { success, error } = await joinSchool(user.id, school.id, 'teacher')
+      const { success, error } = await joinSchool(user.id, school.id, 'staff')
       if (success) {
         Alert.alert('Success', `You have joined ${school.name}!`, [
           { text: 'OK', onPress: () => {
@@ -116,7 +116,7 @@ export default function SchoolScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>My School</Text>
-          <Text style={styles.subtitle}>Connect with students and share opportunities</Text>
+          <Text style={styles.subtitle}>Connect with students by approved school support flows</Text>
         </View>
 
         {membership?.school ? (
@@ -139,7 +139,7 @@ export default function SchoolScreen() {
             </View>
             <Text style={styles.emptyTitle}>No school joined yet</Text>
             <Text style={styles.emptyDescription}>
-              Search and join your school to connect with students and share opportunities.
+              Search and join your school as a support staff reference. Canonical counselor access still requires a student or parent invite.
             </Text>
             <TouchableOpacity 
               style={styles.addButton}
@@ -160,7 +160,7 @@ export default function SchoolScreen() {
               </View>
               <View style={styles.featureContent}>
                 <Text style={styles.featureTitle}>School Announcements</Text>
-                <Text style={styles.featureDesc}>Post updates and reminders for students</Text>
+                <Text style={styles.featureDesc}>Updates and reminders for students</Text>
               </View>
             </View>
             <View style={styles.featureItem}>

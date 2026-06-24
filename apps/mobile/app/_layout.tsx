@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font'
 import { Slot, useRouter, useSegments } from 'expo-router'
 import type { Href } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
+import * as Sentry from '@sentry/react-native'
 import { useEffect } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
 import 'react-native-reanimated'
@@ -16,6 +17,13 @@ export {
 } from 'expo-router'
 
 SplashScreen.preventAutoHideAsync()
+
+
+Sentry.init({
+  dsn: 'https://5dba1675162a408154a0f0a72fa3ba8c@o4511417163841536.ingest.us.sentry.io/4511611580448768',
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+})
 
 function AuthGate() {
   const { session, profile, loading } = useAuth()
@@ -52,7 +60,7 @@ function AuthGate() {
   return <Slot />
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
@@ -79,7 +87,7 @@ export default function RootLayout() {
       </ThemeProvider>
     </AuthProvider>
   )
-}
+})
 
 const styles = StyleSheet.create({
   loadingContainer: {

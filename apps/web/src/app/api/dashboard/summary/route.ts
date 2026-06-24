@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createNextServerSupabaseClient } from '@mysryear/shared'
+import { createNextServerSupabaseClient, computePortfolioSummary } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
 import { computeAcademicHealth, templatesForGrade, type GradeLevel } from '@/lib/student-success'
 
@@ -102,6 +102,20 @@ export async function GET() {
 
   const selectedCareersCount = (interests || []).length
 
+  const [activities, serviceHours, achievements, certifications] = await Promise.all([
+    supabase.from('student_activities').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId),
+    supabase.from('student_service_hours').select('hours').eq('student_profile_id', studentProfileId),
+    supabase.from('student_achievements').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId),
+    supabase.from('student_certifications').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId).eq('status', 'completed'),
+  ])
+
+  const portfolio = computePortfolioSummary({
+    activitiesCount: activities.count || 0,
+    serviceHoursTotal: (serviceHours.data || []).reduce((sum, row) => sum + Number(row.hours || 0), 0),
+    achievementsCount: achievements.count || 0,
+    certificationsCompleted: certifications.count || 0,
+  })
+
   return ok({
     studentProfileId,
     viewerRole: (viewerProfile?.role as string | null) || null,
@@ -115,5 +129,6 @@ export async function GET() {
     lifepath: {
       selectedCareersCount,
     },
+    portfolio,
   })
 }
