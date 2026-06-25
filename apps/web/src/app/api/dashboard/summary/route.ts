@@ -103,17 +103,20 @@ export async function GET() {
   const selectedCareersCount = (interests || []).length
 
   const [activities, serviceHours, achievements, certifications] = await Promise.all([
-    supabase.from('student_activities').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId),
-    supabase.from('student_service_hours').select('hours').eq('student_profile_id', studentProfileId),
-    supabase.from('student_achievements').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId),
-    supabase.from('student_certifications').select('id', { count: 'exact', head: true }).eq('student_profile_id', studentProfileId).eq('status', 'completed'),
+    supabase.from('student_activities').select('id,uploaded_file_id').eq('student_profile_id', studentProfileId),
+    supabase.from('student_service_hours').select('id,hours,uploaded_file_id').eq('student_profile_id', studentProfileId),
+    supabase.from('student_achievements').select('id,uploaded_file_id').eq('student_profile_id', studentProfileId),
+    supabase.from('student_certifications').select('id,status,uploaded_file_id').eq('student_profile_id', studentProfileId),
   ])
 
   const portfolio = computePortfolioSummary({
-    activitiesCount: activities.count || 0,
+    activitiesCount: activities.data?.length || 0,
     serviceHoursTotal: (serviceHours.data || []).reduce((sum, row) => sum + Number(row.hours || 0), 0),
-    achievementsCount: achievements.count || 0,
-    certificationsCompleted: certifications.count || 0,
+    achievementsCount: achievements.data?.length || 0,
+    certificationsCompleted: (certifications.data || []).filter((row) => row.status === 'completed').length,
+    proofDocumentsCount: [activities.data, serviceHours.data, achievements.data, certifications.data]
+      .flatMap((rows) => rows || [])
+      .filter((row) => Boolean(row.uploaded_file_id)).length,
   })
 
   return ok({

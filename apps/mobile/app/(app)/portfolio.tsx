@@ -114,6 +114,7 @@ export default function PortfolioScreen() {
         <View style={styles.summaryCard}><Text style={styles.summaryLabel}>Hours</Text><Text style={styles.summaryValue}>{portfolio?.summary.serviceHoursTotal || 0}</Text></View>
         <View style={styles.summaryCard}><Text style={styles.summaryLabel}>Awards</Text><Text style={styles.summaryValue}>{portfolio?.summary.achievementsCount || 0}</Text></View>
         <View style={styles.summaryCard}><Text style={styles.summaryLabel}>Certs</Text><Text style={styles.summaryValue}>{portfolio?.summary.certificationsCompleted || 0}</Text></View>
+        <View style={styles.summaryCardWide}><Text style={styles.summaryLabel}>Scholarship Readiness</Text><Text style={styles.summaryValue}>{portfolio?.summary.scholarshipReadinessScore || 0}%</Text><Text style={styles.summaryHint}>{portfolio?.summary.scholarshipReadinessLabel || 'Needs Foundation'}</Text></View>
       </View>
 
       <View style={styles.card}>
@@ -149,6 +150,7 @@ export default function PortfolioScreen() {
                   <Text style={styles.itemTitle}>{titleFor(item)}</Text>
                   <Text style={styles.itemMeta}>{[item.category, item.organization || item.provider, item.status].filter(Boolean).join(' • ') || 'Portfolio entry'}</Text>
                   {section.kind === 'serviceHours' ? <Text style={styles.itemMeta}>{Number(item.hours || 0)} hours</Text> : null}
+                  {item.uploaded_files?.file_name ? <Text style={styles.proofBadge}>Proof: {item.uploaded_files.file_name}</Text> : null}
                 </View>
                 <TouchableOpacity onPress={() => remove(section.kind, item)}>
                   <Ionicons name="trash-outline" size={20} color={colors.error} />
@@ -170,8 +172,10 @@ const styles = StyleSheet.create({
   subtitle: { color: ui.textSecondary, fontSize: 15, marginTop: 8, marginBottom: 18, lineHeight: 22 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   summaryCard: { width: '47%', backgroundColor: ui.card, borderWidth: 1, borderColor: ui.cardBorder, borderRadius: radius.lg, padding: 14, ...shadow.card },
+  summaryCardWide: { width: '100%', backgroundColor: ui.card, borderWidth: 1, borderColor: ui.cardBorder, borderRadius: radius.lg, padding: 14, ...shadow.card },
   summaryLabel: { color: ui.textSecondary, fontSize: 12 },
   summaryValue: { color: ui.text, fontSize: 24, fontWeight: '800', marginTop: 4 },
+  summaryHint: { color: ui.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 },
   card: { backgroundColor: ui.card, borderWidth: 1, borderColor: ui.cardBorder, borderRadius: radius.lg, padding: 16, marginBottom: 16, ...shadow.card },
   cardTitle: { color: ui.text, fontWeight: '800', fontSize: 17 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 12 },
@@ -189,4 +193,5 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: ui.border, paddingTop: 12, marginTop: 12 },
   itemTitle: { color: ui.text, fontWeight: '700' },
   itemMeta: { color: ui.textSecondary, fontSize: 12, marginTop: 2 },
+  proofBadge: { color: ui.primary, backgroundColor: ui.primaryLight, alignSelf: 'flex-start', fontSize: 12, fontWeight: '700', marginTop: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.full },
 })

@@ -99,15 +99,15 @@ export async function GET() {
       serviceHours: [],
       achievements: [],
       certifications: [],
-      summary: computePortfolioSummary({ activitiesCount: 0, serviceHoursTotal: 0, achievementsCount: 0, certificationsCompleted: 0 }),
+      summary: computePortfolioSummary({ activitiesCount: 0, serviceHoursTotal: 0, achievementsCount: 0, certificationsCompleted: 0, proofDocumentsCount: 0 }),
     })
   }
 
   const [activities, serviceHours, achievements, certifications] = await Promise.all([
-    supabase.from(TABLES.activities).select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from(TABLES.serviceHours).select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from(TABLES.achievements).select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from(TABLES.certifications).select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from(TABLES.activities).select('*, uploaded_files(id,file_name,file_path,upload_context,created_at)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from(TABLES.serviceHours).select('*, uploaded_files(id,file_name,file_path,upload_context,created_at)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from(TABLES.achievements).select('*, uploaded_files(id,file_name,file_path,upload_context,created_at)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from(TABLES.certifications).select('*, uploaded_files(id,file_name,file_path,upload_context,created_at)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
   ])
 
   const firstError = activities.error || serviceHours.error || achievements.error || certifications.error
@@ -115,6 +115,9 @@ export async function GET() {
 
   const serviceHoursTotal = (serviceHours.data || []).reduce((sum, row) => sum + Number(row.hours || 0), 0)
   const certificationsCompleted = (certifications.data || []).filter((row) => row.status === 'completed').length
+  const proofDocumentsCount = [activities.data, serviceHours.data, achievements.data, certifications.data]
+    .flatMap((rows) => rows || [])
+    .filter((row) => Boolean(row.uploaded_file_id)).length
 
   return NextResponse.json({
     ok: true,
@@ -128,6 +131,7 @@ export async function GET() {
       serviceHoursTotal,
       achievementsCount: (achievements.data || []).length,
       certificationsCompleted,
+      proofDocumentsCount,
     }),
   })
 }

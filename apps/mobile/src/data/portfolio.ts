@@ -24,6 +24,7 @@ export type PortfolioItem = {
   expiration_date?: string | null
   credential_id?: string | null
   uploaded_file_id?: string | null
+  uploaded_files?: { id: string; file_name: string; file_path?: string | null; upload_context?: string | null } | null
   created_at?: string | null
 }
 
@@ -113,10 +114,10 @@ function payloadFor(kind: PortfolioKind, studentProfileId: string, userId: strin
 
 export async function listStudentPortfolio(studentProfileId: string): Promise<PortfolioData> {
   const [activities, serviceHours, achievements, certifications] = await Promise.all([
-    supabase.from('student_activities').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from('student_service_hours').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from('student_achievements').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
-    supabase.from('student_certifications').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from('student_activities').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from('student_service_hours').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from('student_achievements').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
+    supabase.from('student_certifications').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }),
   ])
 
   const serviceRows = (serviceHours.data || []) as PortfolioItem[]
@@ -132,6 +133,9 @@ export async function listStudentPortfolio(studentProfileId: string): Promise<Po
       serviceHoursTotal: serviceRows.reduce((sum, row) => sum + Number(row.hours || 0), 0),
       achievementsCount: achievements.data?.length || 0,
       certificationsCompleted: certRows.filter((row) => row.status === 'completed').length,
+      proofDocumentsCount: [activities.data, serviceHours.data, achievements.data, certifications.data]
+        .flatMap((rows) => rows || [])
+        .filter((row) => Boolean((row as PortfolioItem).uploaded_file_id)).length,
     }),
   }
 }
@@ -166,24 +170,24 @@ export async function deletePortfolioItem(kind: PortfolioKind, id: string, stude
 }
 
 export const listStudentActivities = (studentProfileId: string) =>
-  supabase.from('student_activities').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
+  supabase.from('student_activities').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
 export const createStudentActivity = (studentProfileId: string, userId: string, input: PortfolioInput) => createPortfolioItem('activities', studentProfileId, userId, input)
 export const updateStudentActivity = (id: string, studentProfileId: string, userId: string, input: PortfolioInput) => updatePortfolioItem('activities', id, studentProfileId, userId, input)
 export const deleteStudentActivity = (id: string, studentProfileId: string) => deletePortfolioItem('activities', id, studentProfileId)
 export const listStudentServiceHours = (studentProfileId: string) =>
-  supabase.from('student_service_hours').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
+  supabase.from('student_service_hours').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
 export const createStudentServiceHour = (studentProfileId: string, userId: string, input: PortfolioInput) => createPortfolioItem('serviceHours', studentProfileId, userId, input)
 export const updateStudentServiceHour = (id: string, studentProfileId: string, userId: string, input: PortfolioInput) => updatePortfolioItem('serviceHours', id, studentProfileId, userId, input)
 export const deleteStudentServiceHour = (id: string, studentProfileId: string) => deletePortfolioItem('serviceHours', id, studentProfileId)
 
 export const listStudentAchievements = (studentProfileId: string) =>
-  supabase.from('student_achievements').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
+  supabase.from('student_achievements').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
 export const createStudentAchievement = (studentProfileId: string, userId: string, input: PortfolioInput) => createPortfolioItem('achievements', studentProfileId, userId, input)
 export const updateStudentAchievement = (id: string, studentProfileId: string, userId: string, input: PortfolioInput) => updatePortfolioItem('achievements', id, studentProfileId, userId, input)
 export const deleteStudentAchievement = (id: string, studentProfileId: string) => deletePortfolioItem('achievements', id, studentProfileId)
 
 export const listStudentCertifications = (studentProfileId: string) =>
-  supabase.from('student_certifications').select('*').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
+  supabase.from('student_certifications').select('*, uploaded_files(id,file_name,file_path,upload_context)').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false })
 export const createStudentCertification = (studentProfileId: string, userId: string, input: PortfolioInput) => createPortfolioItem('certifications', studentProfileId, userId, input)
 export const updateStudentCertification = (id: string, studentProfileId: string, userId: string, input: PortfolioInput) => updatePortfolioItem('certifications', id, studentProfileId, userId, input)
 export const deleteStudentCertification = (id: string, studentProfileId: string) => deletePortfolioItem('certifications', id, studentProfileId)
