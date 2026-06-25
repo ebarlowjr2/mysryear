@@ -225,6 +225,11 @@ export default function DashboardScreen() {
           <Text style={styles.statValue}>{metrics?.portfolioCertificationsCompleted ?? 0}</Text>
           <Text style={styles.statDesc}>Completed credentials</Text>
         </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statLabel}>Scholarship Ready</Text>
+          <Text style={styles.statValue}>{metrics?.portfolioScholarshipReadinessScore ?? 0}%</Text>
+          <Text style={styles.statDesc}>{metrics?.portfolioScholarshipReadinessLabel || 'Portfolio checklist'}</Text>
+        </View>
       </View>
 
       <View style={styles.section}>

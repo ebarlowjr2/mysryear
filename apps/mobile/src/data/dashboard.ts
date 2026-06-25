@@ -18,6 +18,8 @@ export type DashboardMetrics = {
   portfolioServiceHoursTotal?: number
   portfolioAchievementsCount?: number
   portfolioCertificationsCompleted?: number
+  portfolioScholarshipReadinessScore?: number
+  portfolioScholarshipReadinessLabel?: string
 }
 
 export type NextDeadline = {
@@ -74,6 +76,8 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,
     portfolioAchievementsCount: portfolio?.summary.achievementsCount || 0,
     portfolioCertificationsCompleted: portfolio?.summary.certificationsCompleted || 0,
+    portfolioScholarshipReadinessScore: portfolio?.summary.scholarshipReadinessScore || 0,
+    portfolioScholarshipReadinessLabel: portfolio?.summary.scholarshipReadinessLabel || 'Needs Foundation',
   }
 }
 

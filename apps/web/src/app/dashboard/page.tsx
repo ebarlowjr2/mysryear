@@ -36,7 +36,7 @@ type DashboardSummary = {
   tasks?: DashboardTask[]
   academicHealth?: { score: number; label: string; nextAction: string }
   lifepath?: { selectedCareersCount: number }
-  portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; readinessLabel: string; nextAction: string }
+  portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; proofDocumentsCount: number; readinessLabel: string; nextAction: string; scholarshipReadinessScore: number; scholarshipReadinessLabel: string }
   error?: string
 }
 
@@ -183,6 +183,7 @@ export default function Dashboard() {
         <StatTile label="Service Hours" value={loadingSummary ? '…' : String(summary?.portfolio?.serviceHoursTotal ?? 0)} desc="Volunteer and community work" />
         <StatTile label="Achievements" value={loadingSummary ? '…' : String(summary?.portfolio?.achievementsCount ?? 0)} desc="Awards and honors" />
         <StatTile label="Certifications" value={loadingSummary ? '…' : String(summary?.portfolio?.certificationsCompleted ?? 0)} desc={summary?.portfolio?.readinessLabel || 'Portfolio progress'} />
+        <StatTile label="Scholarship Ready" value={loadingSummary ? '…' : `${summary?.portfolio?.scholarshipReadinessScore ?? 0}%`} desc={summary?.portfolio?.scholarshipReadinessLabel || 'Portfolio checklist'} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">

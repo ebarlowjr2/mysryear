@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import Link from 'next/link'
 
 type Kind = 'activities' | 'serviceHours' | 'achievements' | 'certifications'
@@ -23,6 +23,8 @@ type PortfolioItem = {
   earned_date?: string | null
   expiration_date?: string | null
   credential_id?: string | null
+  uploaded_file_id?: string | null
+  uploaded_files?: { id: string; file_name: string; file_path?: string | null; upload_context?: string | null; created_at?: string | null } | null
 }
 
 type PortfolioData = {
@@ -37,8 +39,13 @@ type PortfolioData = {
     serviceHoursTotal: number
     achievementsCount: number
     certificationsCompleted: number
+    proofDocumentsCount: number
     readinessLabel: string
     nextAction: string
+    scholarshipReadinessScore: number
+    scholarshipReadinessLabel: string
+    scholarshipReadinessChecklist: Array<{ label: string; complete: boolean }>
+    missingScholarshipItems: string[]
   }
   error?: string
 }
@@ -102,6 +109,7 @@ export default function PortfolioClient() {
   const [data, setData] = useState<PortfolioData | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [saving, setSaving] = useState(false)
+  const [proofFile, setProofFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function load() {
@@ -139,16 +147,51 @@ export default function PortfolioClient() {
       expiration_date: item.expiration_date || '',
       credential_id: item.credential_id || '',
     })
+    setProofFile(null)
+  }
+
+
+  function proofContext(kind: Kind) {
+    if (kind === 'certifications') return 'lifepath_certification'
+    if (kind === 'serviceHours') return 'portfolio_service_hours'
+    if (kind === 'achievements') return 'portfolio_achievement'
+    return 'portfolio_activity'
+  }
+
+  async function uploadProofFile() {
+    if (!proofFile) return null
+    const form = new FormData()
+    form.append('file', proofFile)
+    form.append('upload_context', proofContext(draft.kind))
+    const res = await fetch('/api/upload', { method: 'POST', body: form })
+    const json = (await res.json().catch(() => null)) as { ok?: boolean; file?: { id: string }; error?: string } | null
+    if (!res.ok || !json?.ok || !json.file?.id) {
+      throw new Error(json?.error || 'Proof upload failed')
+    }
+    return json.file.id
+  }
+
+  function onProofFileChange(event: ChangeEvent<HTMLInputElement>) {
+    setProofFile(event.target.files?.[0] || null)
   }
 
   async function save() {
     setSaving(true)
     setError(null)
+    let uploadedFileId: string | undefined
+    try {
+      uploadedFileId = (await uploadProofFile()) || undefined
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Proof upload failed')
+      setSaving(false)
+      return
+    }
     const body = {
       ...draft,
       name: draft.title,
       provider: draft.organization,
       hours: draft.hours ? Number(draft.hours) : 0,
+      uploaded_file_id: uploadedFileId || undefined,
     }
     try {
       const res = await fetch('/api/portfolio', {
@@ -162,6 +205,7 @@ export default function PortfolioClient() {
         return
       }
       setDraft({ ...emptyDraft, kind: draft.kind })
+      setProofFile(null)
       await load()
     } finally {
       setSaving(false)
@@ -202,11 +246,13 @@ export default function PortfolioClient() {
         <div className="card p-5"><div className="text-sm text-slate-600">Service Hours</div><div className="text-3xl font-black">{data?.summary.serviceHoursTotal ?? '…'}</div></div>
         <div className="card p-5"><div className="text-sm text-slate-600">Achievements</div><div className="text-3xl font-black">{data?.summary.achievementsCount ?? '…'}</div></div>
         <div className="card p-5"><div className="text-sm text-slate-600">Certifications</div><div className="text-3xl font-black">{data?.summary.certificationsCompleted ?? '…'}</div></div>
+        <div className="card p-5 sm:col-span-2 lg:col-span-4"><div className="text-sm text-slate-600">Scholarship Readiness</div><div className="mt-1 flex items-end gap-3"><span className="text-3xl font-black">{data?.summary.scholarshipReadinessScore ?? '…'}%</span><span className="pb-1 text-sm font-semibold text-slate-600">{data?.summary.scholarshipReadinessLabel || 'Loading'}</span></div></div>
       </div>
 
       <div className="card p-6">
         <h2 className="text-xl font-black">Portfolio Readiness</h2>
         <p className="mt-2 text-slate-700">{data?.summary.readinessLabel || 'Loading'} — {data?.summary.nextAction || 'Add portfolio evidence.'}</p>
+        {data?.summary.scholarshipReadinessChecklist?.length ? <div className="mt-4 grid sm:grid-cols-2 gap-2 text-sm">{data.summary.scholarshipReadinessChecklist.map((item) => <div key={item.label} className={item.complete ? 'text-emerald-700' : 'text-slate-600'}>{item.complete ? '[x]' : '[ ]'} {item.label}</div>)}</div> : null}
       </div>
 
       <div className="grid lg:grid-cols-[360px_1fr] gap-8">
@@ -240,6 +286,9 @@ export default function PortfolioClient() {
             {draft.kind === 'activities' ? <div className="grid grid-cols-2 gap-2"><input className="rounded-lg border border-slate-300 p-3" type="date" value={draft.start_date} onChange={(e) => setDraft({ ...draft, start_date: e.target.value })} /><input className="rounded-lg border border-slate-300 p-3" type="date" value={draft.end_date} onChange={(e) => setDraft({ ...draft, end_date: e.target.value })} /></div> : null}
             {(draft.kind === 'achievements' || draft.kind === 'certifications') ? <input className="w-full rounded-lg border border-slate-300 p-3" type="date" value={draft.earned_date} onChange={(e) => setDraft({ ...draft, earned_date: e.target.value })} /> : null}
             {draft.kind === 'certifications' ? <input className="w-full rounded-lg border border-slate-300 p-3" type="date" value={draft.expiration_date} onChange={(e) => setDraft({ ...draft, expiration_date: e.target.value })} /> : null}
+            <label className="block text-sm font-semibold text-slate-700">Optional proof attachment</label>
+            <input className="w-full rounded-lg border border-slate-300 p-3 text-sm" type="file" onChange={onProofFileChange} />
+            {draft.id ? <p className="text-xs text-slate-500">To replace proof, add a new entry for now. Editing attached files will be refined later.</p> : null}
 
             <button className="btn-primary w-full" type="button" onClick={save} disabled={saving}>{saving ? 'Saving...' : draft.id ? 'Save Changes' : 'Add Item'}</button>
             {draft.id ? <button className="btn-secondary w-full" type="button" onClick={() => setDraft({ ...emptyDraft, kind: draft.kind })}>Cancel edit</button> : null}
@@ -264,6 +313,7 @@ export default function PortfolioClient() {
                           {kind === 'serviceHours' ? <div className="mt-1 text-sm font-semibold">{Number(item.hours || 0)} hours</div> : null}
                           {kind === 'certifications' ? <div className="mt-1 text-sm font-semibold capitalize">{String(item.status || 'planned').replace('_', ' ')}</div> : null}
                           {item.description ? <div className="mt-2 text-sm text-slate-700">{item.description}</div> : null}
+                          {item.uploaded_files?.file_name ? <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Proof: {item.uploaded_files.file_name}</div> : null}
                         </div>
                         <div className="flex gap-2 shrink-0">
                           <button className="btn-secondary" type="button" onClick={() => edit(kind, item)}>Edit</button>
