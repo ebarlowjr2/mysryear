@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { getStudentSuccessSummary, type StudentSuccessSummary } from './academic'
 import { listStudentPortfolio } from './portfolio'
+import { averageCareerHealth, listSelectedLifePathCareers } from './lifepath'
 
 export type DashboardMetrics = {
   scholarshipsCount: number
@@ -13,6 +14,8 @@ export type DashboardMetrics = {
   checklistDone?: number
   checklistTotal?: number
   lifePathCareersCount?: number
+  lifePathAverageHealth?: number
+  lifePathNextAction?: string
   parentNextAction?: string
   portfolioActivitiesCount?: number
   portfolioServiceHoursTotal?: number
@@ -59,6 +62,7 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
 
   const success = await getStudentSuccessSummary(userId)
   const portfolio = success.studentProfileId ? await listStudentPortfolio(success.studentProfileId) : null
+  const lifePathCareers = success.studentProfileId ? await listSelectedLifePathCareers(success.studentProfileId) : []
 
   return {
     scholarshipsCount,
@@ -70,7 +74,9 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     reportCardStatus: success.reportCardStatus,
     checklistDone: success.checklist.done,
     checklistTotal: success.checklist.total,
-    lifePathCareersCount: success.lifepath.selectedCareersCount,
+    lifePathCareersCount: lifePathCareers.length || success.lifepath.selectedCareersCount,
+    lifePathAverageHealth: averageCareerHealth(lifePathCareers),
+    lifePathNextAction: lifePathCareers.length ? 'Open LifePath and review your next pathway milestone.' : 'Start LifePath by choosing career interests.',
     parentNextAction: success.academicHealth.nextAction,
     portfolioActivitiesCount: portfolio?.summary.activitiesCount || 0,
     portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,

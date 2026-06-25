@@ -200,7 +200,7 @@ export default function DashboardScreen() {
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>LifePath</Text>
           <Text style={styles.statValue}>{metrics?.lifePathCareersCount ?? 0} careers</Text>
-          <Text style={styles.statDesc}>Selected pathways</Text>
+          <Text style={styles.statDesc}>Avg health {metrics?.lifePathAverageHealth ?? 0}%</Text>
         </View>
       </View>
 
@@ -320,6 +320,18 @@ export default function DashboardScreen() {
         <Text style={styles.sectionSubtitle}>Replace sticky notes and scattered tabs with a simple dashboard.</Text>
         
         <View style={styles.featureGrid}>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/aura' as never)}
+          >
+            <View style={styles.featureIcon}>
+              <Ionicons name="map-outline" size={24} color={ui.primary} />
+            </View>
+            <Text style={styles.featureTitle}>A.U.R.A LifePath</Text>
+            <Text style={styles.featureDesc}>{metrics?.lifePathNextAction || 'Compare careers, cost, and Career Health.'}</Text>
+            <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity 
             style={styles.featureCard}
             onPress={() => router.push('/(app)/scholarships')}

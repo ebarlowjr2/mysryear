@@ -15,3 +15,6 @@ export type {
 } from './lifepath'
 export { computePortfolioSummary } from './portfolio'
 export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
+
+export { CAREERS, CATEGORIES } from './career-catalog'
+export type { CareerPath, CareerMilestone, CohortOpportunity } from './career-catalog'
