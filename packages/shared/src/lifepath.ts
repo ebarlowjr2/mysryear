@@ -143,3 +143,17 @@ export function scoreCareerHealth(career: CareerPathForScoring, scenario: LifePa
     adjustedTimelineYears: Math.round(timeline * 10) / 10,
   }
 }
+
+export type LifePathStarterTask = {
+  title: string
+  description: string
+  career_id: string
+}
+
+export function starterTasksForCareer(career: { id: string; milestones: Array<{ stage: string; title: string; description: string }> }): LifePathStarterTask[] {
+  return career.milestones.map((milestone, index) => ({
+    career_id: career.id,
+    title: `${milestone.stage}: ${milestone.title}`,
+    description: milestone.description || `Complete milestone ${index + 1} for this career path.`,
+  }))
+}
