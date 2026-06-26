@@ -8,8 +8,8 @@ export { createNextServerSupabaseClient } from './supabase/next-server'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
 export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
-export { scoreCareerHealth } from './lifepath'
-export type { CareerHealthBreakdown, CareerHealthResult, CareerPathForScoring, DebtRisk, LifePathScenarioId, PathwayType } from './lifepath'
+export { scoreCareerHealth, starterTasksForCareer } from './lifepath'
+export type { CareerHealthBreakdown, CareerHealthResult, CareerPathForScoring, LifePathStarterTask, DebtRisk, LifePathScenarioId, PathwayType } from './lifepath'
 export { computePortfolioSummary } from './portfolio'
 export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
 

@@ -1,6 +1,38 @@
 import { NextResponse } from 'next/server'
-import { createNextServerSupabaseClient } from '@mysryear/shared'
+import { CAREERS, createNextServerSupabaseClient, starterTasksForCareer } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
+
+
+async function seedLifePathTasks(supabase: Awaited<ReturnType<typeof createNextServerSupabaseClient>>, studentProfileId: string, userId: string, careerIds: string[]) {
+  const selectedCareers = CAREERS.filter((career) => careerIds.includes(career.id))
+  if (!selectedCareers.length) return null
+
+  const { data: existing, error: existingError } = await supabase
+    .from('lifepath_tasks')
+    .select('title,career_id')
+    .eq('student_profile_id', studentProfileId)
+    .in('career_id', careerIds)
+
+  if (existingError) return existingError
+
+  const existingKeys = new Set((existing || []).map((task) => `${task.career_id || ''}:${task.title}`))
+  const rows = selectedCareers.flatMap((career) =>
+    starterTasksForCareer(career)
+      .filter((task) => !existingKeys.has(`${task.career_id}:${task.title}`))
+      .map((task) => ({
+        student_profile_id: studentProfileId,
+        career_id: task.career_id,
+        title: task.title,
+        description: task.description,
+        status: 'todo',
+        created_by_user_id: userId,
+      })),
+  )
+
+  if (!rows.length) return null
+  const { error } = await supabase.from('lifepath_tasks').insert(rows)
+  return error
+}
 
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status })
@@ -76,6 +108,9 @@ export async function PUT(req: Request) {
   )
 
   if (insertError) return jsonError(insertError.message, 400)
+
+  const seedError = await seedLifePathTasks(supabase, studentProfileId, session.user.id, careerIds)
+  if (seedError) return jsonError(seedError.message, 400)
 
   return NextResponse.json({ ok: true, studentProfileId, careerIds })
 }

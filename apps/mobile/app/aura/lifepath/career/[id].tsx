@@ -88,7 +88,7 @@ export default function LifePathCareerDetailScreen() {
         {tasks.length === 0 ? <Text style={styles.itemText}>No saved LifePath tasks yet.</Text> : tasks.map((task) => (
           <TouchableOpacity key={task.id} style={styles.taskRow} onPress={() => toggleTask(task)}>
             <Ionicons name={task.status === 'done' ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={task.status === 'done' ? colors.success : ui.textSecondary} />
-            <View style={{ flex: 1 }}><Text style={styles.itemTitle}>{task.title}</Text>{task.description ? <Text style={styles.itemText}>{task.description}</Text> : null}</View>
+            <View style={{ flex: 1 }}><Text style={styles.itemTitle}>{task.title}</Text>{task.description ? <Text style={styles.itemText}>{task.description}</Text> : null}{task.uploaded_files?.file_name ? <Text style={styles.proofText}>Proof: {task.uploaded_files.file_name}</Text> : null}</View>
           </TouchableOpacity>
         ))}
       </View>
@@ -132,4 +132,5 @@ const styles = StyleSheet.create({
   itemText: { color: ui.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 3 },
   bullet: { color: ui.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 4 },
   taskRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: ui.border, paddingTop: 12, marginTop: 12 },
+  proofText: { color: ui.primary, fontSize: 12, fontWeight: '700', marginTop: 5 },
 })

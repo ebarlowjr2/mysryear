@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { CareerPath, LifePathScenarioId } from '../lib/types'
 import { scoreLifePath } from '../lib/scoring'
@@ -12,10 +12,54 @@ import DebtRiskCard from './DebtRiskCard'
 import RecommendationList from './RecommendationList'
 import CohortOpportunityCard from './CohortOpportunityCard'
 
+type LifePathTask = {
+  id: string
+  title: string
+  description?: string | null
+  status: 'todo' | 'doing' | 'done'
+  career_id?: string | null
+  uploaded_file_id?: string | null
+  uploaded_files?: { id: string; file_name: string } | null
+}
+
 export default function LifePathCareerDetail({ career }: { career: CareerPath }) {
   const [scenario, setScenario] = useState<LifePathScenarioId>('baseline')
+  const [tasks, setTasks] = useState<LifePathTask[]>([])
+  const [taskError, setTaskError] = useState<string | null>(null)
 
   const health = useMemo(() => scoreLifePath(career, scenario), [career, scenario])
+
+
+  async function loadTasks() {
+    setTaskError(null)
+    const res = await fetch(`/api/aura/lifepath/tasks?careerId=${encodeURIComponent(career.id)}`)
+    const json = (await res.json().catch(() => null)) as { ok?: boolean; tasks?: LifePathTask[]; error?: string } | null
+    if (!res.ok || !json?.ok) {
+      setTaskError(json?.error || 'Could not load LifePath tasks')
+      return
+    }
+    setTasks(json.tasks || [])
+  }
+
+  useEffect(() => {
+    void loadTasks()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [career.id])
+
+  async function toggleTask(task: LifePathTask) {
+    const next = task.status === 'done' ? 'todo' : 'done'
+    const res = await fetch('/api/aura/lifepath/tasks', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: task.id, status: next }),
+    })
+    const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+    if (!res.ok || !json?.ok) {
+      setTaskError(json?.error || 'Could not update task')
+      return
+    }
+    await loadTasks()
+  }
 
   return (
     <div className="space-y-6">
@@ -58,6 +102,32 @@ export default function LifePathCareerDetail({ career }: { career: CareerPath })
             costMax={health.adjustedCostMax}
           />
           <RecommendationList items={career.recommendations} />
+        </div>
+      </div>
+
+
+      <div className="card p-6">
+        <div className="text-sm font-semibold text-slate-600">LifePath Tasks</div>
+        <p className="mt-2 text-sm text-slate-700">Career-specific tasks plus any general LifePath tasks for this student profile.</p>
+        {taskError ? <div className="mt-3 text-sm text-rose-700">{taskError}</div> : null}
+        <div className="mt-4 space-y-3">
+          {tasks.length === 0 ? <div className="text-sm text-slate-600">No saved LifePath tasks yet. Re-save career choices to generate starter tasks.</div> : tasks.map((task) => (
+            <button
+              key={task.id}
+              type="button"
+              onClick={() => { void toggleTask(task) }}
+              className="w-full rounded-2xl border border-slate-200 p-4 text-left hover:border-blue-300 transition"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="font-bold text-slate-950">{task.title}</div>
+                  {task.description ? <div className="mt-1 text-sm text-slate-600">{task.description}</div> : null}
+                  {task.uploaded_files?.file_name ? <div className="mt-2 text-xs font-semibold text-blue-700">Proof: {task.uploaded_files.file_name}</div> : null}
+                </div>
+                <span className={task.status === 'done' ? 'badge bg-emerald-50 text-emerald-700' : 'badge'}>{task.status === 'done' ? 'Done' : 'Todo'}</span>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
