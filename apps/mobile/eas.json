@@ -32,5 +32,12 @@
         "SENTRY_ALLOW_FAILURE": "true"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6756896611"
+      }
+    }
   }
 }
