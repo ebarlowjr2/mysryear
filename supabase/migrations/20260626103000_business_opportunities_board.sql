@@ -19,6 +19,27 @@ create table if not exists public.business_profiles (
   updated_at timestamptz default now()
 );
 
+-- Compatibility for existing/legacy business_profiles tables.
+alter table public.business_profiles add column if not exists owner_user_id uuid references auth.users(id) on delete cascade;
+alter table public.business_profiles add column if not exists organization_name text;
+alter table public.business_profiles add column if not exists contact_name text;
+alter table public.business_profiles add column if not exists contact_email text;
+alter table public.business_profiles add column if not exists phone text;
+alter table public.business_profiles add column if not exists website text;
+alter table public.business_profiles add column if not exists industry text;
+alter table public.business_profiles add column if not exists description text;
+alter table public.business_profiles add column if not exists address_city text;
+alter table public.business_profiles add column if not exists address_state text;
+alter table public.business_profiles add column if not exists verified boolean default false;
+alter table public.business_profiles add column if not exists status text default 'pending';
+alter table public.business_profiles add column if not exists created_at timestamptz default now();
+alter table public.business_profiles add column if not exists updated_at timestamptz default now();
+
+-- Backfill required display field for any legacy rows before enforcing future writes.
+update public.business_profiles
+set organization_name = coalesce(organization_name, 'Business Partner')
+where organization_name is null;
+
 create unique index if not exists business_profiles_owner_idx
 on public.business_profiles(owner_user_id);
 
@@ -53,6 +74,41 @@ create table if not exists public.business_opportunities (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Compatibility for existing/legacy business_opportunities tables.
+alter table public.business_opportunities add column if not exists business_profile_id uuid references public.business_profiles(id) on delete cascade;
+alter table public.business_opportunities add column if not exists created_by_user_id uuid references auth.users(id) on delete cascade;
+alter table public.business_opportunities add column if not exists title text;
+alter table public.business_opportunities add column if not exists opportunity_type text default 'internship';
+alter table public.business_opportunities add column if not exists description text;
+alter table public.business_opportunities add column if not exists location_type text;
+alter table public.business_opportunities add column if not exists city text;
+alter table public.business_opportunities add column if not exists state text;
+alter table public.business_opportunities add column if not exists remote_available boolean default false;
+alter table public.business_opportunities add column if not exists age_min integer;
+alter table public.business_opportunities add column if not exists grade_min text;
+alter table public.business_opportunities add column if not exists grade_max text;
+alter table public.business_opportunities add column if not exists career_category text;
+alter table public.business_opportunities add column if not exists related_career_ids text[];
+alter table public.business_opportunities add column if not exists skills text[];
+alter table public.business_opportunities add column if not exists application_url text;
+alter table public.business_opportunities add column if not exists contact_email text;
+alter table public.business_opportunities add column if not exists deadline date;
+alter table public.business_opportunities add column if not exists start_date date;
+alter table public.business_opportunities add column if not exists end_date date;
+alter table public.business_opportunities add column if not exists paid boolean default false;
+alter table public.business_opportunities add column if not exists compensation text;
+alter table public.business_opportunities add column if not exists hours_required text;
+alter table public.business_opportunities add column if not exists status text default 'active';
+alter table public.business_opportunities add column if not exists created_at timestamptz default now();
+alter table public.business_opportunities add column if not exists updated_at timestamptz default now();
+
+update public.business_opportunities
+set title = coalesce(title, 'Untitled Opportunity'),
+    opportunity_type = coalesce(opportunity_type, 'internship'),
+    description = coalesce(description, 'Opportunity details coming soon.'),
+    status = coalesce(status, 'active')
+where title is null or opportunity_type is null or description is null or status is null;
 
 create index if not exists business_opportunities_active_idx
 on public.business_opportunities(status, opportunity_type, career_category, state, created_at desc)
