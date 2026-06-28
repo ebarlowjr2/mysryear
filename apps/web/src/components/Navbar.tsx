@@ -11,6 +11,7 @@ const links = [
   { href: '/open-dashboard/applications', label: 'Applications' },
   { href: '/scholarships', label: 'Scholarships' },
   { href: '/resources', label: 'Resources' },
+  { href: '/opportunities', label: 'Opportunities' },
   { href: '/aura', label: 'A.U.R.A' },
 ]
 
@@ -70,6 +71,9 @@ export default function Navbar() {
               </Link>
               <Link href="/profile" className="btn-secondary">
                 Profile
+              </Link>
+              <Link href="/business/dashboard" className="btn-secondary">
+                Business
               </Link>
               <Link href="/open-dashboard" className="btn-primary">
                 Open Dashboard

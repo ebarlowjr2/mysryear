@@ -26,7 +26,8 @@ export async function GET() {
     .maybeSingle()
 
   const studentProfileId = await getActiveStudentProfileId()
-  if (!studentProfileId) return ok({ studentProfileId: null })
+  const viewerRole = (viewerProfile?.role as string | null) || null
+  if (!studentProfileId) return ok({ studentProfileId: null, viewerRole })
 
   const { data: studentProfile } = await supabase
     .from('student_profiles')
@@ -119,9 +120,16 @@ export async function GET() {
       .filter((row) => Boolean(row.uploaded_file_id)).length,
   })
 
+  const { data: opportunities } = await supabase
+    .from('business_opportunities')
+    .select('id,title,opportunity_type,career_category,city,state,remote_available,deadline,business_profiles(organization_name)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(3)
+
   return ok({
     studentProfileId,
-    viewerRole: (viewerProfile?.role as string | null) || null,
+    viewerRole,
     activeStudentProfile: studentProfile || null,
     gradeLevel,
     academicRecords: records || [],
@@ -133,5 +141,6 @@ export async function GET() {
       selectedCareersCount,
     },
     portfolio,
+    opportunities: opportunities || [],
   })
 }

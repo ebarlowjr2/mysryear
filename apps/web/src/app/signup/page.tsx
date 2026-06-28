@@ -11,6 +11,7 @@ export default function Signup() {
   const [graduationYear, setGraduationYear] = useState<number | ''>('')
   const [schoolId, setSchoolId] = useState<string>('')
   const [schoolQuery, setSchoolQuery] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
   const [schools, setSchools] = useState<
     { id: string; name: string; city: string | null; state: string | null }[]
   >([])
@@ -49,6 +50,11 @@ export default function Signup() {
     setMessage('')
 
     try {
+      if (role === 'business' && !organizationName.trim()) {
+        setError('Please enter your organization name.')
+        return
+      }
+
       if (role === 'student') {
         if (typeof graduationYear !== 'number' || !graduationYear) {
           setError('Please enter your graduation year.')
@@ -69,6 +75,7 @@ export default function Signup() {
             role,
             graduation_year: typeof graduationYear === 'number' ? graduationYear : null,
             school_id: schoolId || null,
+            organization_name: role === 'business' ? organizationName.trim() : null,
           },
         },
       })
@@ -152,6 +159,23 @@ export default function Signup() {
                 ))}
               </select>
             </div>
+
+            {role === 'business' && (
+              <div>
+                <label htmlFor="organizationName" className="block text-sm font-medium text-gray-300 mb-2">
+                  Organization name
+                </label>
+                <input
+                  id="organizationName"
+                  name="organizationName"
+                  className="input w-full px-4 py-3 rounded-lg"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  placeholder="Company or organization"
+                  required
+                />
+              </div>
+            )}
 
             {role === 'student' && (
               <>
