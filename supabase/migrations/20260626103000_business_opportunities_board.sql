@@ -20,6 +20,26 @@ create table if not exists public.business_profiles (
 );
 
 -- Compatibility for existing/legacy business_profiles tables.
+alter table public.business_profiles add column if not exists id uuid default gen_random_uuid();
+update public.business_profiles set id = gen_random_uuid() where id is null;
+alter table public.business_profiles alter column id set default gen_random_uuid();
+alter table public.business_profiles alter column id set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.business_profiles'::regclass
+      and conname = 'business_profiles_id_key'
+  ) and not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.business_profiles'::regclass
+      and contype = 'p'
+  ) then
+    alter table public.business_profiles add constraint business_profiles_id_key unique (id);
+  end if;
+end $$;
+
 alter table public.business_profiles add column if not exists owner_user_id uuid references auth.users(id) on delete cascade;
 alter table public.business_profiles add column if not exists organization_name text;
 alter table public.business_profiles add column if not exists contact_name text;
@@ -76,6 +96,26 @@ create table if not exists public.business_opportunities (
 );
 
 -- Compatibility for existing/legacy business_opportunities tables.
+alter table public.business_opportunities add column if not exists id uuid default gen_random_uuid();
+update public.business_opportunities set id = gen_random_uuid() where id is null;
+alter table public.business_opportunities alter column id set default gen_random_uuid();
+alter table public.business_opportunities alter column id set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.business_opportunities'::regclass
+      and conname = 'business_opportunities_id_key'
+  ) and not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.business_opportunities'::regclass
+      and contype = 'p'
+  ) then
+    alter table public.business_opportunities add constraint business_opportunities_id_key unique (id);
+  end if;
+end $$;
+
 alter table public.business_opportunities add column if not exists business_profile_id uuid references public.business_profiles(id) on delete cascade;
 alter table public.business_opportunities add column if not exists created_by_user_id uuid references auth.users(id) on delete cascade;
 alter table public.business_opportunities add column if not exists title text;
