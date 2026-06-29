@@ -31,10 +31,6 @@ begin
     select 1 from pg_constraint
     where conrelid = 'public.business_profiles'::regclass
       and conname = 'business_profiles_id_key'
-  ) and not exists (
-    select 1 from pg_constraint
-    where conrelid = 'public.business_profiles'::regclass
-      and contype = 'p'
   ) then
     alter table public.business_profiles add constraint business_profiles_id_key unique (id);
   end if;
@@ -107,10 +103,6 @@ begin
     select 1 from pg_constraint
     where conrelid = 'public.business_opportunities'::regclass
       and conname = 'business_opportunities_id_key'
-  ) and not exists (
-    select 1 from pg_constraint
-    where conrelid = 'public.business_opportunities'::regclass
-      and contype = 'p'
   ) then
     alter table public.business_opportunities add constraint business_opportunities_id_key unique (id);
   end if;
