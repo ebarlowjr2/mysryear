@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { GraduationCap, CalendarClock, ClipboardList, Trophy } from 'lucide-react'
+import { GraduationCap, CalendarClock, ClipboardList, Trophy, BriefcaseBusiness } from 'lucide-react'
 import StatTile from '@/components/StatTile'
 import DocUpload from '@/components/DocUpload'
 import ReportCardVault from '@/components/ReportCardVault'
@@ -20,6 +20,18 @@ type DashboardTask = {
   upload_required: boolean | null
 }
 
+type DashboardOpportunity = {
+  id: string
+  title: string
+  opportunity_type: string
+  career_category: string | null
+  city: string | null
+  state: string | null
+  remote_available: boolean | null
+  deadline: string | null
+  business_profiles?: { organization_name: string | null } | null
+}
+
 type DashboardSummary = {
   ok: boolean
   studentProfileId: string | null
@@ -36,6 +48,7 @@ type DashboardSummary = {
   tasks?: DashboardTask[]
   academicHealth?: { score: number; label: string; nextAction: string }
   lifepath?: { selectedCareersCount: number }
+  opportunities?: DashboardOpportunity[]
   portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; proofDocumentsCount: number; readinessLabel: string; nextAction: string; scholarshipReadinessScore: number; scholarshipReadinessLabel: string }
   error?: string
 }
@@ -115,6 +128,7 @@ export default function Dashboard() {
   const viewerRole = (summary?.viewerRole as string | null) || null
   const showParentActionCenter = viewerRole === 'parent' || viewerRole === 'guardian' || viewerRole === 'admin'
   const showCounselorInfo = viewerRole === 'counselor'
+  const showBusinessPanel = viewerRole === 'business'
 
   return (
     <div className="container-prose py-14">
@@ -126,6 +140,14 @@ export default function Dashboard() {
       </div>
 
       <ActiveStudentCard studentProfile={summary?.activeStudentProfile || null} />
+
+      {showBusinessPanel ? (
+        <div className="mb-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-slate-800">
+          <div className="font-semibold">Business account</div>
+          <div className="mt-1">Manage your organization profile and career opportunity postings from the business dashboard.</div>
+          <div className="mt-3"><Link href="/business/dashboard" className="btn-primary inline-flex">Open Business Dashboard</Link></div>
+        </div>
+      ) : null}
 
       {showCounselorInfo ? (
         <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
@@ -205,6 +227,35 @@ export default function Dashboard() {
         <DocUpload />
       </div>
 
+
+      <div className="card p-6 mb-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold">{showParentActionCenter ? 'Opportunities to review with your student' : 'Career Opportunities'}</h3>
+            <p className="mt-2 text-sm text-slate-700">
+              {showParentActionCenter
+                ? 'Review internships, volunteer roles, workshops, and career exposure opportunities together.'
+                : 'Explore internships, volunteer roles, workshops, apprenticeships, and career events.'}
+            </p>
+          </div>
+          <Link href="/opportunities" className="btn-secondary shrink-0">View Board</Link>
+        </div>
+        <div className="mt-5 grid md:grid-cols-3 gap-4">
+          {(summary?.opportunities || []).length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600 md:col-span-3">No active opportunities posted yet.</div>
+          ) : (
+            (summary?.opportunities || []).map((opportunity) => (
+              <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`} className="rounded-xl border border-slate-200 p-4 hover:bg-slate-50 transition">
+                <div className="text-xs font-semibold text-brand-700">{opportunity.opportunity_type.replaceAll('_', ' ')}</div>
+                <div className="mt-1 font-bold text-slate-900 line-clamp-2">{opportunity.title}</div>
+                <div className="mt-2 text-xs text-slate-600">{opportunity.business_profiles?.organization_name || opportunity.career_category || 'Business partner'}</div>
+                <div className="mt-1 text-xs text-slate-500">{[opportunity.city, opportunity.state].filter(Boolean).join(', ') || (opportunity.remote_available ? 'Remote' : 'Location TBD')}</div>
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         <ReportCardVault />
         <div className="card p-6">
@@ -260,6 +311,12 @@ export default function Dashboard() {
           <CalendarClock className="w-8 h-8 text-brand-600 mb-4" />
           <h3 className="text-lg font-bold mb-2">Planner</h3>
           <p className="text-slate-600 text-sm">Senior year timeline and tasks</p>
+        </Link>
+
+        <Link href="/opportunities" className="card p-6 hover:shadow-lg transition">
+          <BriefcaseBusiness className="w-8 h-8 text-brand-600 mb-4" />
+          <h3 className="text-lg font-bold mb-2">Opportunities</h3>
+          <p className="text-slate-600 text-sm">Internships, volunteer roles, job shadowing, and workshops</p>
         </Link>
 
         <Link href="/portfolio" className="card p-6 hover:shadow-lg transition">
