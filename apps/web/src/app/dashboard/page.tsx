@@ -49,6 +49,7 @@ type DashboardSummary = {
   academicHealth?: { score: number; label: string; nextAction: string }
   lifepath?: { selectedCareersCount: number }
   opportunities?: DashboardOpportunity[]
+  scholarships?: { readiness: { percentage: number; label: string }; currentMatches: number; availableValue: number; applicationsInProgress: number; topMissingRequirement: string | null }
   portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; proofDocumentsCount: number; readinessLabel: string; nextAction: string; scholarshipReadinessScore: number; scholarshipReadinessLabel: string }
   error?: string
 }
@@ -124,6 +125,9 @@ export default function Dashboard() {
     typeof summary?.lifepath?.selectedCareersCount === 'number'
       ? String(summary.lifepath.selectedCareersCount)
       : '—'
+
+  const scholarshipReadinessValue = typeof summary?.scholarships?.readiness?.percentage === 'number' ? `${summary.scholarships.readiness.percentage}%` : '—'
+  const scholarshipValue = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(summary?.scholarships?.availableValue || 0)
 
   const viewerRole = (summary?.viewerRole as string | null) || null
   const showParentActionCenter = viewerRole === 'parent' || viewerRole === 'guardian' || viewerRole === 'admin'
@@ -205,7 +209,7 @@ export default function Dashboard() {
         <StatTile label="Service Hours" value={loadingSummary ? '…' : String(summary?.portfolio?.serviceHoursTotal ?? 0)} desc="Volunteer and community work" />
         <StatTile label="Achievements" value={loadingSummary ? '…' : String(summary?.portfolio?.achievementsCount ?? 0)} desc="Awards and honors" />
         <StatTile label="Certifications" value={loadingSummary ? '…' : String(summary?.portfolio?.certificationsCompleted ?? 0)} desc={summary?.portfolio?.readinessLabel || 'Portfolio progress'} />
-        <StatTile label="Scholarship Ready" value={loadingSummary ? '…' : `${summary?.portfolio?.scholarshipReadinessScore ?? 0}%`} desc={summary?.portfolio?.scholarshipReadinessLabel || 'Portfolio checklist'} />
+        <StatTile label="Scholarship Ready" value={loadingSummary ? '…' : scholarshipReadinessValue} desc={summary?.scholarships?.readiness?.label || 'Profile-based matching'} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -227,6 +231,39 @@ export default function Dashboard() {
         <DocUpload />
       </div>
 
+
+
+      <div className="card p-6 mb-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold">{showParentActionCenter ? 'Scholarship Action Center' : 'Scholarship Readiness'}</h3>
+            <p className="mt-2 text-sm text-slate-700">
+              {showParentActionCenter
+                ? 'Review scholarship matches, missing documents, and deadlines with your student.'
+                : 'A.U.R.A is matching scholarships using academics, portfolio, LifePath, uploads, and location.'}
+            </p>
+          </div>
+          <Link href="/scholarships" className="btn-secondary shrink-0">View Scholarships</Link>
+        </div>
+        <div className="mt-5 grid md:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500">Readiness</div>
+            <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : scholarshipReadinessValue}</div>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500">Current Matches</div>
+            <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : String(summary?.scholarships?.currentMatches ?? 0)}</div>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500">Money Available</div>
+            <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : scholarshipValue}</div>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500">Next Requirement</div>
+            <div className="mt-1 text-sm font-bold text-slate-800">{summary?.scholarships?.topMissingRequirement || 'Build scholarship matches'}</div>
+          </div>
+        </div>
+      </div>
 
       <div className="card p-6 mb-8">
         <div className="flex items-start justify-between gap-4">

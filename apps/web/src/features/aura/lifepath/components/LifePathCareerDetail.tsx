@@ -12,6 +12,9 @@ import DebtRiskCard from './DebtRiskCard'
 import RecommendationList from './RecommendationList'
 import CohortOpportunityCard from './CohortOpportunityCard'
 
+type RelatedScholarship = { id: string; title: string; organization: string | null; amount: number | null; deadline: string | null }
+type RelatedOpportunity = { id: string; title: string; opportunity_type: string; career_category: string | null; deadline: string | null }
+
 type LifePathTask = {
   id: string
   title: string
@@ -26,9 +29,24 @@ export default function LifePathCareerDetail({ career }: { career: CareerPath })
   const [scenario, setScenario] = useState<LifePathScenarioId>('baseline')
   const [tasks, setTasks] = useState<LifePathTask[]>([])
   const [taskError, setTaskError] = useState<string | null>(null)
+  const [relatedScholarships, setRelatedScholarships] = useState<RelatedScholarship[]>([])
+  const [relatedOpportunities, setRelatedOpportunities] = useState<RelatedOpportunity[]>([])
 
   const health = useMemo(() => scoreLifePath(career, scenario), [career, scenario])
 
+
+  async function loadRelatedResources() {
+    const scholarshipParams = `careerId=${encodeURIComponent(career.id)}&careerCategory=${encodeURIComponent(career.category)}&limit=3`
+    const opportunityParams = `careerCategory=${encodeURIComponent(career.category)}&limit=3`
+    const [scholarshipRes, opportunityRes] = await Promise.all([
+      fetch(`/api/scholarships/related?${scholarshipParams}`),
+      fetch(`/api/opportunities?${opportunityParams}`),
+    ])
+    const scholarshipJson = (await scholarshipRes.json().catch(() => null)) as { ok?: boolean; scholarships?: RelatedScholarship[] } | null
+    const opportunityJson = (await opportunityRes.json().catch(() => null)) as { ok?: boolean; opportunities?: RelatedOpportunity[] } | null
+    if (scholarshipJson?.ok) setRelatedScholarships(scholarshipJson.scholarships || [])
+    if (opportunityJson?.ok) setRelatedOpportunities(opportunityJson.opportunities || [])
+  }
 
   async function loadTasks() {
     setTaskError(null)
@@ -43,6 +61,7 @@ export default function LifePathCareerDetail({ career }: { career: CareerPath })
 
   useEffect(() => {
     void loadTasks()
+    void loadRelatedResources()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [career.id])
 
@@ -128,6 +147,36 @@ export default function LifePathCareerDetail({ career }: { career: CareerPath })
               </div>
             </button>
           ))}
+        </div>
+      </div>
+
+
+      <div className="card p-6">
+        <div className="text-sm font-semibold text-slate-600">Related Scholarships + Opportunities</div>
+        <p className="mt-2 text-sm text-slate-700">Matched by career category and related career tags. This will become part of the A.U.R.A recommendation engine.</p>
+        <div className="mt-4 grid md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="font-bold text-slate-950">Related Scholarships</div>
+            <div className="mt-3 space-y-3">
+              {relatedScholarships.length === 0 ? <div className="text-sm text-slate-600">No related scholarships tagged yet.</div> : relatedScholarships.map((item) => (
+                <Link key={item.id} href="/scholarships" className="block rounded-xl border border-slate-100 p-3 hover:bg-slate-50">
+                  <div className="font-semibold text-sm">{item.title}</div>
+                  <div className="mt-1 text-xs text-slate-600">{item.organization || 'Scholarship Provider'}{item.amount ? ` • $${Number(item.amount).toLocaleString()}` : ''}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="font-bold text-slate-950">Related Internships / Volunteer Opportunities</div>
+            <div className="mt-3 space-y-3">
+              {relatedOpportunities.length === 0 ? <div className="text-sm text-slate-600">No related business opportunities posted yet.</div> : relatedOpportunities.map((item) => (
+                <Link key={item.id} href={`/opportunities/${item.id}`} className="block rounded-xl border border-slate-100 p-3 hover:bg-slate-50">
+                  <div className="font-semibold text-sm">{item.title}</div>
+                  <div className="mt-1 text-xs text-slate-600">{item.opportunity_type.replaceAll('_', ' ')}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
