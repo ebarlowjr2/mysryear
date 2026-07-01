@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createNextServerSupabaseClient, computePortfolioSummary } from '@mysryear/shared'
+import { createNextServerSupabaseClient, computePortfolioSummary, computeScholarshipReadiness } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
 import { computeAcademicHealth, templatesForGrade, type GradeLevel } from '@/lib/student-success'
 
@@ -120,6 +120,47 @@ export async function GET() {
       .filter((row) => Boolean(row.uploaded_file_id)).length,
   })
 
+  const { data: scholarshipMatches } = await supabase
+    .from('student_scholarship_matches')
+    .select('status,match_score,missing_requirements,scholarships(amount,deadline,title)')
+    .eq('student_profile_id', studentProfileId)
+    .order('match_score', { ascending: false })
+    .limit(50)
+
+  const scholarshipReadiness = computeScholarshipReadiness({
+    student: {
+      academicHealthScore: health.score,
+      portfolioReadinessScore: portfolio.scholarshipReadinessScore,
+      gpa: latestGpa,
+      gradeLevel: Number(gradeLevel),
+      graduationYear: typeof studentProfile?.graduation_year === 'number' ? studentProfile.graduation_year : null,
+      state: null,
+      volunteerHours: portfolio.serviceHoursTotal,
+      activitiesCount: portfolio.activitiesCount,
+      achievementsCount: portfolio.achievementsCount,
+      certifications: [],
+      careerInterests: (interests || []).map((row) => String(row.career_id)),
+      careerCategories: [],
+      uploadedDocumentContexts: [],
+      hasResume: portfolio.proofDocumentsCount > 0,
+      hasTranscript: hasRecentRecord,
+      hasRecommendation: false,
+      hasFafsa: false,
+    },
+  })
+
+  const scholarshipRows = (scholarshipMatches || []) as Array<{
+    status: string | null
+    match_score: number | null
+    missing_requirements: string[] | null
+    scholarships?: { amount?: number | null; deadline?: string | null; title?: string | null } | { amount?: number | null; deadline?: string | null; title?: string | null }[] | null
+  }>
+  const scholarshipAvailableValue = scholarshipRows.reduce((sum, row) => {
+    const scholarship = Array.isArray(row.scholarships) ? row.scholarships[0] : row.scholarships
+    return sum + Number(scholarship?.amount || 0)
+  }, 0)
+  const scholarshipTopMissing = scholarshipRows.flatMap((row) => row.missing_requirements || [])[0] || scholarshipReadiness.topMissingRequirement
+
   const { data: opportunities } = await supabase
     .from('business_opportunities')
     .select('id,title,opportunity_type,career_category,city,state,remote_available,deadline,business_profiles(organization_name)')
@@ -142,5 +183,12 @@ export async function GET() {
     },
     portfolio,
     opportunities: opportunities || [],
+    scholarships: {
+      readiness: scholarshipReadiness,
+      currentMatches: scholarshipRows.length,
+      availableValue: scholarshipAvailableValue,
+      applicationsInProgress: scholarshipRows.filter((row) => row.status === 'applying' || row.status === 'submitted').length,
+      topMissingRequirement: scholarshipTopMissing,
+    },
   })
 }
