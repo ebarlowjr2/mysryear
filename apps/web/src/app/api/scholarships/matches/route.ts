@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import {
   CAREERS,
+  buildScholarshipApplicationTaskSeeds,
   computeAcademicHealth,
   computePortfolioSummary,
+  computeScholarshipApplicationProgress,
   computeScholarshipMatch,
   computeScholarshipReadiness,
   createNextServerSupabaseClient,
   scoreCareerHealth,
+  type ScholarshipApplicationTaskStatus,
   type ScholarshipForMatching,
   type ScholarshipRequirement,
   type ScholarshipStatus,
@@ -143,6 +146,32 @@ async function buildStudentScholarshipProfile(studentProfileId: string): Promise
   }
 }
 
+
+async function seedApplicationTasks(input: {
+  studentProfileId: string
+  scholarship: ScholarshipForMatching
+  requirements: ScholarshipRequirement[]
+  userId: string
+}) {
+  const supabase = await createNextServerSupabaseClient()
+  const seeds = buildScholarshipApplicationTaskSeeds(input.scholarship, input.requirements)
+  if (seeds.length === 0) return
+
+  await supabase.from('scholarship_application_tasks').upsert(
+    seeds.map((task) => ({
+      student_profile_id: input.studentProfileId,
+      scholarship_id: input.scholarship.id,
+      created_by_user_id: input.userId,
+      title: task.title,
+      description: task.description || null,
+      category: task.category,
+      due_date: task.dueDate || null,
+      upload_required: Boolean(task.uploadRequired),
+    })),
+    { onConflict: 'student_profile_id,scholarship_id,title', ignoreDuplicates: true },
+  )
+}
+
 export async function GET() {
   const supabase = await createNextServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
@@ -153,10 +182,11 @@ export async function GET() {
 
   const { student, portfolio, academicHealth } = await buildStudentScholarshipProfile(studentProfileId)
 
-  const [scholarshipsResult, requirementsResult, existingMatchesResult] = await Promise.all([
+  const [scholarshipsResult, requirementsResult, existingMatchesResult, applicationTasksResult] = await Promise.all([
     supabase.from('scholarships').select('*').eq('active', true).order('deadline', { ascending: true, nullsFirst: false }).limit(100),
     supabase.from('scholarship_requirements').select('*'),
     supabase.from('student_scholarship_matches').select('scholarship_id,status').eq('student_profile_id', studentProfileId),
+    supabase.from('scholarship_application_tasks').select('*').eq('student_profile_id', studentProfileId).order('due_date', { ascending: true, nullsFirst: false }),
   ])
 
   if (scholarshipsResult.error) return error(scholarshipsResult.error.message)
@@ -167,6 +197,25 @@ export async function GET() {
     const list = requirementsByScholarship.get(scholarshipId) || []
     list.push(requirement as ScholarshipRequirement)
     requirementsByScholarship.set(scholarshipId, list)
+  }
+
+  const tasksByScholarship = new Map<string, Array<{ id: string; scholarship_id: string; title: string; description: string | null; category: string; status: ScholarshipApplicationTaskStatus; due_date: string | null; upload_required: boolean; uploaded_file_id: string | null; completed_at: string | null }>>()
+  for (const task of applicationTasksResult.data || []) {
+    const scholarshipId = String(task.scholarship_id)
+    const list = tasksByScholarship.get(scholarshipId) || []
+    list.push({
+      id: String(task.id),
+      scholarship_id: scholarshipId,
+      title: String(task.title),
+      description: typeof task.description === 'string' ? task.description : null,
+      category: String(task.category || 'general'),
+      status: (task.status === 'in_progress' || task.status === 'done') ? task.status : 'not_started',
+      due_date: typeof task.due_date === 'string' ? task.due_date : null,
+      upload_required: Boolean(task.upload_required),
+      uploaded_file_id: typeof task.uploaded_file_id === 'string' ? task.uploaded_file_id : null,
+      completed_at: typeof task.completed_at === 'string' ? task.completed_at : null,
+    })
+    tasksByScholarship.set(scholarshipId, list)
   }
 
   const existingStatus = new Map<string, ScholarshipStatus>()
@@ -181,6 +230,8 @@ export async function GET() {
       ...computed,
       status: existingStatus.get(scholarship.id) || 'suggested',
       scholarship,
+      applicationTasks: tasksByScholarship.get(scholarship.id) || [],
+      applicationProgress: computeScholarshipApplicationProgress(tasksByScholarship.get(scholarship.id) || []),
     }
   }).sort((a, b) => b.matchScore - a.matchScore)
 
@@ -244,5 +295,21 @@ export async function PATCH(req: Request) {
     .upsert({ student_profile_id: studentProfileId, scholarship_id: scholarshipId, status }, { onConflict: 'student_profile_id,scholarship_id' })
 
   if (updateError) return error(updateError.message)
+
+  if (status === 'saved' || status === 'applying' || status === 'submitted') {
+    const [{ data: scholarship }, { data: requirements }] = await Promise.all([
+      supabase.from('scholarships').select('*').eq('id', scholarshipId).maybeSingle(),
+      supabase.from('scholarship_requirements').select('*').eq('scholarship_id', scholarshipId),
+    ])
+    if (scholarship) {
+      await seedApplicationTasks({
+        studentProfileId,
+        scholarship: normalizeScholarship(scholarship as Record<string, unknown>),
+        requirements: (requirements || []) as ScholarshipRequirement[],
+        userId: session.user.id,
+      })
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }

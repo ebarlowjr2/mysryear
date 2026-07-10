@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createNextServerSupabaseClient, computePortfolioSummary, computeScholarshipReadiness } from '@mysryear/shared'
+import { createNextServerSupabaseClient, computePortfolioSummary, computeScholarshipApplicationProgress, computeScholarshipReadiness } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
 import { computeAcademicHealth, templatesForGrade, type GradeLevel } from '@/lib/student-success'
 
@@ -120,12 +120,20 @@ export async function GET() {
       .filter((row) => Boolean(row.uploaded_file_id)).length,
   })
 
-  const { data: scholarshipMatches } = await supabase
+  const [{ data: scholarshipMatches }, { data: scholarshipApplicationTasks }] = await Promise.all([
+    supabase
     .from('student_scholarship_matches')
     .select('status,match_score,missing_requirements,scholarships(amount,deadline,title)')
     .eq('student_profile_id', studentProfileId)
     .order('match_score', { ascending: false })
-    .limit(50)
+    .limit(50),
+    supabase
+      .from('scholarship_application_tasks')
+      .select('id,title,status,due_date,upload_required')
+      .eq('student_profile_id', studentProfileId)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100),
+  ])
 
   const scholarshipReadiness = computeScholarshipReadiness({
     student: {
@@ -160,6 +168,12 @@ export async function GET() {
     return sum + Number(scholarship?.amount || 0)
   }, 0)
   const scholarshipTopMissing = scholarshipRows.flatMap((row) => row.missing_requirements || [])[0] || scholarshipReadiness.topMissingRequirement
+  const scholarshipApplicationProgress = computeScholarshipApplicationProgress((scholarshipApplicationTasks || []).map((task) => ({
+    status: task.status,
+    title: task.title,
+    due_date: task.due_date,
+    upload_required: task.upload_required,
+  })))
 
   const { data: opportunities } = await supabase
     .from('business_opportunities')
@@ -188,7 +202,8 @@ export async function GET() {
       currentMatches: scholarshipRows.length,
       availableValue: scholarshipAvailableValue,
       applicationsInProgress: scholarshipRows.filter((row) => row.status === 'applying' || row.status === 'submitted').length,
-      topMissingRequirement: scholarshipTopMissing,
+      applicationTasks: scholarshipApplicationProgress,
+      topMissingRequirement: scholarshipApplicationProgress.nextTask || scholarshipTopMissing,
     },
   })
 }

@@ -248,3 +248,161 @@ export function computeScholarshipReadiness(input: {
     topMissingRequirement: missingRequirements[0] || null,
   }
 }
+
+export type ScholarshipApplicationTaskStatus = 'not_started' | 'in_progress' | 'done'
+
+export type ScholarshipApplicationTaskSeed = {
+  title: string
+  description?: string | null
+  category: 'setup' | 'documents' | 'essay' | 'recommendation' | 'submission' | 'follow_up' | 'general'
+  dueDate?: string | null
+  uploadRequired?: boolean
+}
+
+export type ScholarshipApplicationProgress = {
+  total: number
+  completed: number
+  percentage: number
+  nextTask: string | null
+  overdue: number
+  documentsNeeded: number
+}
+
+function daysBefore(dateValue: string | null | undefined, days: number) {
+  if (!dateValue) return null
+  const date = new Date(`${dateValue}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return null
+  date.setDate(date.getDate() - days)
+  return date.toISOString().slice(0, 10)
+}
+
+function addUniqueTask(tasks: ScholarshipApplicationTaskSeed[], task: ScholarshipApplicationTaskSeed) {
+  if (!tasks.some((existing) => normalize(existing.title) === normalize(task.title))) tasks.push(task)
+}
+
+export function buildScholarshipApplicationTaskSeeds(
+  scholarship: ScholarshipForMatching,
+  requirements: ScholarshipRequirement[] = [],
+): ScholarshipApplicationTaskSeed[] {
+  const deadline = scholarship.deadline || null
+  const tasks: ScholarshipApplicationTaskSeed[] = []
+
+  addUniqueTask(tasks, {
+    title: 'Review eligibility requirements',
+    description: 'Confirm GPA, grade level, location, career fit, and any special requirements before spending time on the application.',
+    category: 'setup',
+    dueDate: daysBefore(deadline, 21),
+  })
+
+  addUniqueTask(tasks, {
+    title: 'Open official application link',
+    description: 'Visit the scholarship provider site and confirm the exact deadline, required documents, and submission method.',
+    category: 'setup',
+    dueDate: daysBefore(deadline, 20),
+  })
+
+  if (scholarship.essay_required || requirements.some((req) => req.requirement_type === 'essay')) {
+    addUniqueTask(tasks, {
+      title: 'Draft scholarship essay',
+      description: 'Create a first draft and save it in the essay/resume vault or document center.',
+      category: 'essay',
+      dueDate: daysBefore(deadline, 14),
+      uploadRequired: true,
+    })
+    addUniqueTask(tasks, {
+      title: 'Review and polish essay',
+      description: 'Ask a parent, counselor, mentor, or trusted adult to review the essay before submission.',
+      category: 'essay',
+      dueDate: daysBefore(deadline, 7),
+    })
+  }
+
+  if (scholarship.recommendation_required || requirements.some((req) => req.requirement_type === 'recommendation')) {
+    addUniqueTask(tasks, {
+      title: 'Request recommendation letter',
+      description: 'Ask a teacher, counselor, employer, or mentor early and provide context about the scholarship.',
+      category: 'recommendation',
+      dueDate: daysBefore(deadline, 21),
+    })
+    addUniqueTask(tasks, {
+      title: 'Confirm recommendation was submitted',
+      description: 'Follow up politely before the deadline to make sure the recommendation is complete.',
+      category: 'recommendation',
+      dueDate: daysBefore(deadline, 3),
+    })
+  }
+
+  if (requirements.some((req) => req.requirement_type === 'transcript') || scholarship.minimum_gpa) {
+    addUniqueTask(tasks, {
+      title: 'Upload or request transcript',
+      description: 'Attach the latest transcript/report card or request an official copy from school if required.',
+      category: 'documents',
+      dueDate: daysBefore(deadline, 10),
+      uploadRequired: true,
+    })
+  }
+
+  if (scholarship.volunteer_required || requirements.some((req) => req.requirement_type === 'volunteer_hours')) {
+    addUniqueTask(tasks, {
+      title: 'Verify service hours',
+      description: 'Make sure volunteer/service hours are logged with organization or supervisor details.',
+      category: 'documents',
+      dueDate: daysBefore(deadline, 10),
+    })
+  }
+
+  if (requirements.some((req) => req.requirement_type === 'fafsa')) {
+    addUniqueTask(tasks, {
+      title: 'Prepare FAFSA or financial aid proof',
+      description: 'Confirm whether the scholarship requires FAFSA completion or financial need documentation.',
+      category: 'documents',
+      dueDate: daysBefore(deadline, 12),
+      uploadRequired: true,
+    })
+  }
+
+  addUniqueTask(tasks, {
+    title: 'Submit scholarship application',
+    description: 'Submit before the official deadline and save confirmation if available.',
+    category: 'submission',
+    dueDate: deadline,
+  })
+
+  addUniqueTask(tasks, {
+    title: 'Save confirmation or follow-up notes',
+    description: 'Record confirmation number, email receipt, or next steps after submission.',
+    category: 'follow_up',
+    dueDate: deadline,
+  })
+
+  return tasks
+}
+
+export function computeScholarshipApplicationProgress(tasks: Array<{
+  status?: ScholarshipApplicationTaskStatus | string | null
+  title?: string | null
+  due_date?: string | null
+  dueDate?: string | null
+  upload_required?: boolean | null
+  uploadRequired?: boolean | null
+}>): ScholarshipApplicationProgress {
+  const today = new Date().toISOString().slice(0, 10)
+  const total = tasks.length
+  const completed = tasks.filter((task) => task.status === 'done').length
+  const incomplete = tasks.filter((task) => task.status !== 'done')
+  const sortedIncomplete = [...incomplete].sort((a, b) => String(a.due_date || a.dueDate || '9999-12-31').localeCompare(String(b.due_date || b.dueDate || '9999-12-31')))
+  const overdue = incomplete.filter((task) => {
+    const due = task.due_date || task.dueDate
+    return Boolean(due && due < today)
+  }).length
+  const documentsNeeded = incomplete.filter((task) => Boolean(task.upload_required ?? task.uploadRequired)).length
+
+  return {
+    total,
+    completed,
+    percentage: total ? Math.round((completed / total) * 100) : 0,
+    nextTask: sortedIncomplete[0]?.title || null,
+    overdue,
+    documentsNeeded,
+  }
+}
