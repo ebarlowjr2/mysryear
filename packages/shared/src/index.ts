@@ -15,3 +15,6 @@ export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
 
 export { CAREERS, CATEGORIES } from './career-catalog'
 export type { CareerPath, CareerMilestone, CohortOpportunity } from './career-catalog'
+
+export { computeScholarshipReadiness, computeScholarshipMatch, explainScholarshipMatch, identifyMissingRequirements } from './scholarships'
+export type { ScholarshipForMatching, ScholarshipMatchResult, ScholarshipReadinessResult, ScholarshipRequirement, ScholarshipRequirementType, ScholarshipStatus, StudentScholarshipProfile } from './scholarships'
