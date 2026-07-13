@@ -21,6 +21,7 @@ export type ScholarshipForMatching = {
   description?: string | null
   amount?: number | null
   deadline?: string | null
+  application_url?: string | null
   state?: string | null
   country?: string | null
   minimum_gpa?: number | null

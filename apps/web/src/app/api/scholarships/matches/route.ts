@@ -44,6 +44,7 @@ function normalizeScholarship(row: Record<string, unknown>): ScholarshipForMatch
     description: typeof row.description === 'string' ? row.description : null,
     amount: typeof row.amount === 'number' ? row.amount : row.amount ? Number(row.amount) : null,
     deadline: typeof row.deadline === 'string' ? row.deadline : null,
+    application_url: typeof row.application_url === 'string' ? row.application_url : null,
     state: typeof row.state === 'string' ? row.state : null,
     country: typeof row.country === 'string' ? row.country : null,
     minimum_gpa: typeof row.minimum_gpa === 'number' ? row.minimum_gpa : row.minimum_gpa ? Number(row.minimum_gpa) : null,
