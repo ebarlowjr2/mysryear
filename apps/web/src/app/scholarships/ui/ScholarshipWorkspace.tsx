@@ -10,10 +10,31 @@ type Scholarship = {
   description?: string | null
   amount?: number | null
   deadline?: string | null
+  application_url?: string | null
   state?: string | null
   minimum_gpa?: number | null
   career_tags?: string[] | null
   skill_tags?: string[] | null
+}
+
+type ApplicationTask = {
+  id: string
+  title: string
+  description?: string | null
+  category: string
+  status: 'not_started' | 'in_progress' | 'done'
+  due_date?: string | null
+  upload_required?: boolean | null
+  uploaded_file_id?: string | null
+}
+
+type ApplicationProgress = {
+  total: number
+  completed: number
+  percentage: number
+  nextTask: string | null
+  overdue: number
+  documentsNeeded: number
 }
 
 type Match = {
@@ -24,6 +45,8 @@ type Match = {
   missingRequirements: string[]
   status: 'suggested' | 'saved' | 'applying' | 'submitted' | 'awarded' | 'rejected'
   scholarship: Scholarship
+  applicationTasks?: ApplicationTask[]
+  applicationProgress?: ApplicationProgress
 }
 
 type ResponseShape = {
@@ -67,6 +90,7 @@ export default function ScholarshipWorkspace() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('suggested')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -87,6 +111,7 @@ export default function ScholarshipWorkspace() {
 
   async function updateStatus(match: Match, status: Match['status']) {
     setBusyId(match.scholarshipId)
+    setNotice(null)
     const res = await fetch('/api/scholarships/matches', {
       method: 'PATCH',
       credentials: 'include',
@@ -101,6 +126,27 @@ export default function ScholarshipWorkspace() {
     }
     await load()
     if (tabs.includes(status as (typeof tabs)[number])) setActiveTab(status as (typeof tabs)[number])
+    if (status === 'applying') {
+      setNotice('Application workspace opened. MySRYear will help you track the checklist here; use the official application link when you are ready to complete the provider form.')
+    }
+  }
+
+
+  async function updateTask(task: ApplicationTask, status: ApplicationTask['status']) {
+    setBusyId(task.id)
+    const res = await fetch('/api/scholarships/application-tasks', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ taskId: task.id, status }),
+    })
+    const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+    setBusyId(null)
+    if (!res.ok || !json?.ok) {
+      setError(json?.error || 'Could not update application task')
+      return
+    }
+    await load()
   }
 
   const visibleMatches = useMemo(() => {
@@ -173,6 +219,7 @@ export default function ScholarshipWorkspace() {
       </section>
 
       <section className="card p-6">
+        {notice ? <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">{notice}</div> : null}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-black tracking-tight">{labels[activeTab]}</h2>
@@ -213,13 +260,61 @@ export default function ScholarshipWorkspace() {
                       </ul>
                     </div>
                   </div>
+
+                  {(match.applicationTasks || []).length > 0 ? (
+                    <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-black text-slate-900">MySRYear application workspace</div>
+                          <div className="text-xs text-slate-600">This checklist does not submit the scholarship for you. It keeps tasks, documents, and reminders organized before you apply on the provider site.</div>
+                          <div className="mt-1 text-xs text-slate-600">Next: {match.applicationProgress?.nextTask || 'All checklist items complete'}</div>
+                        </div>
+                        <div className="text-sm font-bold text-slate-800">{match.applicationProgress?.completed || 0}/{match.applicationProgress?.total || 0} done</div>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-white overflow-hidden">
+                        <div className="h-full rounded-full bg-brand-500" style={{ width: `${match.applicationProgress?.percentage || 0}%` }} />
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        {(match.applicationTasks || []).map((task) => (
+                          <label key={task.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                            <input
+                              type="checkbox"
+                              className="mt-1 h-4 w-4"
+                              checked={task.status === 'done'}
+                              disabled={busyId === task.id}
+                              onChange={(event) => updateTask(task, event.target.checked ? 'done' : 'not_started')}
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className={task.status === 'done' ? 'font-bold text-slate-500 line-through' : 'font-bold text-slate-900'}>{task.title}</span>
+                              {task.description ? <span className="mt-1 block text-xs text-slate-600">{task.description}</span> : null}
+                              <span className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
+                                <span className="badge">{task.category.replace('_', ' ')}</span>
+                                {task.due_date ? <span className="badge">Due {date(task.due_date)}</span> : null}
+                                {task.upload_required ? <span className="badge">Document needed</span> : null}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
-                <div className="flex flex-col gap-2 lg:min-w-44">
-                  {match.status === 'suggested' ? <button className="btn-secondary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'saved')}>Save</button> : null}
-                  {match.status === 'saved' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'applying')}>Start Applying</button> : null}
-                  {match.status === 'applying' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'submitted')}>Mark Submitted</button> : null}
+                <div className="flex flex-col gap-2 lg:min-w-48">
+                  {match.status === 'suggested' ? <button className="btn-secondary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'saved')}>Save to MySRYear</button> : null}
+                  {match.status === 'saved' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'applying')}>Open Application Workspace</button> : null}
+                  {match.status === 'applying' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'submitted')}>I Submitted This</button> : null}
                   {match.status === 'submitted' ? <button className="btn-secondary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'awarded')}>Mark Awarded</button> : null}
+                  {match.scholarship.application_url ? (
+                    <a className="btn-secondary text-center" href={match.scholarship.application_url} target="_blank" rel="noreferrer">
+                      Open Official Application
+                    </a>
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                      Official application link not added yet. Use the checklist here while you confirm the provider link.
+                    </div>
+                  )}
+                  <div className="text-xs text-slate-500">MySRYear tracks your process. The scholarship provider receives your application only when you submit on their official site.</div>
                 </div>
               </div>
             </article>

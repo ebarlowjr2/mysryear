@@ -49,7 +49,7 @@ type DashboardSummary = {
   academicHealth?: { score: number; label: string; nextAction: string }
   lifepath?: { selectedCareersCount: number }
   opportunities?: DashboardOpportunity[]
-  scholarships?: { readiness: { percentage: number; label: string }; currentMatches: number; availableValue: number; applicationsInProgress: number; topMissingRequirement: string | null }
+  scholarships?: { readiness: { percentage: number; label: string }; currentMatches: number; availableValue: number; applicationsInProgress: number; applicationTasks?: { total: number; completed: number; percentage: number; nextTask: string | null; overdue: number; documentsNeeded: number }; topMissingRequirement: string | null }
   portfolio?: { activitiesCount: number; serviceHoursTotal: number; achievementsCount: number; certificationsCompleted: number; proofDocumentsCount: number; readinessLabel: string; nextAction: string; scholarshipReadinessScore: number; scholarshipReadinessLabel: string }
   error?: string
 }
@@ -245,7 +245,7 @@ export default function Dashboard() {
           </div>
           <Link href="/scholarships" className="btn-secondary shrink-0">View Scholarships</Link>
         </div>
-        <div className="mt-5 grid md:grid-cols-4 gap-4">
+        <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="rounded-xl border border-slate-200 p-4">
             <div className="text-xs font-semibold text-slate-500">Readiness</div>
             <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : scholarshipReadinessValue}</div>
@@ -259,7 +259,12 @@ export default function Dashboard() {
             <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : scholarshipValue}</div>
           </div>
           <div className="rounded-xl border border-slate-200 p-4">
-            <div className="text-xs font-semibold text-slate-500">Next Requirement</div>
+            <div className="text-xs font-semibold text-slate-500">Applications</div>
+            <div className="mt-1 text-2xl font-black">{loadingSummary ? '…' : String(summary?.scholarships?.applicationsInProgress ?? 0)}</div>
+            <div className="mt-1 text-xs text-slate-500">{summary?.scholarships?.applicationTasks ? `${summary.scholarships.applicationTasks.completed}/${summary.scholarships.applicationTasks.total} tasks done` : 'No checklist yet'}</div>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4">
+            <div className="text-xs font-semibold text-slate-500">Next Scholarship Task</div>
             <div className="mt-1 text-sm font-bold text-slate-800">{summary?.scholarships?.topMissingRequirement || 'Build scholarship matches'}</div>
           </div>
         </div>
