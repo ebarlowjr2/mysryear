@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { getStudentSuccessSummary, type StudentSuccessSummary } from './academic'
 import { listStudentPortfolio } from './portfolio'
 import { averageCareerHealth, listSelectedLifePathCareers } from './lifepath'
+import { listScholarshipMatches } from './scholarships'
 
 export type DashboardMetrics = {
   scholarshipsCount: number
@@ -36,18 +37,12 @@ export async function getStudentSuccessDashboard(userId: string): Promise<Studen
 }
 
 export async function getDashboardMetrics(userId: string): Promise<DashboardMetrics> {
-  const [scholarshipsResult, tasksResult] = await Promise.all([
-    supabase
-      .from('scraped_scholarships')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true),
-    supabase
-      .from('user_tasks')
-      .select('id, status, due_date')
-      .eq('user_id', userId)
-  ])
+  const tasksResult = await supabase
+    .from('user_tasks')
+    .select('id, status, due_date')
+    .eq('user_id', userId)
 
-  const scholarshipsCount = scholarshipsResult.count ?? 0
+  let scholarshipsCount = 0
 
   const tasks = tasksResult.data ?? []
   const now = new Date()
@@ -63,6 +58,11 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
   const success = await getStudentSuccessSummary(userId)
   const portfolio = success.studentProfileId ? await listStudentPortfolio(success.studentProfileId) : null
   const lifePathCareers = success.studentProfileId ? await listSelectedLifePathCareers(success.studentProfileId) : []
+  const scholarshipWorkspace = success.studentProfileId ? await listScholarshipMatches(success.studentProfileId).catch((error) => {
+    console.warn('Failed to load scholarship readiness:', error?.message || error)
+    return null
+  }) : null
+  scholarshipsCount = scholarshipWorkspace?.counts.total || 0
 
   return {
     scholarshipsCount,
@@ -82,8 +82,8 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,
     portfolioAchievementsCount: portfolio?.summary.achievementsCount || 0,
     portfolioCertificationsCompleted: portfolio?.summary.certificationsCompleted || 0,
-    portfolioScholarshipReadinessScore: portfolio?.summary.scholarshipReadinessScore || 0,
-    portfolioScholarshipReadinessLabel: portfolio?.summary.scholarshipReadinessLabel || 'Needs Foundation',
+    portfolioScholarshipReadinessScore: scholarshipWorkspace?.readiness.percentage ?? portfolio?.summary.scholarshipReadinessScore ?? 0,
+    portfolioScholarshipReadinessLabel: scholarshipWorkspace?.readiness.label || portfolio?.summary.scholarshipReadinessLabel || 'Needs Foundation',
   }
 }
 
