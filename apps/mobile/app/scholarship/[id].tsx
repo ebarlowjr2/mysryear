@@ -1,122 +1,100 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useCallback, useEffect, useState } from 'react'
+import {
   ActivityIndicator,
-  Linking,
-  Alert
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native'
-import { useRouter, useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
 import { useSession } from '../../src/hooks/useSession'
-import { 
-  getScholarshipById, 
-  getSavedScholarshipIds,
-  saveScholarship,
-  unsaveScholarship,
-  markScholarshipApplied,
+import { getActiveStudentProfile, type StudentProfile } from '../../src/data/identity'
+import {
   formatDeadline,
-  Scholarship
+  formatScholarshipAmount,
+  getScholarshipMatch,
+  updateScholarshipApplicationTask,
+  updateScholarshipStatus,
+  type MobileScholarshipMatch,
+  type MobileScholarshipTask,
 } from '../../src/data/scholarships'
-import { createTask } from '../../src/data/planner'
-import { colors, ui, radius } from '../../src/theme'
+import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function ScholarshipDetailScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useSession()
-  const [scholarship, setScholarship] = useState<Scholarship | null>(null)
-  const [savedStatus, setSavedStatus] = useState<'saved' | 'applied' | null>(null)
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null)
+  const [match, setMatch] = useState<MobileScholarshipMatch | null>(null)
   const [loading, setLoading] = useState(true)
-  const [addingToPlanner, setAddingToPlanner] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     if (!id || !user?.id) return
-
     try {
-      const [scholarshipData, savedIds] = await Promise.all([
-        getScholarshipById(id),
-        getSavedScholarshipIds(user.id)
-      ])
-      setScholarship(scholarshipData)
-      setSavedStatus(savedIds.get(id) ?? null)
+      setError(null)
+      const active = await getActiveStudentProfile(user.id)
+      setStudentProfile(active)
+      setMatch(active?.id ? await getScholarshipMatch(active.id, id) : null)
     } catch (err) {
       console.error('Failed to load scholarship:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load scholarship')
     } finally {
       setLoading(false)
     }
   }, [id, user?.id])
 
   useEffect(() => {
-    loadData()
+    void loadData()
   }, [loadData])
 
-  const handleSaveToggle = useCallback(async () => {
-    if (!user?.id || !id) return
-
+  const setStatus = useCallback(async (status: MobileScholarshipMatch['status']) => {
+    if (!user?.id || !studentProfile?.id || !match) return
+    setBusyId(match.scholarshipId)
     try {
-      if (savedStatus) {
-        await unsaveScholarship(user.id, id)
-        setSavedStatus(null)
-      } else {
-        await saveScholarship(user.id, id)
-        setSavedStatus('saved')
+      await updateScholarshipStatus({ studentProfileId: studentProfile.id, scholarship: match.scholarship, status, userId: user.id })
+      await loadData()
+      if (status === 'applying') {
+        Alert.alert('Workspace opened', 'MySRYear will track your scholarship checklist here. Use the official application link when you are ready to submit on the provider site.')
       }
     } catch (err) {
-      console.error('Failed to save/unsave scholarship:', err)
-    }
-  }, [user?.id, id, savedStatus])
-
-  const handleMarkApplied = useCallback(async () => {
-    if (!user?.id || !id) return
-
-    try {
-      await markScholarshipApplied(user.id, id)
-      setSavedStatus('applied')
-      Alert.alert('Success', 'Scholarship marked as applied!')
-    } catch (err) {
-      console.error('Failed to mark as applied:', err)
-      Alert.alert('Error', 'Failed to mark as applied')
-    }
-  }, [user?.id, id])
-
-  const handleApply = useCallback(() => {
-    if (scholarship?.link) {
-      Linking.openURL(scholarship.link)
-    }
-  }, [scholarship?.link])
-
-  const handleAddToPlanner = useCallback(async () => {
-    if (!user?.id || !scholarship) return
-
-    setAddingToPlanner(true)
-    try {
-      const normalizedDeadline = normalizeDeadline(scholarship.deadline)
-      
-      await createTask(user.id, {
-        title: `Submit: ${scholarship.name}`,
-        category: 'Scholarships',
-        dueDate: normalizedDeadline || undefined,
-        notes: `Amount: ${scholarship.amount}\nLink: ${scholarship.link}`
-      })
-      
-      Alert.alert(
-        'Added to Planner',
-        `Task created for "${scholarship.name}" with deadline ${formatDeadline(scholarship.deadline)}`,
-        [
-          { text: 'View Planner', onPress: () => router.push('/(app)/planner') },
-          { text: 'OK' }
-        ]
-      )
-    } catch (err) {
-      console.error('Failed to add to planner:', err)
-      Alert.alert('Error', 'Failed to add to planner')
+      console.error('Failed to update scholarship status:', err)
+      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to update scholarship')
     } finally {
-      setAddingToPlanner(false)
+      setBusyId(null)
     }
-  }, [user?.id, scholarship, router])
+  }, [loadData, match, studentProfile?.id, user?.id])
+
+  const toggleTask = useCallback(async (task: MobileScholarshipTask) => {
+    if (!studentProfile?.id) return
+    setBusyId(task.id)
+    try {
+      await updateScholarshipApplicationTask({
+        studentProfileId: studentProfile.id,
+        taskId: task.id,
+        status: task.status === 'done' ? 'not_started' : 'done',
+      })
+      await loadData()
+    } catch (err) {
+      console.error('Failed to update task:', err)
+      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to update task')
+    } finally {
+      setBusyId(null)
+    }
+  }, [loadData, studentProfile?.id])
+
+  const openOfficialApplication = useCallback(async () => {
+    const url = match?.scholarship.application_url
+    if (!url) {
+      Alert.alert('Official link missing', 'This scholarship does not have an official application link yet. Use the checklist while you confirm the provider link.')
+      return
+    }
+    await WebBrowser.openBrowserAsync(url)
+  }, [match?.scholarship.application_url])
 
   if (loading) {
     return (
@@ -127,12 +105,12 @@ export default function ScholarshipDetailScreen() {
     )
   }
 
-  if (!scholarship) {
+  if (!match) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Scholarship not found</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>Go back</Text>
+        <Text style={styles.errorText}>{error || 'Scholarship not found'}</Text>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
+          <Text style={styles.secondaryButtonText}>Go back</Text>
         </TouchableOpacity>
       </View>
     )
@@ -142,285 +120,107 @@ export default function ScholarshipDetailScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backLink}>← Back</Text>
+          <Text style={styles.backLink}>Back</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>{scholarship.name}</Text>
+        <Text style={styles.title}>{match.scholarship.title}</Text>
+        <Text style={styles.provider}>{match.scholarship.organization || 'Scholarship Provider'}</Text>
 
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>
-            {savedStatus === 'applied' ? 'Applied' : savedStatus === 'saved' ? 'Saved' : 'Not Saved'}
-          </Text>
+        <View style={styles.statusRow}>
+          <View style={styles.badge}><Text style={styles.badgeText}>{match.matchScore}% match</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>{match.readinessPercentage}% ready</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>{match.status}</Text></View>
         </View>
 
         <View style={styles.detailsCard}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Amount</Text>
-            <Text style={styles.detailValue}>{scholarship.amount}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Deadline</Text>
-            <Text style={styles.detailValue}>{formatDeadline(scholarship.deadline)}</Text>
-          </View>
-
-          {scholarship.state && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>State</Text>
-              <Text style={styles.detailValue}>{scholarship.state}</Text>
-            </View>
-          )}
-
-          {scholarship.source && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Source</Text>
-              <Text style={styles.detailValue}>{scholarship.source}</Text>
-            </View>
-          )}
+          <View style={styles.detailRow}><Text style={styles.detailLabel}>Amount</Text><Text style={styles.detailValue}>{formatScholarshipAmount(match.scholarship.amount)}</Text></View>
+          <View style={styles.detailRow}><Text style={styles.detailLabel}>Deadline</Text><Text style={styles.detailValue}>{formatDeadline(match.scholarship.deadline)}</Text></View>
+          {match.scholarship.state ? <View style={styles.detailRow}><Text style={styles.detailLabel}>State</Text><Text style={styles.detailValue}>{match.scholarship.state}</Text></View> : null}
         </View>
 
-        {scholarship.tags && scholarship.tags.length > 0 && (
-          <View style={styles.tagsSection}>
-            <Text style={styles.sectionTitle}>Tags</Text>
-            <View style={styles.tagsContainer}>
-              {scholarship.tags.map((tag, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
+        {match.scholarship.description ? <Text style={styles.description}>{match.scholarship.description}</Text> : null}
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Why this matches</Text>
+          {match.matchReason.slice(0, 5).map((reason) => <Text key={reason} style={styles.bullet}>• {reason}</Text>)}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Missing requirements</Text>
+          {match.missingRequirements.length ? match.missingRequirements.slice(0, 5).map((item) => <Text key={item} style={styles.bullet}>• {item}</Text>) : <Text style={styles.bullet}>No major missing requirements detected.</Text>}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>MySRYear application workspace</Text>
+          <Text style={styles.helperText}>This does not submit your scholarship. Track tasks here, then apply on the provider's official site.</Text>
+          <Text style={styles.progressText}>{match.applicationProgress.completed}/{match.applicationProgress.total} checklist items complete</Text>
+
+          {match.applicationTasks.length === 0 ? (
+            <Text style={styles.helperText}>Open the workspace to generate a checklist for this scholarship.</Text>
+          ) : match.applicationTasks.map((task) => (
+            <TouchableOpacity key={task.id} style={styles.taskRow} disabled={busyId === task.id} onPress={() => toggleTask(task)}>
+              <View style={[styles.checkbox, task.status === 'done' && styles.checkboxDone]}><Text style={styles.checkboxText}>{task.status === 'done' ? '✓' : ''}</Text></View>
+              <View style={styles.taskBody}>
+                <Text style={[styles.taskTitle, task.status === 'done' && styles.taskTitleDone]}>{task.title}</Text>
+                {task.description ? <Text style={styles.taskDescription}>{task.description}</Text> : null}
+                <Text style={styles.taskMeta}>{task.category.replace('_', ' ')}{task.due_date ? ` • Due ${formatDeadline(task.due_date)}` : ''}{task.upload_required ? ' • Document needed' : ''}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={handleApply}
-          >
-            <Text style={styles.primaryButtonText}>Apply Now</Text>
+          {match.status === 'suggested' ? <TouchableOpacity style={styles.secondaryButton} disabled={busyId === match.scholarshipId} onPress={() => setStatus('saved')}><Text style={styles.secondaryButtonText}>Save to MySRYear</Text></TouchableOpacity> : null}
+          {match.status === 'saved' ? <TouchableOpacity style={styles.primaryButton} disabled={busyId === match.scholarshipId} onPress={() => setStatus('applying')}><Text style={styles.primaryButtonText}>Open Application Workspace</Text></TouchableOpacity> : null}
+          {match.status === 'applying' ? <TouchableOpacity style={styles.primaryButton} disabled={busyId === match.scholarshipId} onPress={() => setStatus('submitted')}><Text style={styles.primaryButtonText}>I Submitted This</Text></TouchableOpacity> : null}
+          {match.status === 'submitted' ? <TouchableOpacity style={styles.secondaryButton} disabled={busyId === match.scholarshipId} onPress={() => setStatus('awarded')}><Text style={styles.secondaryButtonText}>Mark Awarded</Text></TouchableOpacity> : null}
+          <TouchableOpacity style={styles.secondaryButton} onPress={openOfficialApplication}>
+            <Text style={styles.secondaryButtonText}>Open Official Application</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.secondaryButton, addingToPlanner && styles.buttonDisabled]}
-            onPress={handleAddToPlanner}
-            disabled={addingToPlanner}
-          >
-              {addingToPlanner ? (
-                <ActivityIndicator size="small" color={ui.primary} />
-              ) : (
-                <Text style={styles.secondaryButtonText}>Add to Planner</Text>
-              )}
-          </TouchableOpacity>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.halfButton, savedStatus && styles.halfButtonActive]}
-              onPress={handleSaveToggle}
-            >
-              <Text style={[styles.halfButtonText, savedStatus && styles.halfButtonTextActive]}>
-                {savedStatus ? 'Unsave' : 'Save'}
-              </Text>
-            </TouchableOpacity>
-
-            {savedStatus !== 'applied' && (
-              <TouchableOpacity 
-                style={styles.halfButton}
-                onPress={handleMarkApplied}
-              >
-                <Text style={styles.halfButtonText}>Mark Applied</Text>
-              </TouchableOpacity>
-            )}
-          </View>
         </View>
       </ScrollView>
     </View>
   )
 }
 
-function normalizeDeadline(d: string): string | null {
-  try {
-    if (/\d{4}-\d{2}-\d{2}/.test(d)) return d
-    const date = new Date(d + ' ' + new Date().getFullYear())
-    if (!isNaN(date.getTime())) return date.toISOString().slice(0, 10)
-  } catch {}
-  return null
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: ui.background,
-  },
-  centerContainer: {
-    flex: 1,
-    backgroundColor: ui.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    color: ui.textSecondary,
-    marginTop: 12,
-    fontSize: 16,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  backButton: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: ui.primary,
-    borderRadius: radius.sm,
-  },
-  backButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    padding: 16,
-    paddingTop: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: ui.border,
-  },
-  backLink: {
-    fontSize: 16,
-    color: ui.primary,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: ui.text,
-    marginBottom: 12,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: ui.backgroundSecondary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: ui.border,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: ui.textSecondary,
-  },
-  detailsCard: {
-    backgroundColor: ui.card,
-    borderRadius: radius.lg,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: ui.cardBorder,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: ui.textMuted,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: ui.text,
-    fontWeight: '600',
-  },
-  tagsSection: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: ui.text,
-    marginBottom: 12,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: ui.backgroundSecondary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: ui.border,
-  },
-  tagText: {
-    fontSize: 13,
-    color: ui.textSecondary,
-  },
-  actionsSection: {
-    marginTop: 24,
-    gap: 12,
-  },
-  primaryButton: {
-    backgroundColor: ui.primary,
-    paddingVertical: 16,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  secondaryButton: {
-    backgroundColor: ui.card,
-    paddingVertical: 16,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: ui.primary,
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: ui.primary,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfButton: {
-    flex: 1,
-    backgroundColor: ui.backgroundSecondary,
-    paddingVertical: 14,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: ui.border,
-  },
-  halfButtonActive: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  halfButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: ui.textSecondary,
-  },
-  halfButtonTextActive: {
-    color: colors.white,
-  },
+  container: { flex: 1, backgroundColor: ui.background },
+  centerContainer: { flex: 1, backgroundColor: ui.background, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  loadingText: { color: ui.textSecondary, marginTop: 12, fontSize: 16 },
+  errorText: { color: colors.error, fontSize: 16, textAlign: 'center', marginBottom: 16 },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8, backgroundColor: ui.background },
+  backLink: { color: ui.primary, fontSize: 16, fontWeight: '700' },
+  content: { flex: 1 },
+  contentContainer: { padding: 20, paddingBottom: 40 },
+  title: { fontSize: 28, fontWeight: '900', color: ui.text, lineHeight: 34 },
+  provider: { fontSize: 15, color: ui.textSecondary, marginTop: 6 },
+  statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
+  badge: { backgroundColor: '#EFF6FF', borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 6 },
+  badgeText: { color: ui.primary, fontWeight: '800', fontSize: 12, textTransform: 'capitalize' },
+  detailsCard: { backgroundColor: colors.white, borderRadius: radius.lg, padding: 16, marginTop: 18, ...shadow.card },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: ui.border },
+  detailLabel: { fontSize: 14, color: ui.textSecondary },
+  detailValue: { fontSize: 14, color: ui.text, fontWeight: '800', flexShrink: 1, textAlign: 'right' },
+  description: { marginTop: 16, fontSize: 15, color: ui.textSecondary, lineHeight: 22 },
+  sectionCard: { backgroundColor: colors.white, borderRadius: radius.lg, padding: 16, marginTop: 16, ...shadow.card },
+  sectionTitle: { fontSize: 17, fontWeight: '900', color: ui.text, marginBottom: 10 },
+  bullet: { fontSize: 14, color: ui.textSecondary, lineHeight: 21, marginBottom: 4 },
+  helperText: { fontSize: 13, color: ui.textSecondary, lineHeight: 19, marginBottom: 8 },
+  progressText: { fontSize: 14, color: ui.text, fontWeight: '800', marginBottom: 10 },
+  taskRow: { flexDirection: 'row', gap: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: ui.border },
+  checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: ui.primary, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  checkboxDone: { backgroundColor: ui.primary },
+  checkboxText: { color: colors.white, fontWeight: '900' },
+  taskBody: { flex: 1 },
+  taskTitle: { fontSize: 15, fontWeight: '800', color: ui.text },
+  taskTitleDone: { textDecorationLine: 'line-through', color: ui.textSecondary },
+  taskDescription: { fontSize: 13, color: ui.textSecondary, lineHeight: 18, marginTop: 3 },
+  taskMeta: { fontSize: 12, color: ui.textSecondary, marginTop: 6, textTransform: 'capitalize' },
+  actionsSection: { marginTop: 20, gap: 12 },
+  primaryButton: { backgroundColor: ui.primary, paddingVertical: 15, borderRadius: radius.md, alignItems: 'center' },
+  primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  secondaryButton: { borderWidth: 1, borderColor: ui.primary, paddingVertical: 15, borderRadius: radius.md, alignItems: 'center' },
+  secondaryButtonText: { color: ui.primary, fontSize: 16, fontWeight: '900' },
 })
