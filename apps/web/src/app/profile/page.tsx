@@ -41,7 +41,9 @@ export default async function ProfilePage() {
 
   const { data: profileRow, error: profileError } = await supabase
     .from('profiles')
-    .select('role,onboarding_complete,state,path,testing,early_action,deadline_lead_days,active_student_profile_id')
+    .select(
+      'role,onboarding_complete,state,path,testing,early_action,deadline_lead_days,active_student_profile_id',
+    )
     .eq('id', sp.user.id)
     .maybeSingle()
 
@@ -62,7 +64,8 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: true })
 
   const studentProfiles: StudentProfileRow[] = []
-  if (ownedStudentProfile?.id) studentProfiles.push(ownedStudentProfile as unknown as StudentProfileRow)
+  if (ownedStudentProfile?.id)
+    studentProfiles.push(ownedStudentProfile as unknown as StudentProfileRow)
   for (const r of (relRows || []) as unknown as RelationshipRow[]) {
     const spRow = r.student_profiles
     if (!spRow?.id) continue
@@ -114,13 +117,29 @@ export default async function ProfilePage() {
     .order('name', { ascending: true })
     .limit(5000)
 
+  const role = (profileRow?.role || sp.role || null) as string | null
+  const isBusiness = role === 'business'
+  const isCounselor = role === 'counselor'
+  const isFamily = role === 'parent' || role === 'guardian'
+  const isStudent = role === 'student'
+  const canEditActiveStudentProfile = isStudent || isFamily
+  const showStudentProfileSections = !isBusiness
+
+  const { data: businessProfile } = isBusiness
+    ? await supabase
+        .from('business_profiles')
+        .select('id,organization_name,status,contact_email')
+        .eq('owner_user_id', sp.user.id)
+        .maybeSingle()
+    : { data: null }
+
   return (
     <section className="container-prose pt-10 pb-20 space-y-6">
       <div className="card p-8">
         <div className="badge">Account</div>
         <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Profile</h1>
         <p className="mt-3 text-slate-700 max-w-2xl">
-          Manage your account, your active student profile, and linked supporters (parent/guardian/counselor).
+          Manage your account and the profile tools available for your role.
         </p>
 
         <div className="mt-6 grid sm:grid-cols-2 gap-4">
@@ -130,12 +149,14 @@ export default async function ProfilePage() {
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold text-slate-600">Role</div>
-            <div className="mt-1 font-black">{profileRow?.role || sp.role || '—'}</div>
+            <div className="mt-1 font-black">{role || '—'}</div>
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold text-slate-600">Onboarding</div>
             <div className="mt-1 font-black">
-              {Boolean(profileRow?.onboarding_complete ?? sp.onboardingComplete) ? 'Complete' : 'Not complete'}
+              {Boolean(profileRow?.onboarding_complete ?? sp.onboardingComplete)
+                ? 'Complete'
+                : 'Not complete'}
             </div>
           </div>
           <div className="card p-4">
@@ -155,150 +176,219 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="card p-8">
-        <div className="badge">Student Profile</div>
-        <h2 className="mt-3 text-2xl font-black tracking-tight">Active Student Profile</h2>
-        <p className="mt-2 text-slate-700">
-          LifePath, uploads, and planning tools should attach to your active student profile.
-        </p>
+      {showStudentProfileSections ? (
+        <div className="card p-8">
+          <div className="badge">Student Profile</div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight">Active Student Profile</h2>
+          <p className="mt-2 text-slate-700">
+            LifePath, uploads, and planning tools should attach to your active student profile.
+          </p>
 
-        <div className="mt-6">
-          <ActiveStudentProfileSelector
-            activeStudentProfileId={activeStudentProfileId}
-            studentProfiles={studentProfiles}
-          />
-        </div>
-
-        <div className="mt-6 grid sm:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">Student</div>
-            <div className="mt-1 font-black">
-              {activeStudentProfile
-                ? [activeStudentProfile.first_name, activeStudentProfile.last_name].filter(Boolean).join(' ') || '—'
-                : '—'}
-            </div>
-            <div className="mt-2 text-sm text-slate-700">
-              <div>
-                <span className="font-semibold">Graduation year:</span>{' '}
-                {activeStudentProfile?.graduation_year || '—'}
-              </div>
-              <div>
-                <span className="font-semibold">School:</span> {activeStudentProfile?.schools?.name || '—'}
-              </div>
-            </div>
+          <div className="mt-6">
+            <ActiveStudentProfileSelector
+              activeStudentProfileId={activeStudentProfileId}
+              studentProfiles={studentProfiles}
+            />
           </div>
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">What’s Next</div>
-            <div className="mt-2 text-sm text-slate-700 space-y-1">
-              <div>1. Invite a parent/guardian/counselor below.</div>
-              <div>2. Build LifePath in A.U.R.A.</div>
-              <div>3. Upload documents and track milestones.</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-6">
-          <StudentProfileDetailsForm
-            studentProfileId={activeStudentProfileId}
-            initialFirstName={activeStudentProfile?.first_name || null}
-            initialLastName={activeStudentProfile?.last_name || null}
-            initialGraduationYear={activeStudentProfile?.graduation_year || null}
-            initialSchoolId={activeStudentProfile?.school_id || null}
-            schools={(schools || []) as unknown as { id: string; name: string; city: string | null; state: string | null }[]}
-          />
-        </div>
-      </div>
-
-      <div className="card p-8">
-        <div className="badge">School</div>
-        <h2 className="mt-3 text-2xl font-black tracking-tight">School Hub</h2>
-        <p className="mt-2 text-slate-700">
-          These modules will connect to your school and student directory data. (Coming soon on web—already listed on mobile.)
-        </p>
-
-        <div className="mt-6 grid md:grid-cols-3 gap-4">
-          <div className="card p-5">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <Megaphone className="h-5 w-5 text-slate-700" />
+          <div className="mt-6 grid sm:grid-cols-2 gap-4">
+            <div className="card p-4">
+              <div className="text-xs font-semibold text-slate-600">Student</div>
+              <div className="mt-1 font-black">
+                {activeStudentProfile
+                  ? [activeStudentProfile.first_name, activeStudentProfile.last_name]
+                      .filter(Boolean)
+                      .join(' ') || '—'
+                  : '—'}
               </div>
-              <div className="min-w-0">
-                <div className="text-lg font-black">School Announcements</div>
-                <div className="mt-1 text-sm text-slate-700">
-                  Updates from your school and district—deadlines, reminders, and key info.
+              <div className="mt-2 text-sm text-slate-700">
+                <div>
+                  <span className="font-semibold">Graduation year:</span>{' '}
+                  {activeStudentProfile?.graduation_year || '—'}
                 </div>
-                <div className="mt-3">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
-                    Coming Soon
-                  </span>
+                <div>
+                  <span className="font-semibold">School:</span>{' '}
+                  {activeStudentProfile?.schools?.name || '—'}
                 </div>
+              </div>
+            </div>
+            <div className="card p-4">
+              <div className="text-xs font-semibold text-slate-600">What’s Next</div>
+              <div className="mt-2 text-sm text-slate-700 space-y-1">
+                <div>1. Invite a parent/guardian/counselor below.</div>
+                <div>2. Build LifePath in A.U.R.A.</div>
+                <div>3. Upload documents and track milestones.</div>
               </div>
             </div>
           </div>
 
-          <div className="card p-5">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <CalendarDays className="h-5 w-5 text-slate-700" />
+          {canEditActiveStudentProfile ? (
+            <div className="mt-6">
+              <StudentProfileDetailsForm
+                studentProfileId={activeStudentProfileId}
+                initialFirstName={activeStudentProfile?.first_name || null}
+                initialLastName={activeStudentProfile?.last_name || null}
+                initialGraduationYear={activeStudentProfile?.graduation_year || null}
+                initialSchoolId={activeStudentProfile?.school_id || null}
+                schools={
+                  (schools || []) as unknown as {
+                    id: string
+                    name: string
+                    city: string | null
+                    state: string | null
+                  }[]
+                }
+              />
+            </div>
+          ) : isCounselor ? (
+            <div className="mt-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-slate-800">
+              Counselors currently have approved read/support access only. Core student profile
+              fields are editable by the student and parent/guardian.
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="card p-8">
+          <div className="badge">Business Profile</div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight">Business Account</h2>
+          <p className="mt-2 text-slate-700">
+            Business accounts manage organization details and student-facing opportunities from the
+            business dashboard.
+          </p>
+          <div className="mt-6 grid sm:grid-cols-2 gap-4">
+            <div className="card p-4">
+              <div className="text-xs font-semibold text-slate-600">Organization</div>
+              <div className="mt-1 font-black">
+                {businessProfile?.organization_name || 'Not set'}
               </div>
-              <div className="min-w-0">
-                <div className="text-lg font-black">Events Calendar</div>
-                <div className="mt-1 text-sm text-slate-700">
-                  Track school events, testing dates, and important milestones in one place.
+              <div className="mt-2 text-sm text-slate-700">
+                Status: {businessProfile?.status || '—'}
+              </div>
+            </div>
+            <div className="card p-4">
+              <div className="text-xs font-semibold text-slate-600">Business Tools</div>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <a href="/business/dashboard" className="btn-primary inline-flex">
+                  Business Dashboard
+                </a>
+                <a href="/business/onboarding" className="btn-secondary inline-flex">
+                  Edit Business Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStudentProfileSections ? (
+        <div className="card p-8">
+          <div className="badge">School</div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight">School Hub</h2>
+          <p className="mt-2 text-slate-700">
+            These modules will connect to your school and student directory data. (Coming soon on
+            web—already listed on mobile.)
+          </p>
+
+          <div className="mt-6 grid md:grid-cols-3 gap-4">
+            <div className="card p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <Megaphone className="h-5 w-5 text-slate-700" />
                 </div>
-                <div className="mt-3">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
-                    Coming Soon
-                  </span>
+                <div className="min-w-0">
+                  <div className="text-lg font-black">School Announcements</div>
+                  <div className="mt-1 text-sm text-slate-700">
+                    Updates from your school and district—deadlines, reminders, and key info.
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                      Coming Soon
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <CalendarDays className="h-5 w-5 text-slate-700" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-lg font-black">Events Calendar</div>
+                  <div className="mt-1 text-sm text-slate-700">
+                    Track school events, testing dates, and important milestones in one place.
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                      Coming Soon
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-slate-700" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-lg font-black">Student Directory</div>
+                  <div className="mt-1 text-sm text-slate-700">
+                    Connect with classmates, cohorts, and verified school groups (privacy-safe).
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                      Coming Soon
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      ) : null}
 
-          <div className="card p-5">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-slate-700" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-lg font-black">Student Directory</div>
-                <div className="mt-1 text-sm text-slate-700">
-                  Connect with classmates, cohorts, and verified school groups (privacy-safe).
-                </div>
-                <div className="mt-3">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
-                    Coming Soon
-                  </span>
-                </div>
-              </div>
-            </div>
+      {showStudentProfileSections ? (
+        <div className="card p-8">
+          <div className="badge">Relationships</div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight">Invites & Linked Support</h2>
+          <p className="mt-2 text-slate-700">
+            Invite supporters to help plan. Counselors are read/support access only for now.
+          </p>
+
+          <div className="mt-6">
+            <LinkedSupporters
+              currentUserId={sp.user.id}
+              linked={
+                (linkedRows || []) as unknown as {
+                  user_id: string
+                  role: string
+                  created_at: string
+                }[]
+              }
+              pendingInvites={
+                pendingInvitesForActive as unknown as {
+                  id: string
+                  invited_email: string | null
+                  relationship_role: string
+                  status: string
+                  created_at: string
+                }[]
+              }
+            />
+          </div>
+
+          <div className="mt-6">
+            <RelationshipInvites
+              activeStudentProfileId={activeStudentProfileId}
+              invitesCreated={(invitesCreated || []) as unknown as InviteRow[]}
+              invitesReceived={(invitesReceived || []) as unknown as InviteRow[]}
+            />
           </div>
         </div>
-      </div>
-
-      <div className="card p-8">
-        <div className="badge">Relationships</div>
-        <h2 className="mt-3 text-2xl font-black tracking-tight">Invites & Linked Support</h2>
-        <p className="mt-2 text-slate-700">
-          Invite supporters to help plan. Counselors are read/support access only for now.
-        </p>
-
-        <div className="mt-6">
-          <LinkedSupporters
-            currentUserId={sp.user.id}
-            linked={(linkedRows || []) as unknown as { user_id: string; role: string; created_at: string }[]}
-            pendingInvites={pendingInvitesForActive as unknown as { id: string; invited_email: string | null; relationship_role: string; status: string; created_at: string }[]}
-          />
-        </div>
-
-        <div className="mt-6">
-          <RelationshipInvites
-            activeStudentProfileId={activeStudentProfileId}
-            invitesCreated={(invitesCreated || []) as unknown as InviteRow[]}
-            invitesReceived={(invitesReceived || []) as unknown as InviteRow[]}
-          />
-        </div>
-      </div>
+      ) : null}
     </section>
   )
 }
