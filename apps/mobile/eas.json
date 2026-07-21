@@ -24,7 +24,8 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "environment": "production"
     },
     "production": {
       "distribution": "store",
