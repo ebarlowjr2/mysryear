@@ -135,12 +135,30 @@ describe('normalizeImportRecord', () => {
     expect(row.import_fingerprint).toHaveLength(40)
   })
 
-  it('generates a deterministic external id when the source has none', () => {
+  it('generates a deterministic identity external id when the source has none', () => {
     const row = normalizeImportRecord(baseRecord({ externalId: '' }))
-    expect(row.external_id).toBe(row.import_fingerprint)
+    // Fallback external id is the identity fingerprint (stable across content edits).
+    expect(row.external_id).toBe(
+      deterministicExternalId({
+        source: 'fixture-dataset',
+        title: 'Example Scholarship',
+        organization: 'Example Foundation',
+        deadline: null,
+        applicationUrl: 'https://example.org/s/1/apply',
+      }),
+    )
     // Re-normalizing the same record yields the same generated id (idempotent).
     const again = normalizeImportRecord(baseRecord({ externalId: '' }))
     expect(again.external_id).toBe(row.external_id)
+  })
+
+  it('keeps the fallback external id stable but changes the content fingerprint on edits', () => {
+    const original = normalizeImportRecord(baseRecord({ externalId: '', careerTags: ['a'] }))
+    const edited = normalizeImportRecord(baseRecord({ externalId: '', careerTags: ['a', 'b'] }))
+    // Same identity => same row target (no duplicate)...
+    expect(edited.external_id).toBe(original.external_id)
+    // ...but a real content change is detectable.
+    expect(edited.import_fingerprint).not.toBe(original.import_fingerprint)
   })
 
   it('handles missing optional fields without crashing', () => {

@@ -150,15 +150,38 @@ reasonable rate limits and always record source attribution.
 
 ## 6. Deduplication rules
 
-- **Natural key**: `source + external_id`.
-- Sources without a stable id get a **deterministic fingerprint** id derived from
-  `source + title + organization + deadline + application_url`, so re-imports
-  converge to "unchanged".
+Two distinct fingerprints do two distinct jobs:
+
+- **Identity fingerprint** (`computeFingerprint`) over
+  `source + title + organization + deadline + application_url`. Used only to
+  generate a fallback `external_id` when a source has no stable id. It is stable
+  across content edits, so an edited record maps to the **same** row.
+- **Content fingerprint** (`computeContentFingerprint`, stored in
+  `import_fingerprint`) over all descriptive/eligibility fields. Used for
+  **change detection**: a real content change (amount, tags, requirements,
+  description, deadline, urls, gpa, grades…) produces a new hash and is applied
+  as an **update**, not a duplicate.
+
+Rules:
+
+- **Natural key**: `source + external_id` (backed by the partial unique index).
+- Sources without a stable id get the deterministic identity fingerprint id, so
+  re-imports target the same row.
 - Within a batch, duplicate `(source, external_id)` rows are collapsed (last
   wins) and counted as `rejected`.
-- Across runs, the natural key + `import_fingerprint` decide insert vs update vs
-  unchanged. The importer is **idempotent**: running the same import twice
-  creates no duplicates.
+- Across runs, the natural key + content fingerprint decide insert vs update vs
+  unchanged (`active` / `lifecycle_status` are compared explicitly on top). The
+  importer is **idempotent**: running the same import twice creates no
+  duplicates and reports every unchanged record as `unchanged`.
+
+### Manual curation precedence
+
+The importer only ever reads and writes rows for the source it is running
+(`loadExistingBySource(source)` + upsert on `(source, external_id)`).
+Manually-curated rows have `source = NULL`, so they are excluded from the unique
+index and are **never** matched, updated, or deactivated by ingestion. To hand a
+scholarship to ingestion, give it a `source`; to protect one from ingestion,
+leave `source` null.
 
 ## 7. Deadline & lifecycle behavior
 
@@ -249,6 +272,15 @@ optional fields, source-failure handling, and dry-run behavior.
   terms before treating that data as authoritative/live.
 - `student_scholarship_matches` are recomputed lazily on the matches route; a
   post-import match refresh job is a possible future enhancement.
+
+### Pre-existing, out-of-scope issue (not caused by this sprint)
+
+`npx tsc -p apps/mobile/tsconfig.json --noEmit` reports one error in
+`apps/mobile/components/ExternalLink.tsx` — `TS2578: Unused '@ts-expect-error'
+directive`. This is present unchanged on `origin/main`, lives in the mobile app
+(a separate workstream's area), and is **intentionally left untouched** by this
+sprint, which does not modify any mobile code. It should be addressed by the
+mobile workstream, not here.
 
 ## 14. How to add another source
 

@@ -134,10 +134,13 @@ export function parseGpa(value: unknown): number | null {
 }
 
 /**
- * Deterministic fingerprint for a record. Prefers the natural key
- * `source + external_id`; when a source has no stable external id, callers pass
- * a record with a generated externalId derived from these same fields, keeping
- * the pipeline idempotent either way.
+/**
+ * Deterministic IDENTITY fingerprint. Covers only the stable identity fields
+ * (`source + title + organization + deadline + application_url`). It is used to
+ * generate a fallback `external_id` for sources without a stable id, so that a
+ * later content edit maps to the SAME row (idempotent, no duplicates). Because
+ * it is identity-only, it must NOT be used for change detection — see
+ * `computeContentFingerprint`.
  */
 export function computeFingerprint(input: {
   source: string
@@ -158,7 +161,7 @@ export function computeFingerprint(input: {
 
 /**
  * Generate a deterministic external id for sources that do not provide a stable
- * one. Uses the same fields as the fingerprint so re-imports are idempotent.
+ * one. Uses the identity fingerprint so re-imports converge to the same row.
  */
 export function deterministicExternalId(input: {
   source: string
@@ -168,6 +171,51 @@ export function deterministicExternalId(input: {
   applicationUrl: string
 }): string {
   return computeFingerprint(input)
+}
+
+/**
+ * CONTENT fingerprint used for change detection. Hashes the descriptive/
+ * eligibility fields that ingestion owns, so any real content change (amount,
+ * tags, requirements, description, deadline, urls, gpa, grades, etc.) produces a
+ * new hash and is applied as an update. Deliberately EXCLUDES:
+ *  - volatile fields (`last_verified_at`) that change every run, and
+ *  - `active` / `lifecycle_status`, which are compared explicitly by the
+ *    orchestrator (and are mutated post-normalization by expiry handling).
+ */
+export function computeContentFingerprint(
+  row: Omit<NormalizedScholarshipRow, 'import_fingerprint'>,
+): string {
+  const content = {
+    source: row.source,
+    external_id: row.external_id,
+    source_url: row.source_url,
+    title: row.title,
+    organization: row.organization,
+    description: row.description,
+    amount: row.amount,
+    amount_min: row.amount_min,
+    amount_max: row.amount_max,
+    amount_display: row.amount_display,
+    deadline: row.deadline,
+    application_url: row.application_url,
+    minimum_gpa: row.minimum_gpa,
+    minimum_grade_level: row.minimum_grade_level,
+    maximum_grade_level: row.maximum_grade_level,
+    graduation_years: row.graduation_years,
+    career_tags: row.career_tags,
+    major_tags: row.major_tags,
+    certification_tags: row.certification_tags,
+    skill_tags: row.skill_tags,
+    state: row.state,
+    country: row.country,
+    financial_need_required: row.financial_need_required,
+    essay_required: row.essay_required,
+    recommendation_required: row.recommendation_required,
+    transcript_required: row.transcript_required,
+    volunteer_required: row.volunteer_required,
+    raw_source_metadata: row.raw_source_metadata,
+  }
+  return createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 40)
 }
 
 /**
@@ -186,8 +234,6 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
     ? (cleanString(record.externalId) as string)
     : deterministicExternalId({ source, title, organization, deadline, applicationUrl })
 
-  const fingerprint = computeFingerprint({ source, title, organization, deadline, applicationUrl })
-
   const amountMin = parseAmount(record.amountMin)
   const amountMax = parseAmount(record.amountMax)
   const amount = amountMax ?? amountMin
@@ -199,11 +245,10 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
     ? record.graduationYears.filter((y) => Number.isInteger(y))
     : []
 
-  return {
+  const rowWithoutFingerprint: Omit<NormalizedScholarshipRow, 'import_fingerprint'> = {
     source,
     external_id: externalId,
     source_url: normalizeUrl(record.sourceUrl) ?? '',
-    import_fingerprint: fingerprint,
 
     title,
     organization,
@@ -244,5 +289,10 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
       record.rawSourceMetadata && typeof record.rawSourceMetadata === 'object'
         ? record.rawSourceMetadata
         : null,
+  }
+
+  return {
+    ...rowWithoutFingerprint,
+    import_fingerprint: computeContentFingerprint(rowWithoutFingerprint),
   }
 }

@@ -10,6 +10,7 @@ export * from './types'
 export {
   normalizeImportRecord,
   computeFingerprint,
+  computeContentFingerprint,
   deterministicExternalId,
   normalizeDeadline,
   normalizeUrl,
