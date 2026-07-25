@@ -1,10 +1,10 @@
 {
   "source": "fixture-dataset",
-  "notes": "Manually curated, approved sample dataset of publicly-listed scholarship programs. Each record links to the provider's own public information and application pages. Used to demonstrate and test the ingestion pipeline without calling any external site. Verify/refresh before treating as live data.",
+  "notes": "Manually curated, approved sample dataset of publicly-listed scholarship programs. Titles are deliberately prefixed with 'TEST Scholarship —' so that any records created by a production canary import are unmistakable and easy to remove later (see docs/scholarship-ingestion-release.md, cleanup section). Each record links to the provider's own public information and application pages. Used to demonstrate and test the ingestion pipeline without calling any external site. Verify/refresh before treating as live data.",
   "records": [
     {
       "externalId": "coca-cola-scholars-2026",
-      "title": "Coca-Cola Scholars Program Scholarship",
+      "title": "TEST Scholarship — Coca-Cola Scholars Program Scholarship",
       "organization": "The Coca-Cola Scholars Foundation",
       "description": "Achievement-based scholarship for graduating high school seniors demonstrating leadership, service, and academic excellence.",
       "sourceUrl": "https://www.coca-colascholarsfoundation.org/apply/",
@@ -29,7 +29,7 @@
     },
     {
       "externalId": "gates-scholarship-2026",
-      "title": "The Gates Scholarship",
+      "title": "TEST Scholarship — The Gates Scholarship",
       "organization": "The Gates Scholarship",
       "description": "Highly selective, full scholarship for outstanding, minority high school seniors from low-income households.",
       "sourceUrl": "https://www.thegatesscholarship.org/scholarship",
@@ -51,7 +51,7 @@
     },
     {
       "externalId": "horatio-alger-national-2026",
-      "title": "Horatio Alger National Scholarship",
+      "title": "TEST Scholarship — Horatio Alger National Scholarship",
       "organization": "Horatio Alger Association",
       "description": "Need-based scholarship for high school students who have faced and overcome significant adversity.",
       "sourceUrl": "https://scholars.horatioalger.org/scholarships/",
@@ -72,7 +72,7 @@
     },
     {
       "externalId": "elks-mvs-2026",
-      "title": "Elks National Foundation Most Valuable Student Scholarship",
+      "title": "TEST Scholarship — Elks National Foundation Most Valuable Student Scholarship",
       "organization": "Elks National Foundation",
       "description": "Merit-based scholarship for high school seniors judged on scholarship, leadership, and financial need.",
       "sourceUrl": "https://www.elks.org/scholars/scholarships/mvs.cfm",
@@ -93,7 +93,7 @@
     },
     {
       "externalId": "society-women-engineers-2026",
-      "title": "Society of Women Engineers Scholarship",
+      "title": "TEST Scholarship — Society of Women Engineers Scholarship",
       "organization": "Society of Women Engineers",
       "description": "Scholarships supporting women pursuing ABET-accredited programs in engineering, engineering technology, and computer science.",
       "sourceUrl": "https://swe.org/scholarships/",
@@ -117,7 +117,7 @@
     },
     {
       "externalId": "legacy-past-deadline-demo-2024",
-      "title": "Community Futures Scholarship (Closed Cycle)",
+      "title": "TEST Scholarship — Community Futures Scholarship (Closed Cycle)",
       "organization": "Community Futures Foundation",
       "description": "Sample record with a past deadline to demonstrate lifecycle expiry handling during ingestion.",
       "sourceUrl": "https://example.org/community-futures-scholarship",
