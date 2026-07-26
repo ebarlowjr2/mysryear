@@ -107,7 +107,7 @@ Scholarship ingestion — source="fixture-dataset" mode=DRY-RUN (in-memory store
   updated:    0 (proposed)
   unchanged:  0
   rejected:   0
-  expired:    1        # the past-deadline "Community Futures (Closed Cycle)" record
+  expired:    1        # the past-deadline "Closed Cycle Validation Record" fixture
   errors:     0
 ```
 
