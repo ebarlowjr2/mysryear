@@ -1,4 +1,10 @@
-import { computeAcademicHealth, normalizeGradeLevel, templatesForGrade, type AcademicHealthResult, type GradeLevel } from '@mysryear/shared'
+import {
+  computeAcademicHealth,
+  normalizeGradeLevel,
+  templatesForGrade,
+  type AcademicHealthResult,
+  type GradeLevel,
+} from '@mysryear/shared'
 import { supabase } from '../lib/supabase'
 import { getActiveStudentProfile } from './identity'
 
@@ -87,7 +93,10 @@ export async function getUploadedFiles(studentProfileId: string): Promise<Upload
   return (data || []) as UploadedFile[]
 }
 
-async function ensureStudentSuccessTasks(studentProfileId: string, gradeLevel: GradeLevel): Promise<StudentSuccessTask[]> {
+async function ensureStudentSuccessTasks(
+  studentProfileId: string,
+  gradeLevel: GradeLevel,
+): Promise<StudentSuccessTask[]> {
   const templates = templatesForGrade(gradeLevel)
   const existing = await supabase
     .from('student_success_tasks')
@@ -130,7 +139,12 @@ async function ensureStudentSuccessTasks(studentProfileId: string, gradeLevel: G
 export async function getStudentSuccessSummary(userId: string): Promise<StudentSuccessSummary> {
   const studentProfile = await getActiveStudentProfile(userId)
   if (!studentProfile?.id) {
-    const health = computeAcademicHealth({ gpa: null, hasRecentRecord: false, checklistDone: 0, checklistTotal: 0 })
+    const health = computeAcademicHealth({
+      gpa: null,
+      hasRecentRecord: false,
+      checklistDone: 0,
+      checklistTotal: 0,
+    })
     return {
       studentProfileId: null,
       gradeLevel: '9',
@@ -150,7 +164,11 @@ export async function getStudentSuccessSummary(userId: string): Promise<StudentS
     getAcademicRecords(studentProfile.id),
     getUploadedFiles(studentProfile.id),
     ensureStudentSuccessTasks(studentProfile.id, gradeLevel),
-    supabase.from('student_career_interests').select('career_id').eq('student_profile_id', studentProfile.id).limit(10),
+    supabase
+      .from('student_career_interests')
+      .select('career_id')
+      .eq('student_profile_id', studentProfile.id)
+      .limit(10),
   ])
 
   const latestGpa = academicRecords.find((record) => typeof record.gpa === 'number')?.gpa ?? null
@@ -206,12 +224,27 @@ export type MobileUploadContext =
   | 'student_resume'
   | 'general_document'
 
-export const DOCUMENT_TYPE_OPTIONS: Array<{ value: MobileDocumentType; label: string; context: MobileUploadContext; academic: boolean }> = [
+export const DOCUMENT_TYPE_OPTIONS: Array<{
+  value: MobileDocumentType
+  label: string
+  context: MobileUploadContext
+  academic: boolean
+}> = [
   { value: 'report_card', label: 'Report Card', context: 'academic_report_card', academic: true },
-  { value: 'progress_report', label: 'Progress Report', context: 'academic_progress_report', academic: true },
+  {
+    value: 'progress_report',
+    label: 'Progress Report',
+    context: 'academic_progress_report',
+    academic: true,
+  },
   { value: 'transcript', label: 'Transcript', context: 'academic_transcript', academic: true },
   { value: 'test_score', label: 'Test Score', context: 'academic_test_score', academic: true },
-  { value: 'certification', label: 'Certification', context: 'lifepath_certification', academic: false },
+  {
+    value: 'certification',
+    label: 'Certification',
+    context: 'lifepath_certification',
+    academic: false,
+  },
   { value: 'resume', label: 'Resume', context: 'student_resume', academic: false },
   { value: 'general', label: 'General Document', context: 'general_document', academic: false },
 ]
@@ -235,8 +268,27 @@ function safeFileName(name: string) {
   return (name || 'uploaded.file').replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
-export function uploadContextForDocumentType(documentType: MobileDocumentType): MobileUploadContext {
-  return DOCUMENT_TYPE_OPTIONS.find((option) => option.value === documentType)?.context || 'general_document'
+async function blobFromUri(uri: string): Promise<Blob> {
+  // Android document picker commonly returns content:// URIs. XHR handles those
+  // more reliably than fetch in React Native while still supporting file:// and https://.
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.onload = () => resolve(xhr.response as Blob)
+    xhr.onerror = () =>
+      reject(new Error('Unable to read the selected file. Please try a different file.'))
+    xhr.responseType = 'blob'
+    xhr.open('GET', uri)
+    xhr.send()
+  })
+}
+
+export function uploadContextForDocumentType(
+  documentType: MobileDocumentType,
+): MobileUploadContext {
+  return (
+    DOCUMENT_TYPE_OPTIONS.find((option) => option.value === documentType)?.context ||
+    'general_document'
+  )
 }
 
 export function isAcademicDocumentType(documentType: MobileDocumentType) {
@@ -267,25 +319,34 @@ export async function createAcademicRecordForUpload(input: {
     notes: input.notes || null,
   }
 
-  const { data, error } = await supabase.from('academic_records').insert(record as never).select('*').single()
+  const { data, error } = await supabase
+    .from('academic_records')
+    .insert(record as never)
+    .select('*')
+    .single()
   if (!error) return { record: data as AcademicRecord, error: null }
 
   if (/column .*subject.* does not exist/i.test(error.message)) {
     const { subject: _subject, ...withoutSubject } = record
-    const retry = await supabase.from('academic_records').insert(withoutSubject as never).select('*').single()
+    const retry = await supabase
+      .from('academic_records')
+      .insert(withoutSubject as never)
+      .select('*')
+      .single()
     return { record: (retry.data as AcademicRecord) || null, error: retry.error?.message || null }
   }
 
   return { record: null, error: error.message }
 }
 
-export async function uploadStudentDocument(input: UploadStudentDocumentInput): Promise<{ file: UploadedFile | null; error: string | null }> {
+export async function uploadStudentDocument(
+  input: UploadStudentDocumentInput,
+): Promise<{ file: UploadedFile | null; error: string | null }> {
   const context = uploadContextForDocumentType(input.documentType)
   const cleanName = safeFileName(input.fileName)
   const path = `${input.studentProfileId}/${Date.now()}-${cleanName}`
 
-  const response = await fetch(input.fileUri)
-  const blob = await response.blob()
+  const blob = await blobFromUri(input.fileUri)
 
   const upload = await supabase.storage
     .from('user-uploads')
@@ -326,7 +387,8 @@ export async function uploadStudentDocument(input: UploadStudentDocumentInput): 
       gpa: input.gpa,
       notes: input.notes,
     })
-    if (academic.error) console.warn('Document uploaded but academic record insert failed:', academic.error)
+    if (academic.error)
+      console.warn('Document uploaded but academic record insert failed:', academic.error)
   }
 
   return { file, error: null }
@@ -336,9 +398,16 @@ export async function listStudentDocuments(studentProfileId: string): Promise<Up
   return getUploadedFiles(studentProfileId)
 }
 
-export async function deleteStudentDocument(fileId: string): Promise<{ success: boolean; error: string | null }> {
-  const existing = await supabase.from('uploaded_files').select('id,file_path').eq('id', fileId).single()
-  if (existing.error || !existing.data) return { success: false, error: existing.error?.message || 'File not found' }
+export async function deleteStudentDocument(
+  fileId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const existing = await supabase
+    .from('uploaded_files')
+    .select('id,file_path')
+    .eq('id', fileId)
+    .single()
+  if (existing.error || !existing.data)
+    return { success: false, error: existing.error?.message || 'File not found' }
 
   const storage = await supabase.storage.from('user-uploads').remove([existing.data.file_path])
   if (storage.error) return { success: false, error: storage.error.message }

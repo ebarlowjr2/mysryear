@@ -1,10 +1,23 @@
 import Section from '@/components/Section'
 import FeatureCard from '@/components/FeatureCard'
 import Timeline from '@/components/Timeline'
-import { GraduationCap, CalendarClock, ClipboardList, Layers, FileText, Search } from 'lucide-react'
+import {
+  Apple,
+  CalendarClock,
+  ClipboardList,
+  FileText,
+  GraduationCap,
+  Layers,
+  Search,
+  Smartphone,
+} from 'lucide-react'
 import Link from 'next/link'
 
 export default function Home() {
+  const iosTestRequestHref =
+    process.env.NEXT_PUBLIC_IOS_TEST_REQUEST_URL ||
+    'mailto:quavonojoke@yahoo.com?subject=MySRYear%20iOS%20test%20version%20request&body=Hi%2C%20I%27d%20like%20to%20request%20access%20to%20the%20MySRYear%20iOS%20test%20version.%0A%0AName%3A%0AApple%20ID%20email%3A'
+
   const timeline = [
     {
       month: 'August–September',
@@ -66,6 +79,45 @@ export default function Home() {
             <p className="mt-3 text-xs text-slate-500">
               No account required to explore. Sign in to save progress.
             </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2" aria-label="Mobile app access">
+              <a
+                href={iosTestRequestHref}
+                className="group rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                    <Apple className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-950">iOS Test Version</div>
+                    <div className="mt-1 text-xs leading-5 text-slate-600">
+                      Request access to test MySRYear on iPhone.
+                    </div>
+                    <div className="mt-2 text-xs font-bold text-brand-700 group-hover:text-brand-800">
+                      Request iOS invite
+                    </div>
+                  </div>
+                </div>
+              </a>
+
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-left opacity-90">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                    <Smartphone className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-950">Android App</div>
+                    <div className="mt-1 text-xs leading-5 text-slate-600">
+                      Android testing is on the roadmap after the iOS test cycle.
+                    </div>
+                    <div className="mt-2 inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700">
+                      Coming soon
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="relative">
             <div className="card p-6">
