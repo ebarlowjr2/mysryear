@@ -8,6 +8,7 @@ create table if not exists public.lifepath_feedback (
   author_user_id uuid not null references auth.users(id) on delete cascade,
   author_role text not null,
   note text not null,
+  constraint lifepath_feedback_author_role_check check (author_role in ('student', 'parent', 'guardian', 'counselor')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -19,6 +20,9 @@ on public.lifepath_feedback(student_profile_id, created_at desc);
 
 create index if not exists lifepath_feedback_author_idx
 on public.lifepath_feedback(author_user_id);
+
+create index if not exists lifepath_feedback_student_career_idx
+on public.lifepath_feedback(student_profile_id, career_id, created_at desc);
 
 -- Read official LifePath feedback for the student profile owner, linked family, and approved counselors.
 do $$
@@ -96,6 +100,8 @@ create table if not exists public.lifepath_simulations (
   simulation_type text not null default 'parent',
   title text,
   status text not null default 'active',
+  constraint lifepath_simulations_type_check check (simulation_type in ('parent')),
+  constraint lifepath_simulations_status_check check (status in ('active', 'archived')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -108,12 +114,61 @@ on public.lifepath_simulations(created_by_user_id, status, created_at desc);
 do $$
 begin
   if not exists (
-    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulations' and policyname = 'lifepath_simulations_owner_all'
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulations' and policyname = 'lifepath_simulations_select_own_parent'
   ) then
-    create policy lifepath_simulations_owner_all
-    on public.lifepath_simulations for all
+    create policy lifepath_simulations_select_own_parent
+    on public.lifepath_simulations for select
+    using (created_by_user_id = auth.uid());
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulations' and policyname = 'lifepath_simulations_insert_own_parent'
+  ) then
+    create policy lifepath_simulations_insert_own_parent
+    on public.lifepath_simulations for insert
+    with check (
+      created_by_user_id = auth.uid()
+      and simulation_type = 'parent'
+      and exists (
+        select 1 from public.profiles p
+        where p.id = auth.uid()
+          and p.role in ('parent', 'guardian')
+      )
+    );
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulations' and policyname = 'lifepath_simulations_update_own_parent'
+  ) then
+    create policy lifepath_simulations_update_own_parent
+    on public.lifepath_simulations for update
     using (created_by_user_id = auth.uid())
-    with check (created_by_user_id = auth.uid());
+    with check (
+      created_by_user_id = auth.uid()
+      and simulation_type = 'parent'
+      and exists (
+        select 1 from public.profiles p
+        where p.id = auth.uid()
+          and p.role in ('parent', 'guardian')
+      )
+    );
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulations' and policyname = 'lifepath_simulations_delete_own_parent'
+  ) then
+    create policy lifepath_simulations_delete_own_parent
+    on public.lifepath_simulations for delete
+    using (created_by_user_id = auth.uid());
   end if;
 end $$;
 

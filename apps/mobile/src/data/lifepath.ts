@@ -310,3 +310,66 @@ export function nextLifePathAction(careers: SelectedCareer[]) {
   if (careers.length < 5) return 'Add more career options so you can compare pathways.'
   return 'Open a career path and complete the next milestone.'
 }
+
+export type LifePathFeedback = {
+  id: string
+  student_profile_id: string
+  career_id: string | null
+  author_user_id: string
+  author_role: 'student' | 'parent' | 'guardian'
+  note: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export async function listLifePathFeedback(
+  studentProfileId: string,
+  careerId?: string | null,
+): Promise<{ notes: LifePathFeedback[]; error: string | null }> {
+  let query = supabase
+    .from('lifepath_feedback')
+    .select('*')
+    .eq('student_profile_id', studentProfileId)
+    .order('created_at', { ascending: false })
+
+  query = careerId ? query.eq('career_id', careerId) : query.is('career_id', null)
+
+  const { data, error } = await query
+  if (error) return { notes: [], error: error.message }
+  return { notes: (data || []) as LifePathFeedback[], error: null }
+}
+
+export async function createLifePathFeedback(input: {
+  studentProfileId: string
+  careerId?: string | null
+  authorUserId: string
+  authorRole: 'parent' | 'guardian'
+  note: string
+}): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.from('lifepath_feedback').insert({
+    student_profile_id: input.studentProfileId,
+    career_id: input.careerId || null,
+    author_user_id: input.authorUserId,
+    author_role: input.authorRole,
+    note: input.note.trim(),
+  } as never)
+  return { success: !error, error: error?.message || null }
+}
+
+export async function updateLifePathFeedback(
+  noteId: string,
+  note: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase
+    .from('lifepath_feedback')
+    .update({ note: note.trim(), updated_at: new Date().toISOString() } as never)
+    .eq('id', noteId)
+  return { success: !error, error: error?.message || null }
+}
+
+export async function deleteLifePathFeedback(
+  noteId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.from('lifepath_feedback').delete().eq('id', noteId)
+  return { success: !error, error: error?.message || null }
+}

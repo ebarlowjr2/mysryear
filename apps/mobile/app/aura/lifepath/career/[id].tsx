@@ -27,6 +27,7 @@ import {
   type LifePathTask,
 } from '../../../../src/data/lifepath'
 import { listStudentDocuments, type UploadedFile } from '../../../../src/data/academic'
+import LifePathFeedbackPanel from '../../../../src/components/LifePathFeedbackPanel'
 import { colors, radius, shadow, ui } from '../../../../src/theme'
 
 function goBack(fallback: string) {
@@ -232,6 +233,15 @@ export default function LifePathCareerDetailScreen() {
             ))
           )}
         </View>
+      ) : null}
+
+      {!isSimulation && readOnly && user?.id ? (
+        <LifePathFeedbackPanel
+          userId={user.id}
+          role={profile?.role || null}
+          studentProfile={studentProfile}
+          careerId={career.id}
+        />
       ) : null}
 
       <View style={styles.card}>

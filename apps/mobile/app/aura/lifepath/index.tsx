@@ -14,6 +14,8 @@ import { useSession } from '../../../src/hooks/useSession'
 import {
   getActiveStudentProfile,
   getCurrentProfile,
+  getLinkedStudentProfiles,
+  setActiveStudentProfile,
   type AccountProfile,
   type StudentProfile,
 } from '../../../src/data/identity'
@@ -27,6 +29,7 @@ import {
   type LifePathMode,
   type SelectedCareer,
 } from '../../../src/data/lifepath'
+import LifePathFeedbackPanel from '../../../src/components/LifePathFeedbackPanel'
 import { colors, radius, shadow, ui } from '../../../src/theme'
 
 function riskColor(risk: string) {
@@ -56,6 +59,7 @@ export default function LifePathScreen() {
   const { user, loading: sessionLoading } = useSession()
   const [profile, setProfile] = useState<AccountProfile | null>(null)
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null)
+  const [linkedStudents, setLinkedStudents] = useState<StudentProfile[]>([])
   const [careers, setCareers] = useState<SelectedCareer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -70,12 +74,16 @@ export default function LifePathScreen() {
     if (!user?.id) return
     setLoading(true)
     setError(null)
-    const [account, active] = await Promise.all([
+    const [account, active, linked] = await Promise.all([
       getCurrentProfile(user.id),
       getActiveStudentProfile(user.id),
+      getLinkedStudentProfiles(user.id),
     ])
     setProfile(account)
-    setStudentProfile(active)
+    setLinkedStudents(linked)
+    const validActive =
+      active?.id && linked.some((student) => student.id === active.id) ? active : linked[0] || null
+    setStudentProfile(validActive)
 
     if (account?.role === 'business') {
       setLoading(false)
@@ -86,7 +94,7 @@ export default function LifePathScreen() {
     if (mode === 'parent-simulation') {
       setCareers(await listSelectedParentSimulationCareers(user.id))
     } else {
-      setCareers(active?.id ? await listSelectedLifePathCareers(active.id) : [])
+      setCareers(validActive?.id ? await listSelectedLifePathCareers(validActive.id) : [])
     }
     setLoading(false)
   }, [mode, user?.id])
@@ -94,6 +102,21 @@ export default function LifePathScreen() {
   useEffect(() => {
     if (!sessionLoading) void load()
   }, [sessionLoading, load])
+
+  async function switchStudent(studentId: string) {
+    if (!user?.id || studentProfile?.id === studentId) return
+    setLoading(true)
+    const result = await setActiveStudentProfile(user.id, studentId)
+    if (!result.success) {
+      setLoading(false)
+      setError(result.error || 'Could not switch active student')
+      return
+    }
+    const nextStudent = linkedStudents.find((student) => student.id === studentId) || null
+    setStudentProfile(nextStudent)
+    setCareers(nextStudent?.id ? await listSelectedLifePathCareers(nextStudent.id) : [])
+    setLoading(false)
+  }
 
   async function restartSimulation() {
     if (!user?.id) return
@@ -127,25 +150,67 @@ export default function LifePathScreen() {
           Parent Simulation.
         </Text>
 
-        <TouchableOpacity
-          style={styles.optionCard}
-          onPress={() => router.push('/aura/lifepath?mode=linked-student' as never)}
-        >
-          <View style={styles.optionIcon}>
-            <Ionicons name="people-outline" size={24} color={ui.primary} />
+        <View style={styles.selectorCard}>
+          <View style={styles.selectorHeader}>
+            <View style={styles.optionIcon}>
+              <Ionicons name="people-outline" size={24} color={ui.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>View My Student’s LifePath</Text>
+              <Text style={styles.cardText}>
+                Choose which linked student to review without leaving A.U.R.A.
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>View My Student’s LifePath</Text>
-            <Text style={styles.cardText}>
-              {studentName(studentProfile)}
-              {studentProfile?.graduation_year
-                ? ` • Class of ${studentProfile.graduation_year}`
-                : ''}
-              {studentProfile?.schools?.name ? ` • ${studentProfile.schools.name}` : ''}
-            </Text>
-            <Text style={styles.cardAction}>Open read-only student view</Text>
-          </View>
-        </TouchableOpacity>
+
+          {linkedStudents.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No linked student yet</Text>
+              <Text style={styles.emptyText}>
+                Invite or link a student from Profile. You can still use Parent Simulation now.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.studentList}>
+              {linkedStudents.map((student) => {
+                const active = student.id === studentProfile?.id
+                return (
+                  <TouchableOpacity
+                    key={student.id}
+                    style={[styles.studentChoice, active && styles.studentChoiceActive]}
+                    onPress={() => void switchStudent(student.id)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.studentChoiceName, active && styles.studentChoiceNameActive]}
+                      >
+                        {studentName(student)}
+                      </Text>
+                      <Text style={styles.studentChoiceMeta}>
+                        {student.graduation_year
+                          ? `Class of ${student.graduation_year}`
+                          : 'Graduation year not set'}
+                        {student.schools?.name ? ` • ${student.schools.name}` : ''}
+                      </Text>
+                    </View>
+                    {active ? (
+                      <Ionicons name="checkmark-circle" size={22} color={ui.primary} />
+                    ) : null}
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[styles.primaryButton, linkedStudents.length === 0 && styles.disabled]}
+            disabled={linkedStudents.length === 0}
+            onPress={() => router.push('/aura/lifepath?mode=linked-student' as never)}
+          >
+            <Text style={styles.primaryButtonText}>Open Student LifePath</Text>
+          </TouchableOpacity>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </View>
 
         <TouchableOpacity
           style={styles.optionCard}
@@ -221,6 +286,9 @@ export default function LifePathScreen() {
             </Text>
           </TouchableOpacity>
         ) : null}
+        {readOnlyOfficial && !isSimulation && user?.id ? (
+          <LifePathFeedbackPanel userId={user.id} role={role} studentProfile={studentProfile} />
+        ) : null}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
     )
@@ -250,6 +318,36 @@ export default function LifePathScreen() {
       <Text style={styles.subtitle}>
         {careers.length} selected careers • Avg Career Health {averageCareerHealth(careers)}%
       </Text>
+      {readOnlyOfficial && !isSimulation && linkedStudents.length > 1 ? (
+        <View style={styles.inlineSelector}>
+          <Text style={styles.inlineSelectorTitle}>Active linked student</Text>
+          {linkedStudents.map((student) => {
+            const active = student.id === studentProfile?.id
+            return (
+              <TouchableOpacity
+                key={student.id}
+                style={[styles.studentChoice, active && styles.studentChoiceActive]}
+                onPress={() => void switchStudent(student.id)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[styles.studentChoiceName, active && styles.studentChoiceNameActive]}
+                  >
+                    {studentName(student)}
+                  </Text>
+                  <Text style={styles.studentChoiceMeta}>
+                    {student.graduation_year
+                      ? `Class of ${student.graduation_year}`
+                      : 'Graduation year not set'}
+                  </Text>
+                </View>
+                {active ? <Ionicons name="checkmark-circle" size={22} color={ui.primary} /> : null}
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+      ) : null}
+
       <Text style={styles.nextAction}>
         {isSimulation
           ? 'Simulation choices stay separate from student tasks, scholarships, and dashboard progress.'
@@ -319,6 +417,10 @@ export default function LifePathScreen() {
           </TouchableOpacity>
         </View>
       ))}
+
+      {readOnlyOfficial && !isSimulation && user?.id ? (
+        <LifePathFeedbackPanel userId={user.id} role={role} studentProfile={studentProfile} />
+      ) : null}
     </ScrollView>
   )
 }
@@ -378,6 +480,51 @@ const styles = StyleSheet.create({
   secondaryButtonText: { color: ui.primary, fontWeight: '800' },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 4 },
   actionButton: { flex: 1, minWidth: 145 },
+  selectorCard: {
+    backgroundColor: ui.card,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.lg,
+    padding: 16,
+    marginTop: 14,
+    ...shadow.card,
+  },
+  selectorHeader: { flexDirection: 'row', gap: 14, alignItems: 'flex-start', marginBottom: 12 },
+  studentList: { gap: 10, marginBottom: 12 },
+  studentChoice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: radius.md,
+    padding: 12,
+    backgroundColor: ui.backgroundSecondary,
+  },
+  studentChoiceActive: { borderColor: ui.primary, backgroundColor: ui.primaryLight },
+  studentChoiceName: { color: ui.text, fontWeight: '900' },
+  studentChoiceNameActive: { color: ui.primary },
+  studentChoiceMeta: { color: ui.textSecondary, fontSize: 12, marginTop: 2 },
+  emptyState: {
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: radius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  emptyTitle: { color: ui.text, fontWeight: '900' },
+  emptyText: { color: ui.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  inlineSelector: {
+    backgroundColor: ui.card,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.lg,
+    padding: 14,
+    marginBottom: 12,
+    gap: 10,
+    ...shadow.card,
+  },
+  inlineSelectorTitle: { color: ui.text, fontWeight: '900' },
   optionCard: {
     flexDirection: 'row',
     gap: 14,
@@ -423,4 +570,5 @@ const styles = StyleSheet.create({
   metaGrid: { marginTop: 12, gap: 5 },
   meta: { color: ui.textSecondary, fontSize: 13, fontWeight: '600' },
   errorText: { color: colors.error, marginTop: 12, textAlign: 'center' },
+  disabled: { opacity: 0.55 },
 })
