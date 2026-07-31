@@ -1,4 +1,10 @@
-import { CAREERS, scoreCareerHealth, starterTasksForCareer, type CareerHealthResult, type CareerPath } from '@mysryear/shared'
+import {
+  CAREERS,
+  scoreCareerHealth,
+  starterTasksForCareer,
+  type CareerHealthResult,
+  type CareerPath,
+} from '@mysryear/shared'
 import { supabase } from '../lib/supabase'
 
 export type LifePathTask = {
@@ -10,7 +16,12 @@ export type LifePathTask = {
   due_date: string | null
   career_id?: string | null
   uploaded_file_id?: string | null
-  uploaded_files?: { id: string; file_name: string; file_path?: string | null; upload_context?: string | null } | null
+  uploaded_files?: {
+    id: string
+    file_name: string
+    file_path?: string | null
+    upload_context?: string | null
+  } | null
   created_at?: string | null
 }
 
@@ -21,6 +32,124 @@ export type SelectedCareer = CareerPath & {
 
 const careerMap = new Map(CAREERS.map((career) => [career.id, career]))
 
+export type LifePathMode = 'student' | 'linked-student' | 'parent-simulation'
+
+export type ParentSimulation = {
+  id: string
+  created_by_user_id: string
+  simulation_type: 'parent'
+  title: string | null
+  status: 'active' | 'archived'
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+function selectedCareersFromIds(careerIds: string[]): SelectedCareer[] {
+  const selected: SelectedCareer[] = []
+  careerIds.forEach((careerId, index) => {
+    const career = getCareerById(careerId)
+    if (!career) return
+    selected.push({ ...career, rank: index + 1, health: scoreCareerHealth(career, 'baseline') })
+  })
+  return selected
+}
+
+async function getOrCreateParentSimulation(
+  userId: string,
+): Promise<{ simulation: ParentSimulation | null; error: string | null }> {
+  const existing = await supabase
+    .from('lifepath_simulations')
+    .select('*')
+    .eq('created_by_user_id', userId)
+    .eq('simulation_type', 'parent')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existing.data) return { simulation: existing.data as ParentSimulation, error: null }
+  if (existing.error) return { simulation: null, error: existing.error.message }
+
+  const created = await supabase
+    .from('lifepath_simulations')
+    .insert({
+      created_by_user_id: userId,
+      simulation_type: 'parent',
+      title: 'Parent Simulation',
+      status: 'active',
+    } as never)
+    .select('*')
+    .single()
+
+  if (created.error || !created.data) {
+    return {
+      simulation: null,
+      error: created.error?.message || 'Could not create parent simulation',
+    }
+  }
+  return { simulation: created.data as ParentSimulation, error: null }
+}
+
+export async function listParentSimulationCareerIds(userId: string): Promise<string[]> {
+  const { simulation, error } = await getOrCreateParentSimulation(userId)
+  if (!simulation?.id) {
+    if (error) console.warn('Failed to load parent simulation:', error)
+    return []
+  }
+
+  const { data, error: interestsError } = await supabase
+    .from('lifepath_simulation_interests')
+    .select('career_id,rank')
+    .eq('simulation_id', simulation.id)
+    .order('rank', { ascending: true, nullsFirst: false })
+
+  if (interestsError) {
+    console.warn('Failed to load parent simulation careers:', interestsError.message)
+    return []
+  }
+  return (data || []).map((row) => row.career_id as string).filter(Boolean)
+}
+
+export async function listSelectedParentSimulationCareers(
+  userId: string,
+): Promise<SelectedCareer[]> {
+  return selectedCareersFromIds(await listParentSimulationCareerIds(userId))
+}
+
+export async function saveParentSimulationCareerIds(userId: string, careerIds: string[]) {
+  const selected = Array.from(new Set(careerIds)).slice(0, 5)
+  const { simulation, error: simulationError } = await getOrCreateParentSimulation(userId)
+  if (!simulation?.id)
+    return { success: false, error: simulationError || 'Could not open parent simulation' }
+
+  const { error: deleteError } = await supabase
+    .from('lifepath_simulation_interests')
+    .delete()
+    .eq('simulation_id', simulation.id)
+  if (deleteError) return { success: false, error: deleteError.message }
+  if (!selected.length) return { success: true, error: null }
+
+  const { error } = await supabase.from('lifepath_simulation_interests').insert(
+    selected.map((careerId, index) => ({
+      simulation_id: simulation.id,
+      career_id: careerId,
+      rank: index + 1,
+    })) as never,
+  )
+  return { success: !error, error: error?.message || null }
+}
+
+export async function clearParentSimulation(userId: string) {
+  const { simulation, error: simulationError } = await getOrCreateParentSimulation(userId)
+  if (!simulation?.id)
+    return { success: false, error: simulationError || 'Could not open parent simulation' }
+  const { error } = await supabase
+    .from('lifepath_simulations')
+    .update({ status: 'archived', updated_at: new Date().toISOString() } as never)
+    .eq('id', simulation.id)
+  return { success: !error, error: error?.message || null }
+}
+
 export function getCareerById(careerId: string) {
   return careerMap.get(careerId) || null
 }
@@ -30,7 +159,11 @@ export function getCareerCatalog() {
 }
 
 export function formatCurrencyRange(min: number, max: number) {
-  const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+  const fmt = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  })
   return `${fmt.format(min)} - ${fmt.format(max)}`
 }
 
@@ -49,7 +182,9 @@ export async function listLifePathCareerIds(studentProfileId: string): Promise<s
   return (data || []).map((row) => row.career_id as string).filter(Boolean)
 }
 
-export async function listSelectedLifePathCareers(studentProfileId: string): Promise<SelectedCareer[]> {
+export async function listSelectedLifePathCareers(
+  studentProfileId: string,
+): Promise<SelectedCareer[]> {
   const { data, error } = await supabase
     .from('student_career_interests')
     .select('career_id,rank')
@@ -65,11 +200,14 @@ export async function listSelectedLifePathCareers(studentProfileId: string): Pro
     .map((row) => {
       const career = getCareerById(row.career_id as string)
       if (!career) return null
-      return { ...career, rank: (row.rank as number | null) || null, health: scoreCareerHealth(career, 'baseline') }
+      return {
+        ...career,
+        rank: (row.rank as number | null) || null,
+        health: scoreCareerHealth(career, 'baseline'),
+      }
     })
     .filter((career): career is SelectedCareer => Boolean(career))
 }
-
 
 async function seedLifePathTasks(studentProfileId: string, userId: string, careerIds: string[]) {
   const selectedCareers = CAREERS.filter((career) => careerIds.includes(career.id))
@@ -83,7 +221,9 @@ async function seedLifePathTasks(studentProfileId: string, userId: string, caree
 
   if (existingError) return { success: false, error: existingError.message }
 
-  const existingKeys = new Set((existing || []).map((task) => `${task.career_id || ''}:${task.title}`))
+  const existingKeys = new Set(
+    (existing || []).map((task) => `${task.career_id || ''}:${task.title}`),
+  )
   const rows = selectedCareers.flatMap((career) =>
     starterTasksForCareer(career)
       .filter((task) => !existingKeys.has(`${task.career_id}:${task.title}`))
@@ -102,7 +242,11 @@ async function seedLifePathTasks(studentProfileId: string, userId: string, caree
   return { success: !error, error: error?.message || null }
 }
 
-export async function saveLifePathCareerIds(studentProfileId: string, userId: string, careerIds: string[]) {
+export async function saveLifePathCareerIds(
+  studentProfileId: string,
+  userId: string,
+  careerIds: string[],
+) {
   const selected = Array.from(new Set(careerIds)).slice(0, 5)
 
   const { error: deleteError } = await supabase
@@ -126,7 +270,10 @@ export async function saveLifePathCareerIds(studentProfileId: string, userId: st
   return seedLifePathTasks(studentProfileId, userId, selected)
 }
 
-export async function listLifePathTasks(studentProfileId: string, careerId?: string): Promise<LifePathTask[]> {
+export async function listLifePathTasks(
+  studentProfileId: string,
+  careerId?: string,
+): Promise<LifePathTask[]> {
   let query = supabase
     .from('lifepath_tasks')
     .select('*, uploaded_files(id,file_name,file_path,upload_context)')
@@ -146,7 +293,10 @@ export async function listLifePathTasks(studentProfileId: string, careerId?: str
 }
 
 export async function updateLifePathTaskStatus(taskId: string, status: LifePathTask['status']) {
-  const { error } = await supabase.from('lifepath_tasks').update({ status } as never).eq('id', taskId)
+  const { error } = await supabase
+    .from('lifepath_tasks')
+    .update({ status } as never)
+    .eq('id', taskId)
   return { success: !error, error: error?.message || null }
 }
 
@@ -159,4 +309,67 @@ export function nextLifePathAction(careers: SelectedCareer[]) {
   if (!careers.length) return 'Start LifePath by selecting your top career interests.'
   if (careers.length < 5) return 'Add more career options so you can compare pathways.'
   return 'Open a career path and complete the next milestone.'
+}
+
+export type LifePathFeedback = {
+  id: string
+  student_profile_id: string
+  career_id: string | null
+  author_user_id: string
+  author_role: 'student' | 'parent' | 'guardian'
+  note: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export async function listLifePathFeedback(
+  studentProfileId: string,
+  careerId?: string | null,
+): Promise<{ notes: LifePathFeedback[]; error: string | null }> {
+  let query = supabase
+    .from('lifepath_feedback')
+    .select('*')
+    .eq('student_profile_id', studentProfileId)
+    .order('created_at', { ascending: false })
+
+  query = careerId ? query.eq('career_id', careerId) : query.is('career_id', null)
+
+  const { data, error } = await query
+  if (error) return { notes: [], error: error.message }
+  return { notes: (data || []) as LifePathFeedback[], error: null }
+}
+
+export async function createLifePathFeedback(input: {
+  studentProfileId: string
+  careerId?: string | null
+  authorUserId: string
+  authorRole: 'parent' | 'guardian'
+  note: string
+}): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.from('lifepath_feedback').insert({
+    student_profile_id: input.studentProfileId,
+    career_id: input.careerId || null,
+    author_user_id: input.authorUserId,
+    author_role: input.authorRole,
+    note: input.note.trim(),
+  } as never)
+  return { success: !error, error: error?.message || null }
+}
+
+export async function updateLifePathFeedback(
+  noteId: string,
+  note: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase
+    .from('lifepath_feedback')
+    .update({ note: note.trim(), updated_at: new Date().toISOString() } as never)
+    .eq('id', noteId)
+  return { success: !error, error: error?.message || null }
+}
+
+export async function deleteLifePathFeedback(
+  noteId: string,
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.from('lifepath_feedback').delete().eq('id', noteId)
+  return { success: !error, error: error?.message || null }
 }
