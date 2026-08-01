@@ -5,11 +5,21 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import {
+  CAREERS,
+  calculateParentSimulation,
+  DEFAULT_PARENT_SIMULATION_ASSUMPTIONS,
+  normalizeParentSimulationAssumptions,
+  scoreCareerHealth,
+  type ParentSimulationAssumptions,
+  type ParentSimulationSummary,
+} from '@mysryear/shared'
 import { useSession } from '../../../src/hooks/useSession'
 import {
   getActiveStudentProfile,
@@ -23,10 +33,15 @@ import {
   averageCareerHealth,
   clearParentSimulation,
   formatCurrencyRange,
+  listParentSimulationCareerIdsBySimulation,
+  listParentSimulationScenarios,
   listSelectedLifePathCareers,
   listSelectedParentSimulationCareers,
   nextLifePathAction,
+  saveParentSimulationScenario,
+  shareParentSimulationWithStudent,
   type LifePathMode,
+  type ParentSimulationScenario,
   type SelectedCareer,
 } from '../../../src/data/lifepath'
 import LifePathFeedbackPanel from '../../../src/components/LifePathFeedbackPanel'
@@ -54,6 +69,16 @@ function studentName(studentProfile: StudentProfile | null) {
   )
 }
 
+function selectedCareersFromIds(careerIds: string[]): SelectedCareer[] {
+  const selected: SelectedCareer[] = []
+  careerIds.forEach((careerId, index) => {
+    const career = CAREERS.find((item) => item.id === careerId)
+    if (!career) return
+    selected.push({ ...career, rank: index + 1, health: scoreCareerHealth(career, 'baseline') })
+  })
+  return selected
+}
+
 export default function LifePathScreen() {
   const { mode } = useLocalSearchParams<{ mode?: LifePathMode }>()
   const { user, loading: sessionLoading } = useSession()
@@ -61,6 +86,15 @@ export default function LifePathScreen() {
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null)
   const [linkedStudents, setLinkedStudents] = useState<StudentProfile[]>([])
   const [careers, setCareers] = useState<SelectedCareer[]>([])
+  const [simulationScenarios, setSimulationScenarios] = useState<ParentSimulationScenario[]>([])
+  const [activeSimulation, setActiveSimulation] = useState<ParentSimulationScenario | null>(null)
+  const [simulationTitle, setSimulationTitle] = useState('Parent Simulation')
+  const [simulationAssumptions, setSimulationAssumptions] = useState<ParentSimulationAssumptions>(
+    DEFAULT_PARENT_SIMULATION_ASSUMPTIONS,
+  )
+  const [simulationSummary, setSimulationSummary] = useState<ParentSimulationSummary | null>(null)
+  const [shareMessage, setShareMessage] = useState('')
+  const [savingSimulation, setSavingSimulation] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -92,7 +126,21 @@ export default function LifePathScreen() {
     }
 
     if (mode === 'parent-simulation') {
-      setCareers(await listSelectedParentSimulationCareers(user.id))
+      const scenarios = await listParentSimulationScenarios(user.id)
+      setSimulationScenarios(scenarios)
+      const activeScenario = scenarios[0] || null
+      setActiveSimulation(activeScenario)
+      setSimulationTitle(activeScenario?.title || 'Parent Simulation')
+      const nextAssumptions = normalizeParentSimulationAssumptions(activeScenario?.assumptions)
+      setSimulationAssumptions(nextAssumptions)
+      const ids = activeScenario?.id
+        ? await listParentSimulationCareerIdsBySimulation(activeScenario.id)
+        : []
+      const fallbackCareers = await listSelectedParentSimulationCareers(user.id)
+      setCareers(ids.length ? selectedCareersFromIds(ids) : fallbackCareers)
+      setSimulationSummary(
+        activeScenario?.results || calculateParentSimulation(ids, nextAssumptions),
+      )
     } else {
       setCareers(validActive?.id ? await listSelectedLifePathCareers(validActive.id) : [])
     }
@@ -126,6 +174,59 @@ export default function LifePathScreen() {
       return
     }
     await load()
+  }
+
+  async function saveSimulation(status: 'draft' | 'completed') {
+    if (!user?.id) return
+    setSavingSimulation(true)
+    const result = await saveParentSimulationScenario({
+      userId: user.id,
+      simulationId: activeSimulation?.id,
+      title: simulationTitle,
+      careerIds: careers.map((career) => career.id),
+      assumptions: simulationAssumptions,
+      status,
+    })
+    setSavingSimulation(false)
+    if (!result.success) {
+      Alert.alert('Could not save simulation', result.error || 'Please try again.')
+      return
+    }
+    setSimulationSummary(result.summary || null)
+    Alert.alert(
+      status === 'completed' ? 'Simulation complete' : 'Draft saved',
+      'Your Parent Simulation was saved without changing the student LifePath.',
+    )
+    await load()
+  }
+
+  async function shareSimulation() {
+    if (!user?.id || !activeSimulation?.id || !studentProfile?.id) return
+    const result = await shareParentSimulationWithStudent({
+      simulationId: activeSimulation.id,
+      studentProfileId: studentProfile.id,
+      userId: user.id,
+      message: shareMessage,
+    })
+    if (!result.success) {
+      Alert.alert('Could not share recommendation', result.error || 'Please try again.')
+      return
+    }
+    Alert.alert(
+      'Recommendation shared',
+      'The student can view this as a read-only parent-created recommendation.',
+    )
+  }
+
+  function setAssumptionNumber(
+    key: 'scholarshipsAndGrants' | 'familyContribution' | 'studentEarnings' | 'expectedBorrowing',
+    value: string,
+  ) {
+    const parsed = Number(value)
+    setSimulationAssumptions({
+      ...simulationAssumptions,
+      [key]: Number.isFinite(parsed) ? Math.max(0, parsed) : 0,
+    })
   }
 
   if (sessionLoading || loading) {
@@ -380,6 +481,170 @@ export default function LifePathScreen() {
         </View>
       ) : null}
 
+      {isSimulation ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Scenario Assumptions</Text>
+          {simulationScenarios.length > 1 ? (
+            <View style={styles.scenarioList}>
+              {simulationScenarios.map((scenario) => (
+                <TouchableOpacity
+                  key={scenario.id}
+                  style={[
+                    styles.scenarioPill,
+                    scenario.id === activeSimulation?.id && styles.scenarioPillActive,
+                  ]}
+                  onPress={async () => {
+                    setActiveSimulation(scenario)
+                    setSimulationTitle(scenario.title || 'Parent Simulation')
+                    const nextAssumptions = normalizeParentSimulationAssumptions(
+                      scenario.assumptions,
+                    )
+                    setSimulationAssumptions(nextAssumptions)
+                    const ids = await listParentSimulationCareerIdsBySimulation(scenario.id)
+                    setCareers(selectedCareersFromIds(ids))
+                    setSimulationSummary(
+                      scenario.results || calculateParentSimulation(ids, nextAssumptions),
+                    )
+                  }}
+                >
+                  <Text style={styles.scenarioPillText}>
+                    {scenario.title || 'Simulation'} • {scenario.status}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          <TextInput
+            style={styles.input}
+            value={simulationTitle}
+            onChangeText={setSimulationTitle}
+            placeholder="Scenario name"
+          />
+          <View style={styles.twoCol}>
+            <TouchableOpacity
+              style={styles.choiceButton}
+              onPress={() =>
+                setSimulationAssumptions({
+                  ...simulationAssumptions,
+                  pathway: simulationAssumptions.pathway === 'degree' ? 'certification' : 'degree',
+                })
+              }
+            >
+              <Text style={styles.choiceLabel}>Pathway</Text>
+              <Text style={styles.choiceText}>
+                {simulationAssumptions.pathway.replace(/_/g, ' ')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.choiceButton}
+              onPress={() =>
+                setSimulationAssumptions({
+                  ...simulationAssumptions,
+                  institution:
+                    simulationAssumptions.institution === 'public'
+                      ? 'community_college'
+                      : simulationAssumptions.institution === 'community_college'
+                        ? 'trade_school'
+                        : 'public',
+                })
+              }
+            >
+              <Text style={styles.choiceLabel}>Route</Text>
+              <Text style={styles.choiceText}>
+                {simulationAssumptions.institution.replace(/_/g, ' ')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.twoCol}>
+            <TextInput
+              style={styles.inputHalf}
+              keyboardType="numeric"
+              value={String(simulationAssumptions.scholarshipsAndGrants)}
+              onChangeText={(value) => setAssumptionNumber('scholarshipsAndGrants', value)}
+              placeholder="Scholarships"
+            />
+            <TextInput
+              style={styles.inputHalf}
+              keyboardType="numeric"
+              value={String(simulationAssumptions.familyContribution)}
+              onChangeText={(value) => setAssumptionNumber('familyContribution', value)}
+              placeholder="Family contribution"
+            />
+            <TextInput
+              style={styles.inputHalf}
+              keyboardType="numeric"
+              value={String(simulationAssumptions.studentEarnings)}
+              onChangeText={(value) => setAssumptionNumber('studentEarnings', value)}
+              placeholder="Student earnings"
+            />
+            <TextInput
+              style={styles.inputHalf}
+              keyboardType="numeric"
+              value={
+                simulationAssumptions.expectedBorrowing == null
+                  ? ''
+                  : String(simulationAssumptions.expectedBorrowing)
+              }
+              onChangeText={(value) =>
+                setSimulationAssumptions({
+                  ...simulationAssumptions,
+                  expectedBorrowing: value ? Number(value) : null,
+                })
+              }
+              placeholder="Borrowing, optional"
+            />
+          </View>
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.secondaryButton, styles.actionButton]}
+              disabled={savingSimulation}
+              onPress={() => void saveSimulation('draft')}
+            >
+              <Text style={styles.secondaryButtonText}>
+                {savingSimulation ? 'Saving...' : 'Save Draft'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.primaryButtonSmall, styles.actionButton]}
+              disabled={savingSimulation}
+              onPress={() => void saveSimulation('completed')}
+            >
+              <Text style={styles.primaryButtonText}>Complete</Text>
+            </TouchableOpacity>
+          </View>
+          {simulationSummary ? (
+            <View style={styles.resultsBox}>
+              <Text style={styles.resultText}>
+                Average Career Health: {simulationSummary.averageCareerHealthScore}/100
+              </Text>
+              <Text style={styles.resultText}>
+                Estimated total cost: ${simulationSummary.totalEstimatedCost.toLocaleString()}
+              </Text>
+              <Text style={styles.resultText}>
+                Estimated debt: ${simulationSummary.totalEstimatedDebt.toLocaleString()}
+              </Text>
+            </View>
+          ) : null}
+          {activeSimulation?.status === 'completed' && studentProfile?.id ? (
+            <View style={styles.shareBox}>
+              <Text style={styles.cardTitle}>Share with {studentName(studentProfile)}</Text>
+              <TextInput
+                style={styles.input}
+                value={shareMessage}
+                onChangeText={setShareMessage}
+                placeholder="Optional recommendation note"
+              />
+              <TouchableOpacity
+                style={styles.primaryButtonSmall}
+                onPress={() => void shareSimulation()}
+              >
+                <Text style={styles.primaryButtonText}>Share Read-Only Recommendation</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
       {careers.map((career) => (
         <View key={career.id} style={styles.card}>
           <View style={styles.cardHeader}>
@@ -569,6 +834,55 @@ const styles = StyleSheet.create({
   scoreText: { color: ui.primary, fontSize: 20, fontWeight: '900' },
   metaGrid: { marginTop: 12, gap: 5 },
   meta: { color: ui.textSecondary, fontSize: 13, fontWeight: '600' },
+  scenarioList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10, marginBottom: 10 },
+  scenarioPill: {
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  scenarioPillActive: { borderColor: ui.primary, backgroundColor: ui.primaryLight },
+  scenarioPillText: { color: ui.text, fontWeight: '800', fontSize: 12 },
+  input: {
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: radius.md,
+    padding: 12,
+    marginTop: 10,
+    color: ui.text,
+    backgroundColor: colors.white,
+  },
+  inputHalf: {
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: radius.md,
+    padding: 12,
+    color: ui.text,
+    backgroundColor: colors.white,
+    flex: 1,
+    minWidth: 140,
+  },
+  twoCol: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
+  choiceButton: {
+    borderWidth: 1,
+    borderColor: ui.border,
+    borderRadius: radius.md,
+    padding: 12,
+    flex: 1,
+    minWidth: 140,
+  },
+  choiceLabel: { color: ui.textSecondary, fontSize: 12, fontWeight: '700' },
+  choiceText: { color: ui.text, fontWeight: '900', marginTop: 3, textTransform: 'capitalize' },
+  resultsBox: {
+    backgroundColor: ui.primaryLight,
+    borderRadius: radius.md,
+    padding: 12,
+    gap: 5,
+    marginTop: 12,
+  },
+  resultText: { color: ui.text, fontWeight: '800' },
+  shareBox: { borderTopWidth: 1, borderTopColor: ui.border, marginTop: 16, paddingTop: 12 },
   errorText: { color: colors.error, marginTop: 12, textAlign: 'center' },
   disabled: { opacity: 0.55 },
 })
