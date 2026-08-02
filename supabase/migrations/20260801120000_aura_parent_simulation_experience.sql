@@ -95,7 +95,7 @@ begin
         select 1
         from public.lifepath_simulation_shares share
         where share.simulation_id = lifepath_simulations.id
-          and share.status in ('active', 'acknowledged')
+          and share.status in ('active', 'acknowledged', 'dismissed')
           and public.is_student_owner_for_student_profile(share.student_profile_id)
       )
     );
@@ -115,7 +115,7 @@ begin
         select 1
         from public.lifepath_simulation_shares share
         where share.simulation_id = lifepath_simulation_interests.simulation_id
-          and share.status in ('active', 'acknowledged')
+          and share.status in ('active', 'acknowledged', 'dismissed')
           and public.is_student_owner_for_student_profile(share.student_profile_id)
       )
     );
@@ -161,24 +161,64 @@ begin
   end if;
 end $$;
 
--- Parent/guardian can revoke or edit their own share message/status. Students can acknowledge/dismiss their received recommendation.
+-- Parent/guardian can update their own share message or revoke sharing.
+-- Students do not receive a direct UPDATE policy; acknowledgement/dismissal goes through the RPC below.
 do $$
 begin
+  drop policy if exists lifepath_simulation_shares_update_owner_or_student on public.lifepath_simulation_shares;
+
   if not exists (
-    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulation_shares' and policyname = 'lifepath_simulation_shares_update_owner_or_student'
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'lifepath_simulation_shares' and policyname = 'lifepath_simulation_shares_update_owner'
   ) then
-    create policy lifepath_simulation_shares_update_owner_or_student
+    create policy lifepath_simulation_shares_update_owner
     on public.lifepath_simulation_shares for update
-    using (
-      shared_by_user_id = auth.uid()
-      or public.is_student_owner_for_student_profile(student_profile_id)
-    )
-    with check (
-      shared_by_user_id = auth.uid()
-      or public.is_student_owner_for_student_profile(student_profile_id)
-    );
+    using (shared_by_user_id = auth.uid())
+    with check (shared_by_user_id = auth.uid());
   end if;
 end $$;
+
+create or replace function public.respond_to_lifepath_simulation_share(p_share_id uuid, p_response text)
+returns public.lifepath_simulation_shares
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_share public.lifepath_simulation_shares;
+  v_next_status text;
+begin
+  if p_response not in ('acknowledged', 'dismissed') then
+    raise exception 'Invalid response. Expected acknowledged or dismissed.';
+  end if;
+
+  select * into v_share
+  from public.lifepath_simulation_shares share
+  where share.id = p_share_id
+    and share.status in ('active', 'acknowledged', 'dismissed')
+    and public.is_student_owner_for_student_profile(share.student_profile_id, auth.uid())
+  for update;
+
+  if not found then
+    raise exception 'Recommendation not found or not available.';
+  end if;
+
+  v_next_status := p_response;
+
+  update public.lifepath_simulation_shares
+  set
+    status = v_next_status,
+    acknowledged_at = case when v_next_status = 'acknowledged' then now() else acknowledged_at end,
+    dismissed_at = case when v_next_status = 'dismissed' then now() else dismissed_at end,
+    updated_at = now()
+  where id = p_share_id
+  returning * into v_share;
+
+  return v_share;
+end;
+$$;
+
+revoke all on function public.respond_to_lifepath_simulation_share(uuid, text) from public;
+grant execute on function public.respond_to_lifepath_simulation_share(uuid, text) to authenticated;
 
 do $$
 begin

@@ -419,6 +419,15 @@ export default function LifePathScreen() {
       <Text style={styles.subtitle}>
         {careers.length} selected careers • Avg Career Health {averageCareerHealth(careers)}%
       </Text>
+      {!readOnlyOfficial && !isSimulation ? (
+        <TouchableOpacity
+          style={styles.recommendationButton}
+          onPress={() => router.push('/aura/lifepath/recommendations' as never)}
+        >
+          <Ionicons name="mail-unread-outline" size={18} color={ui.primary} />
+          <Text style={styles.recommendationButtonText}>Parent Recommendations</Text>
+        </TouchableOpacity>
+      ) : null}
       {readOnlyOfficial && !isSimulation && linkedStudents.length > 1 ? (
         <View style={styles.inlineSelector}>
           <Text style={styles.inlineSelectorTitle}>Active linked student</Text>
@@ -711,6 +720,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 14,
   },
+  recommendationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: ui.primary,
+    borderRadius: radius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  recommendationButtonText: { color: ui.primary, fontWeight: '900' },
   nextAction: {
     color: ui.text,
     backgroundColor: ui.primaryLight,

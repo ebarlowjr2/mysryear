@@ -71,7 +71,10 @@ export default function LifePathDashboard({
           </p>
         </div>
         {!readOnly ? (
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <Link href="/aura/lifepath/recommendations" className="btn-secondary">
+              Parent Recommendations
+            </Link>
             <Link href="/aura/lifepath/select" className="btn-secondary">
               Edit Career Choices
             </Link>

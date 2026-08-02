@@ -17,6 +17,13 @@ Parents and guardians can:
 - Share a completed scenario with a linked student as a read-only recommendation.
 - Revoke a shared recommendation.
 
+Students can:
+
+- Open the parent recommendation inbox from LifePath.
+- See only simulations explicitly shared with their active student profile.
+- Review parent name, message, shared date, careers, costs, debt, salary, and Career Health results.
+- Acknowledge or dismiss recommendations without importing careers or changing official LifePath data.
+
 The UI must state that simulation choices do not update official student career selections, LifePath tasks, scholarships, uploads, or dashboard progress.
 
 ## Routes And Screens
@@ -26,12 +33,14 @@ Web:
 - `/aura/lifepath/simulation`: parent scenario dashboard, assumptions, results, share controls.
 - `/aura/lifepath/simulation/select`: simulation career picker.
 - `/aura/lifepath/simulation/career/[id]`: simulation career detail.
+- `/aura/lifepath/recommendations`: student-facing parent recommendation inbox.
 
 Mobile:
 
 - `/aura/lifepath?mode=parent-simulation`: simulation dashboard and scenario controls.
 - `/aura/lifepath/select?mode=parent-simulation`: simulation career picker.
 - `/aura/lifepath/career/[id]?mode=parent-simulation`: simulation career detail.
+- `/aura/lifepath/recommendations`: student-facing parent recommendation inbox.
 
 ## Database Model
 
@@ -51,6 +60,7 @@ Changes:
 - Creates `lifepath_simulation_shares` for read-only student recommendations.
 - Adds helper functions for parent/guardian relationship checks and student ownership checks.
 - Adds RLS policies for owner-only simulation management and explicit shared-student read access.
+- Adds `respond_to_lifepath_simulation_share(share_id, response)` so students can only acknowledge/dismiss through a constrained operation.
 
 ## Ownership And Sharing
 
@@ -62,9 +72,10 @@ Sharing rules:
 
 - Only a parent/guardian who owns a completed simulation can share it.
 - Sharing requires a valid `family_relationships` row for the target `student_profile_id`.
-- The student can read shared simulations when the share is `active` or `acknowledged`.
+- The student can read shared simulations when the share is `active`, `acknowledged`, or `dismissed`.
 - Revoked shares immediately stop student simulation visibility.
 - Students cannot edit parent simulations or simulation interests.
+- Students cannot update share message, recipient, sharing parent, ownership fields, simulation data, or revoke state.
 
 ## Career Health Calculations
 
@@ -109,14 +120,18 @@ The migration preserves official LifePath isolation:
 
 - Parent/guardian can select, insert, update, and archive only their own `lifepath_simulations`.
 - Parent/guardian can manage `lifepath_simulation_interests` only for owned simulations.
-- Shared student can select a simulation and its interests only through an active/acknowledged `lifepath_simulation_shares` row.
+- Shared student can select a simulation and its interests only through an active/acknowledged/dismissed `lifepath_simulation_shares` row.
 - Share creation requires owned completed simulation plus parent/guardian relationship to the student profile.
+- Student acknowledgement/dismissal is enforced by the `respond_to_lifepath_simulation_share` RPC, not by direct row updates.
 - Counselor access is not expanded in this sprint.
 - Business accounts do not gain A.U.R.A LifePath or Parent Simulation access.
 
-Known limitation:
+Archive/delete behavior:
 
-- Student acknowledgement/dismissal is represented in `lifepath_simulation_shares.status`. Perfect column-level restriction for student updates should move to an RPC or trigger-backed API if we need stricter database enforcement beyond the current RLS row boundary and app-level controls.
+- Scenario deletion is implemented as owner-only soft deletion by setting `lifepath_simulations.status = 'archived'`.
+- Archived simulations are excluded from default scenario lists and cannot be shared as new recommendations.
+- Existing shares tied to archived simulations should be revoked by the parent if they should disappear from the student inbox.
+- Permanent removal is intentionally not exposed in this sprint so audit/history can be preserved. A later admin-only purge policy can remove archived scenarios after a retention window.
 
 ## Migration Instructions
 
@@ -128,6 +143,7 @@ Apply in development/staging first, not production:
    - `lifepath_simulations.assumptions` exists.
    - `lifepath_simulations.results` exists.
    - `lifepath_simulation_shares` exists.
+   - `respond_to_lifepath_simulation_share(uuid,text)` exists.
    - RLS is enabled on `lifepath_simulation_shares`.
    - Policies include owner-only simulation access and shared-student read access.
 
@@ -137,8 +153,9 @@ Apply in development/staging first, not production:
 - Parent completes a simulation and sees cost/debt/Career Health results.
 - Parent duplicates, renames, and archives a scenario.
 - Parent shares a completed scenario with a linked student.
-- Student sees the recommendation as read-only.
+- Student sees the recommendation as read-only in `/aura/lifepath/recommendations`.
 - Student cannot write to `lifepath_simulations` or `lifepath_simulation_interests`.
+- Student can acknowledge or dismiss through the RPC without changing official LifePath records.
 - Revoked share disappears from student-visible recommendations.
 - One parent cannot access another parent's private simulation.
 - Counselor remains read-only for official linked LifePath and does not gain simulation access.

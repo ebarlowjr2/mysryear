@@ -458,15 +458,13 @@ export async function saveParentSimulationScenario(input: {
     .eq('simulation_id', simulationId)
   if (deleted.error) return { success: false, error: deleted.error.message }
   if (selected.length) {
-    const inserted = await supabase
-      .from('lifepath_simulation_interests')
-      .insert(
-        selected.map((careerId, index) => ({
-          simulation_id: simulationId,
-          career_id: careerId,
-          rank: index + 1,
-        })) as never,
-      )
+    const inserted = await supabase.from('lifepath_simulation_interests').insert(
+      selected.map((careerId, index) => ({
+        simulation_id: simulationId,
+        career_id: careerId,
+        rank: index + 1,
+      })) as never,
+    )
     if (inserted.error) return { success: false, error: inserted.error.message }
   }
   return { success: true, error: null, simulationId, summary }
@@ -533,5 +531,88 @@ export async function shareParentSimulationWithStudent(input: {
     } as never,
     { onConflict: 'simulation_id,student_profile_id' },
   )
+  return { success: !error, error: error?.message || null }
+}
+
+export type StudentLifePathRecommendation = {
+  id: string
+  status: 'active' | 'acknowledged' | 'dismissed' | 'revoked'
+  message: string | null
+  shared_at: string | null
+  acknowledged_at: string | null
+  dismissed_at: string | null
+  shared_by_user_id: string
+  parent_name: string
+  simulation: {
+    id: string
+    title: string | null
+    status: string
+    results: ParentSimulationSummary | null
+    completed_at: string | null
+  } | null
+}
+
+export async function listStudentLifePathRecommendations(
+  studentProfileId: string,
+): Promise<{ recommendations: StudentLifePathRecommendation[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('lifepath_simulation_shares')
+    .select(
+      'id,status,message,created_at,acknowledged_at,dismissed_at,shared_by_user_id,lifepath_simulations(id,title,status,results,completed_at)',
+    )
+    .eq('student_profile_id', studentProfileId)
+    .in('status', ['active', 'acknowledged', 'dismissed'])
+    .order('created_at', { ascending: false })
+
+  if (error) return { recommendations: [], error: error.message }
+  const rows = (data || []) as unknown as Array<{
+    id: string
+    status: StudentLifePathRecommendation['status']
+    message: string | null
+    created_at: string | null
+    acknowledged_at: string | null
+    dismissed_at: string | null
+    shared_by_user_id: string
+    lifepath_simulations: StudentLifePathRecommendation['simulation']
+  }>
+  const parentIds = Array.from(new Set(rows.map((row) => row.shared_by_user_id).filter(Boolean)))
+  const parentProfiles = parentIds.length
+    ? await supabase.from('profiles').select('id,full_name,email').in('id', parentIds)
+    : { data: [], error: null }
+  if (parentProfiles.error) return { recommendations: [], error: parentProfiles.error.message }
+  const parentMap = new Map(
+    (parentProfiles.data || []).map((parent) => [parent.id as string, parent]),
+  )
+
+  return {
+    recommendations: rows.map((row) => {
+      const parent = parentMap.get(row.shared_by_user_id)
+      return {
+        id: row.id,
+        status: row.status,
+        message: row.message,
+        shared_at: row.created_at,
+        acknowledged_at: row.acknowledged_at,
+        dismissed_at: row.dismissed_at,
+        shared_by_user_id: row.shared_by_user_id,
+        parent_name:
+          (parent?.full_name as string | null) ||
+          (parent?.email as string | null) ||
+          'Parent/guardian',
+        simulation: row.lifepath_simulations,
+      }
+    }),
+    error: null,
+  }
+}
+
+export async function respondToLifePathRecommendation(
+  shareId: string,
+  response: 'acknowledged' | 'dismissed',
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.rpc('respond_to_lifepath_simulation_share', {
+    p_share_id: shareId,
+    p_response: response,
+  })
   return { success: !error, error: error?.message || null }
 }
