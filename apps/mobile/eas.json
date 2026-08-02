@@ -21,7 +21,11 @@
       },
       "env": {
         "SENTRY_ALLOW_FAILURE": "true"
-      }
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "environment": "production"
     },
     "production": {
       "distribution": "store",
@@ -30,6 +34,10 @@
       },
       "env": {
         "SENTRY_ALLOW_FAILURE": "true"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "autoIncrement": true
       }
     }
   },
