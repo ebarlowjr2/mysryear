@@ -55,12 +55,15 @@ export default function Home() {
               My SR Year is a launchpad to manage applications, track scholarships, and plan life
               after high school—college, trades, military, or entrepreneurship.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/dashboard" className="btn-primary">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/dashboard" className="btn-primary w-full sm:w-auto">
                 Open Dashboard
               </Link>
-              <Link href="/how-it-works" className="btn-secondary">
+              <Link href="/how-it-works" className="btn-secondary w-full sm:w-auto">
                 How it Works
+              </Link>
+              <Link href="/resources" className="btn-secondary w-full sm:w-auto">
+                Resources
               </Link>
             </div>
             <p className="mt-3 text-xs text-slate-500">
