@@ -26,6 +26,12 @@ export type ScholarshipImportRecord = {
 
   // Deadlines & application ------------------------------------------------
   deadline?: string
+  /** How the deadline should be interpreted. Defaults to 'fixed' when a
+   *  deadline is present, 'unknown' when it is absent. 'rolling' means the
+   *  scholarship accepts applications continuously (no hard deadline). */
+  deadlineType?: DeadlineType
+  /** When the source last changed this record, if the source reports it. */
+  sourceUpdatedAt?: string
   applicationUrl: string
 
   // Eligibility ------------------------------------------------------------
@@ -70,6 +76,15 @@ export interface ScholarshipSourceAdapter {
 /** Lifecycle status stored alongside the boolean `active` column. */
 export type ScholarshipLifecycleStatus = 'active' | 'inactive' | 'expired' | 'archived'
 
+/** How a scholarship's deadline should be interpreted. */
+export type DeadlineType = 'fixed' | 'rolling' | 'unknown'
+
+/**
+ * Verification/freshness status. The display layer independently hides
+ * 'broken' and 'stale' records; the refresh job maintains these values.
+ */
+export type VerificationStatus = 'verified' | 'unverified' | 'stale' | 'broken' | 'needs_review'
+
 /**
  * A normalized record ready to be persisted. This is the shape the pipeline
  * hands to the repository. Column names mirror the canonical `scholarships`
@@ -91,7 +106,10 @@ export type NormalizedScholarshipRow = {
   amount_display: string | null
 
   deadline: string | null
+  deadline_at: string | null
+  deadline_type: DeadlineType
   application_url: string
+  canonical_url: string
 
   minimum_gpa: number | null
   minimum_grade_level: number | null
@@ -115,6 +133,10 @@ export type NormalizedScholarshipRow = {
   active: boolean
   lifecycle_status: ScholarshipLifecycleStatus
   last_verified_at: string
+  source_updated_at: string | null
+  verification_status: VerificationStatus
+  next_verification_at: string | null
+  archived_at: string | null
 
   raw_source_metadata: Record<string, unknown> | null
 }
@@ -143,10 +165,37 @@ export type ScholarshipIngestionResult = {
   updated: number
   unchanged: number
   rejected: number
+  /** Records collapsed as duplicates within the batch (by id or canonical URL). */
+  duplicates: number
+  /** Records transitioned to expired/archived or retired as missing this run. */
   expired: number
   errors: Array<{ externalId?: string; message: string }>
   startedAt: string
   finishedAt: string
+}
+
+/**
+ * Combined result of a full freshness refresh run: an import pass plus the
+ * lifecycle/verification maintenance that runs regardless of new source data.
+ * Mirrors the columns of the `scholarship_ingestion_runs` log.
+ */
+export type ScholarshipRefreshResult = {
+  source: string
+  trigger: 'scheduled' | 'manual' | 'dry_run'
+  dryRun: boolean
+  fetched: number
+  created: number
+  updated: number
+  unchanged: number
+  archived: number
+  duplicates: number
+  flagged: number
+  rejected: number
+  failed: number
+  errors: Array<{ externalId?: string; message: string }>
+  startedAt: string
+  finishedAt: string
+  status: 'success' | 'partial' | 'failed'
 }
 
 /**
@@ -166,6 +215,15 @@ export interface ScholarshipRepository {
    * Used to retire scholarships that disappeared from the source. Returns count.
    */
   deactivateMissing(source: string, seenExternalIds: string[]): Promise<number>
+  /**
+   * Archive rows whose fixed deadline has passed (active -> inactive, lifecycle
+   * -> expired, archived_at set). Runs independently of new source data so
+   * expired scholarships are retired even when an import brings nothing new.
+   * Returns the number archived. `source` scopes the sweep when provided.
+   */
+  archiveExpired?(nowIso: string, source?: string): Promise<number>
+  /** Record an ingestion/refresh run in the audit log. Best-effort. */
+  recordRun?(run: ScholarshipRunLogRecord): Promise<void>
 }
 
 /** Subset of the canonical row the pipeline needs to compare against. */
@@ -175,4 +233,26 @@ export type ExistingScholarshipRow = {
   import_fingerprint: string | null
   active: boolean
   lifecycle_status: string | null
+  canonical_url?: string | null
+}
+
+/** A row written to public.scholarship_ingestion_runs. */
+export type ScholarshipRunLogRecord = {
+  source: string | null
+  trigger: 'scheduled' | 'manual' | 'dry_run'
+  dry_run: boolean
+  status: 'running' | 'success' | 'partial' | 'failed'
+  started_at: string
+  finished_at: string | null
+  fetched_count: number
+  created_count: number
+  updated_count: number
+  unchanged_count: number
+  archived_count: number
+  duplicate_count: number
+  flagged_count: number
+  rejected_count: number
+  failed_count: number
+  errors: unknown
+  created_by: string | null
 }

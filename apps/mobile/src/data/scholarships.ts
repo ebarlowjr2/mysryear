@@ -189,7 +189,9 @@ export async function listScholarshipMatches(studentProfileId: string): Promise<
   const student = await buildStudentScholarshipProfile(studentProfileId)
 
   const [scholarshipsResult, requirementsResult, existingMatchesResult, applicationTasksResult] = await Promise.all([
-    supabase.from('scholarships').select('*').eq('active', true).order('deadline', { ascending: true, nullsFirst: false }).limit(100),
+    // Freshness-guarded view: excludes expired/stale/broken records at the DB
+    // layer so mobile never shows outdated scholarships even if an import fails.
+    supabase.from('student_visible_scholarships').select('*').order('deadline', { ascending: true, nullsFirst: false }).limit(100),
     supabase.from('scholarship_requirements').select('*'),
     supabase.from('student_scholarship_matches').select('scholarship_id,status').eq('student_profile_id', studentProfileId),
     supabase.from('scholarship_application_tasks').select('*').eq('student_profile_id', studentProfileId).order('due_date', { ascending: true, nullsFirst: false }),
