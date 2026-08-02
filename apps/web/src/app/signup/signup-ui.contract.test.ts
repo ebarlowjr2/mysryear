@@ -41,6 +41,7 @@ describe('signup UI contract', () => {
       signupPage.indexOf('htmlFor="school"'),
     )
     expect(signupPage).toContain('ACCOUNT_TYPE_LABELS[r]')
+    expect(signupPage).toContain('value={r}')
   })
 
   it('supports High School, College, and Add My School Later without free-text school creation', () => {
@@ -48,6 +49,14 @@ describe('signup UI contract', () => {
     expect(signupPage).toContain('College')
     expect(signupPage).toContain('Add My School Later')
     expect(signupPage).not.toContain("from('schools').insert")
+  })
+
+  it('clears incompatible school selection when switching school level', () => {
+    expect(signupPage).toContain('function resetSchoolSelection')
+    expect(signupPage).toContain('setSchoolLevel(nextLevel)')
+    expect(signupPage).toContain("setSchoolId('')")
+    expect(signupPage).toContain("setSchoolQuery('')")
+    expect(signupPage).toContain('setAddSchoolLater(false)')
   })
 
   it('adds school-level columns additively and keeps existing schools as high school by default', () => {
@@ -59,6 +68,10 @@ describe('signup UI contract', () => {
 
   it('shows email confirmation success only after token exchange and includes invalid state', () => {
     expect(confirmationPage).toContain('exchangeCodeForSession(code)')
+    expect(confirmationPage).toContain('if (!code)')
+    expect(confirmationPage.indexOf("setState('confirmed')")).toBeGreaterThan(
+      confirmationPage.indexOf('exchangeCodeForSession(code)'),
+    )
     expect(confirmationPage).toContain('Your email has been confirmed.')
     expect(confirmationPage).toContain('This confirmation link is invalid or expired.')
     expect(confirmationPage).toContain('Return to MySRYear')

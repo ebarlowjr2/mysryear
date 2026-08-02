@@ -36,9 +36,20 @@ describe('signup flow', () => {
   })
 
   it('uses title-case labels while preserving lowercase role values', () => {
-    expect(ACCOUNT_TYPE_LABELS.student).toBe('Student')
-    expect(ACCOUNT_TYPE_LABELS.parent).toBe('Parent')
-    expect(Object.keys(ACCOUNT_TYPE_LABELS)).toContain('business')
+    expect(ACCOUNT_TYPE_LABELS).toEqual({
+      student: 'Student',
+      parent: 'Parent',
+      guardian: 'Guardian',
+      counselor: 'Counselor',
+      business: 'Business',
+    })
+    expect(Object.keys(ACCOUNT_TYPE_LABELS)).toEqual([
+      'student',
+      'parent',
+      'guardian',
+      'counselor',
+      'business',
+    ])
   })
 
   it('generates graduation years dynamically and labels by school level', () => {
@@ -61,6 +72,33 @@ describe('signup flow', () => {
       'Please select a school or choose Add My School Later.',
     )
     expect(validateSignupForm({ ...base, schoolId: '', addSchoolLater: true })).toBeNull()
+  })
+
+  it('does not require graduation year for parent, guardian, counselor, or business roles', () => {
+    expect(
+      validateSignupForm({ ...base, role: 'parent', schoolId: '', graduationYear: '' }),
+    ).toBeNull()
+    expect(
+      validateSignupForm({ ...base, role: 'guardian', schoolId: '', graduationYear: '' }),
+    ).toBeNull()
+    expect(
+      validateSignupForm({
+        ...base,
+        role: 'counselor',
+        schoolId: '',
+        addSchoolLater: true,
+        graduationYear: '',
+      }),
+    ).toBeNull()
+    expect(
+      validateSignupForm({
+        ...base,
+        role: 'business',
+        schoolId: '',
+        graduationYear: '',
+        organizationName: 'Acme Co',
+      }),
+    ).toBeNull()
   })
 
   it('branches role-specific post-signup destinations', () => {
