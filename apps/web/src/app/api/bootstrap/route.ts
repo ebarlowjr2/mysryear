@@ -34,7 +34,9 @@ export async function POST() {
 
   const graduationYear = typeof md.graduation_year === 'number' ? md.graduation_year : null
   const schoolId = typeof md.school_id === 'string' ? md.school_id : null
-  const organizationName = typeof md.organization_name === 'string' ? md.organization_name.trim() : ''
+  const schoolAddLater = md.school_add_later === true
+  const organizationName =
+    typeof md.organization_name === 'string' ? md.organization_name.trim() : ''
 
   // Use the existing onboarding endpoint logic by doing the minimal inline work here.
   const { error: profileUpdateError } = await supabase
@@ -46,27 +48,39 @@ export async function POST() {
 
   if (role === 'business') {
     if (!organizationName) {
-      await supabase.from('profiles').update({ onboarding_complete: false }).eq('id', session.user.id)
+      await supabase
+        .from('profiles')
+        .update({ onboarding_complete: false })
+        .eq('id', session.user.id)
       return badRequest('Missing business name; please complete onboarding.')
     }
 
-    const { error: businessError } = await supabase.from('business_profiles').upsert({
-      owner_user_id: session.user.id,
-      organization_name: organizationName,
-      contact_email: session.user.email || null,
-      status: 'active',
-    }, { onConflict: 'owner_user_id' })
+    const { error: businessError } = await supabase.from('business_profiles').upsert(
+      {
+        owner_user_id: session.user.id,
+        organization_name: organizationName,
+        contact_email: session.user.email || null,
+        status: 'active',
+      },
+      { onConflict: 'owner_user_id' },
+    )
     if (businessError) return badRequest(businessError.message)
 
-    await supabase.from('profiles').update({ active_student_profile_id: null }).eq('id', session.user.id)
+    await supabase
+      .from('profiles')
+      .update({ active_student_profile_id: null })
+      .eq('id', session.user.id)
     return NextResponse.json({ ok: true, role })
   }
 
   if (role === 'student') {
-    if (!graduationYear || !schoolId) {
+    if (!graduationYear) {
       // Mark onboarding incomplete again so the UI can collect missing fields.
-      await supabase.from('profiles').update({ onboarding_complete: false }).eq('id', session.user.id)
-      return badRequest('Missing graduation year or school; please complete onboarding.')
+      await supabase
+        .from('profiles')
+        .update({ onboarding_complete: false })
+        .eq('id', session.user.id)
+      return badRequest('Missing graduation year; please complete onboarding.')
     }
 
     // Ensure a student profile exists and is linked to the auth user.
@@ -85,7 +99,7 @@ export async function POST() {
           student_user_id: session.user.id,
           created_by_user_id: session.user.id,
           graduation_year: graduationYear,
-          school_id: schoolId,
+          school_id: schoolAddLater ? null : schoolId,
         })
         .select('id')
         .single()
@@ -94,7 +108,7 @@ export async function POST() {
     } else {
       await supabase
         .from('student_profiles')
-        .update({ graduation_year: graduationYear, school_id: schoolId })
+        .update({ graduation_year: graduationYear, school_id: schoolAddLater ? null : schoolId })
         .eq('id', studentProfileId)
     }
 
@@ -113,4 +127,3 @@ export async function POST() {
 
   return NextResponse.json({ ok: true, role })
 }
-
