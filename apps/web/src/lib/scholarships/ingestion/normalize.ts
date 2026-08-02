@@ -6,7 +6,14 @@
  */
 
 import { createHash } from 'node:crypto'
-import type { NormalizedScholarshipRow, ScholarshipImportRecord } from './types'
+import type {
+  DeadlineType,
+  NormalizedScholarshipRow,
+  ScholarshipImportRecord,
+} from './types'
+
+/** Default number of days until a freshly imported record should be re-verified. */
+export const DEFAULT_VERIFICATION_INTERVAL_DAYS = 7
 
 export function cleanString(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -76,6 +83,14 @@ function isValidYmd(y: number, m: number, d: number): boolean {
   if (m < 1 || m > 12) return false
   if (d < 1 || d > 31) return false
   return true
+}
+
+/** Add whole days to an ISO timestamp, returning an ISO string. */
+export function addDaysIso(iso: string, days: number): string {
+  const base = new Date(iso)
+  if (Number.isNaN(base.getTime())) return new Date().toISOString()
+  base.setUTCDate(base.getUTCDate() + days)
+  return base.toISOString()
 }
 
 /** Validate and normalize an http(s) URL. Returns null when invalid. */
@@ -213,9 +228,60 @@ export function computeContentFingerprint(
     recommendation_required: row.recommendation_required,
     transcript_required: row.transcript_required,
     volunteer_required: row.volunteer_required,
+    deadline_at: row.deadline_at,
+    deadline_type: row.deadline_type,
+    canonical_url: row.canonical_url,
     raw_source_metadata: row.raw_source_metadata,
   }
   return createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 40)
+}
+
+/**
+ * Canonicalize an application URL for secondary deduplication. Lower-cases the
+ * host, drops the fragment and common tracking params, and trims a trailing
+ * slash so cosmetically-different links to the same page collapse together.
+ * Returns '' when the URL is missing/invalid.
+ */
+export function canonicalizeUrl(value: unknown): string {
+  const normalized = normalizeUrl(value)
+  if (!normalized) return ''
+  try {
+    const url = new URL(normalized)
+    url.hash = ''
+    url.host = url.host.toLowerCase()
+    const params = url.searchParams
+    for (const key of [...params.keys()]) {
+      if (key.toLowerCase().startsWith('utm_') || key.toLowerCase() === 'fbclid' || key.toLowerCase() === 'gclid') {
+        params.delete(key)
+      }
+    }
+    url.search = params.toString()
+    let out = url.toString()
+    if (out.endsWith('/')) out = out.slice(0, -1)
+    return out.toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+/** Derive how a deadline should be interpreted from the record. */
+export function resolveDeadlineType(
+  requested: DeadlineType | undefined,
+  deadline: string | null,
+): DeadlineType {
+  if (requested === 'fixed' || requested === 'rolling' || requested === 'unknown') return requested
+  return deadline ? 'fixed' : 'unknown'
+}
+
+/**
+ * Compute the persisted `deadline_at` timestamp. A fixed deadline maps to the
+ * end of the deadline day (inclusive). Rolling/unknown deadlines have no
+ * concrete instant, so they are null (and the display layer gates them on
+ * verification freshness instead).
+ */
+export function resolveDeadlineAt(deadlineType: DeadlineType, deadline: string | null): string | null {
+  if (deadlineType === 'fixed' && deadline) return `${deadline}T23:59:59.000Z`
+  return null
 }
 
 /**
@@ -239,6 +305,11 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
   const amount = amountMax ?? amountMin
   const { min: minGrade, max: maxGrade } = gradeLevelRange(record.gradeLevels)
 
+  const deadlineType = resolveDeadlineType(record.deadlineType, deadline)
+  const deadlineAt = resolveDeadlineAt(deadlineType, deadline)
+  const lastVerifiedAt = cleanString(record.lastVerifiedAt) ?? new Date().toISOString()
+  const nextVerificationAt = addDaysIso(lastVerifiedAt, DEFAULT_VERIFICATION_INTERVAL_DAYS)
+
   const stateEligibility = cleanTags(record.stateEligibility)
   const countryEligibility = cleanTags(record.countryEligibility)
   const graduationYears = Array.isArray(record.graduationYears)
@@ -260,7 +331,10 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
     amount_display: cleanString(record.amountDisplay),
 
     deadline,
+    deadline_at: deadlineAt,
+    deadline_type: deadlineType,
     application_url: applicationUrl,
+    canonical_url: canonicalizeUrl(applicationUrl),
 
     minimum_gpa: parseGpa(record.minimumGpa),
     minimum_grade_level: minGrade,
@@ -283,7 +357,13 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
 
     active: record.active !== false,
     lifecycle_status: record.active === false ? 'inactive' : 'active',
-    last_verified_at: cleanString(record.lastVerifiedAt) ?? new Date().toISOString(),
+    last_verified_at: lastVerifiedAt,
+    source_updated_at: cleanString(record.sourceUpdatedAt),
+    // Present in the source at import time == verified now. Expiry/staleness are
+    // applied downstream (see ingest.applyLifecycle / freshness.deriveVerification).
+    verification_status: record.active === false ? 'unverified' : 'verified',
+    next_verification_at: nextVerificationAt,
+    archived_at: null,
 
     raw_source_metadata:
       record.rawSourceMetadata && typeof record.rawSourceMetadata === 'object'

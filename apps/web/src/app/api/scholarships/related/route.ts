@@ -15,10 +15,10 @@ export async function GET(req: Request) {
   const careerId = url.searchParams.get('careerId')?.trim()
   const limit = Math.min(Number(url.searchParams.get('limit') || 3), 10)
 
+  // Freshness-guarded view: excludes expired/stale/broken records at the DB layer.
   let query = supabase
-    .from('scholarships')
-    .select('id,title,organization,amount,deadline,state,career_tags,major_tags,skill_tags,application_url')
-    .eq('active', true)
+    .from('student_visible_scholarships')
+    .select('id,title,organization,amount,deadline,deadline_at,deadline_type,last_verified_at,state,career_tags,major_tags,skill_tags,application_url,source_url')
     .order('deadline', { ascending: true, nullsFirst: false })
     .limit(limit)
 

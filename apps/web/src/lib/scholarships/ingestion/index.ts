@@ -14,6 +14,9 @@ export {
   deterministicExternalId,
   normalizeDeadline,
   normalizeUrl,
+  canonicalizeUrl,
+  resolveDeadlineType,
+  resolveDeadlineAt,
   parseAmount,
   gradeLevelRange,
   cleanTags,
@@ -23,6 +26,22 @@ export { deduplicateBatch } from './deduplicate'
 export type { DeduplicateResult } from './deduplicate'
 export { ingestSource, isExpired } from './ingest'
 export type { IngestOptions } from './ingest'
+export {
+  isVisibleToStudents,
+  effectiveDeadlineMs,
+  deriveVerification,
+  DEFAULT_FRESHNESS_WINDOW_DAYS,
+  DEFAULT_STALE_AFTER_DAYS,
+} from './freshness'
+export type {
+  VisibilityInput,
+  FreshnessOptions,
+  RefreshRowInput,
+  VerificationOptions,
+  VerificationDecision,
+} from './freshness'
+export { refreshScholarships, toRunLog } from './refresh'
+export type { RefreshOptions } from './refresh'
 export {
   InMemoryScholarshipRepository,
   SupabaseScholarshipRepository,

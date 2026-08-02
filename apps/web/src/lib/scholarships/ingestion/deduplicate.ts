@@ -13,18 +13,33 @@ export type DeduplicateResult = {
 }
 
 export function deduplicateBatch(rows: NormalizedScholarshipRow[]): DeduplicateResult {
-  const byKey = new Map<string, NormalizedScholarshipRow>()
+  // Primary key: source + external_id. Secondary key: source + canonical_url,
+  // so cosmetically-different links to the same application page also collapse.
+  const byId = new Map<string, NormalizedScholarshipRow>()
+  const canonicalToId = new Map<string, string>()
   const duplicates: NormalizedScholarshipRow[] = []
 
   for (const row of rows) {
-    const key = `${row.source}::${row.external_id}`
-    const existing = byKey.get(key)
-    if (existing) {
-      // Keep the later record; the earlier one is a duplicate within the batch.
-      duplicates.push(existing)
+    const idKey = `${row.source}::${row.external_id}`
+    const canonicalKey = row.canonical_url ? `${row.source}::${row.canonical_url}` : null
+
+    // Resolve to an existing entry by id, or failing that by canonical URL.
+    let targetKey = byId.has(idKey) ? idKey : null
+    if (!targetKey && canonicalKey && canonicalToId.has(canonicalKey)) {
+      targetKey = canonicalToId.get(canonicalKey) ?? null
     }
-    byKey.set(key, row)
+
+    if (targetKey) {
+      // Keep the later record; the earlier one is a duplicate within the batch.
+      const existing = byId.get(targetKey)
+      if (existing) duplicates.push(existing)
+      byId.set(targetKey, row)
+      if (canonicalKey) canonicalToId.set(canonicalKey, targetKey)
+    } else {
+      byId.set(idKey, row)
+      if (canonicalKey) canonicalToId.set(canonicalKey, idKey)
+    }
   }
 
-  return { unique: Array.from(byKey.values()), duplicates }
+  return { unique: Array.from(byId.values()), duplicates }
 }

@@ -17,6 +17,7 @@ import {
 } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
 import { templatesForGrade, type GradeLevel } from '@/lib/student-success'
+import { isVisibleToStudents } from '@/lib/scholarships/ingestion/freshness'
 
 const STATUSES = new Set<ScholarshipStatus>(['suggested', 'saved', 'applying', 'submitted', 'awarded', 'rejected'])
 
@@ -184,7 +185,9 @@ export async function GET() {
   const { student, portfolio, academicHealth } = await buildStudentScholarshipProfile(studentProfileId)
 
   const [scholarshipsResult, requirementsResult, existingMatchesResult, applicationTasksResult] = await Promise.all([
-    supabase.from('scholarships').select('*').eq('active', true).order('deadline', { ascending: true, nullsFirst: false }).limit(100),
+    // Read from the freshness-guarded view so expired/stale/broken records are
+    // excluded at the database layer, independently of the ingestion job.
+    supabase.from('student_visible_scholarships').select('*').order('deadline', { ascending: true, nullsFirst: false }).limit(100),
     supabase.from('scholarship_requirements').select('*'),
     supabase.from('student_scholarship_matches').select('scholarship_id,status').eq('student_profile_id', studentProfileId),
     supabase.from('scholarship_application_tasks').select('*').eq('student_profile_id', studentProfileId).order('due_date', { ascending: true, nullsFirst: false }),
@@ -224,17 +227,31 @@ export async function GET() {
     if (STATUSES.has(match.status as ScholarshipStatus)) existingStatus.set(String(match.scholarship_id), match.status as ScholarshipStatus)
   }
 
-  const matches = (scholarshipsResult.data || []).map((raw) => {
-    const scholarship = normalizeScholarship(raw as Record<string, unknown>)
-    const computed = computeScholarshipMatch(student, scholarship, requirementsByScholarship.get(scholarship.id) || [])
-    return {
-      ...computed,
-      status: existingStatus.get(scholarship.id) || 'suggested',
-      scholarship,
-      applicationTasks: tasksByScholarship.get(scholarship.id) || [],
-      applicationProgress: computeScholarshipApplicationProgress(tasksByScholarship.get(scholarship.id) || []),
-    }
-  }).sort((a, b) => b.matchScore - a.matchScore)
+  const matches = (scholarshipsResult.data || [])
+    // Defense-in-depth: even though the view already excludes expired/stale
+    // records, re-apply the same rule in code so the feed is safe regardless of
+    // which table/view it reads from.
+    .filter((raw) => isVisibleToStudents(raw as Record<string, unknown>))
+    .map((raw) => {
+      const row = raw as Record<string, unknown>
+      const scholarship = normalizeScholarship(row)
+      const computed = computeScholarshipMatch(student, scholarship, requirementsByScholarship.get(scholarship.id) || [])
+      return {
+        ...computed,
+        status: existingStatus.get(scholarship.id) || 'suggested',
+        scholarship: {
+          ...scholarship,
+          // Freshness/provenance fields surfaced for the detail UI.
+          source_url: typeof row.source_url === 'string' ? row.source_url : null,
+          deadline_at: typeof row.deadline_at === 'string' ? row.deadline_at : null,
+          deadline_type: typeof row.deadline_type === 'string' ? row.deadline_type : null,
+          last_verified_at: typeof row.last_verified_at === 'string' ? row.last_verified_at : null,
+          verification_status: typeof row.verification_status === 'string' ? row.verification_status : null,
+        },
+        applicationTasks: tasksByScholarship.get(scholarship.id) || [],
+        applicationProgress: computeScholarshipApplicationProgress(tasksByScholarship.get(scholarship.id) || []),
+      }
+    }).sort((a, b) => b.matchScore - a.matchScore)
 
   if (matches.length > 0) {
     await supabase.from('student_scholarship_matches').upsert(
