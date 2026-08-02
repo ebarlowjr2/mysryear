@@ -34,7 +34,7 @@ feeds read from the view (and re-apply the predicate in code as defense in depth
 
 ---
 
-## 2. Schema (migration `20260722120000_scholarship_freshness_verification.sql`)
+## 2. Schema (migration `20260727120000_scholarship_freshness_verification.sql`)
 
 Additive, non-destructive. Columns added to `public.scholarships`:
 
@@ -106,7 +106,14 @@ while recently verified. Duplicates are collapsed by source `external_id` **or**
 | `GET /api/scholarships/admin/refresh` | Admin | Read the recent ingestion-run log. |
 
 Refresh writes use a **service-role** client (`lib/scholarships/service-role.ts`),
-server-side only. Configure a scheduler (e.g. Vercel Cron) to call the cron route.
+server-side only. The scheduled job is configured in `vercel.json` (Vercel Cron)
+to GET `/api/cron/scholarship-refresh` daily at 07:00 UTC; Vercel automatically
+attaches `Authorization: Bearer $CRON_SECRET` when `CRON_SECRET` is set. The
+route fails closed (401) if `CRON_SECRET` is unset or the header does not match.
+
+The view is created `security_invoker` and explicitly granted `select` to
+`anon, authenticated, service_role`; the underlying `scholarships` RLS
+(`active = true`) is preserved per querying user.
 
 ## 5. Environment variables (server-side only)
 

@@ -132,3 +132,8 @@ where s.active = true
 
 comment on view public.student_visible_scholarships is
   'Freshness-guarded student feed: excludes expired/archived/broken/stale scholarships independently of ingestion. Rolling/unknown-deadline records appear only when verified within 30 days.';
+
+-- Grant read access explicitly (do not rely on default privileges). Because the
+-- view is security_invoker, the underlying scholarships RLS
+-- (scholarships_select_active: active = true) still applies per querying user.
+grant select on public.student_visible_scholarships to anon, authenticated, service_role;
