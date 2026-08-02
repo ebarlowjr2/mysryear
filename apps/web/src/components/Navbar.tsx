@@ -50,18 +50,20 @@ export default function Navbar() {
           <Logo />
         </Link>
         <nav className="hidden md:flex items-center gap-6">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={cn(
-                'text-sm font-medium hover:text-brand-700',
-                pathname === l.href && 'text-brand-700',
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links
+            .filter((l) => isAuthenticated || l.href !== '/resources')
+            .map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  'text-sm font-medium hover:text-brand-700',
+                  pathname === l.href && 'text-brand-700',
+                )}
+              >
+                {l.label}
+              </Link>
+            ))}
         </nav>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
