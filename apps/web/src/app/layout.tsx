@@ -35,6 +35,13 @@ export const metadata: Metadata = {
       'Plan high school, college, careers, scholarships, documents, and next steps in one place.',
     images: ['/brand/mysryear-social-preview.png'],
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

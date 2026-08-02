@@ -16,6 +16,9 @@ describe('site metadata and brand assets', () => {
     expect(layout).toContain('height: 630')
     expect(layout).toContain("card: 'summary_large_image'")
     expect(layout).toContain("images: ['/brand/mysryear-social-preview.png']")
+    expect(layout).toContain("{ url: '/favicon.ico', sizes: 'any' }")
+    expect(layout).toContain("{ url: '/icon.png', type: 'image/png', sizes: '512x512' }")
+    expect(layout).toContain("{ url: '/apple-icon.png', type: 'image/png', sizes: '180x180' }")
   })
 
   it('renders the navbar logo from the canonical brand asset', () => {
