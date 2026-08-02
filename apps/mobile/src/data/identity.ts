@@ -1,11 +1,11 @@
 import { supabase } from '../lib/supabase'
 
-export type CanonicalRole = 'student' | 'parent' | 'guardian' | 'counselor'
-export type RelationshipRole = CanonicalRole
+export type CanonicalRole = 'student' | 'parent' | 'guardian' | 'counselor' | 'business'
+export type RelationshipRole = Exclude<CanonicalRole, 'business'>
 export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired'
 export type InviteType = 'supporter_invite' | 'student_claim' | 'access_request'
 
-export const CANONICAL_ROLES: CanonicalRole[] = ['student', 'parent', 'guardian', 'counselor']
+export const CANONICAL_ROLES: CanonicalRole[] = ['student', 'parent', 'guardian', 'counselor', 'business']
 
 export type School = {
   id: string
@@ -245,7 +245,7 @@ export async function completeCanonicalOnboarding(input: {
   const profileUpdate = await updateAccountProfile(input.userId, profilePatch)
   if (!profileUpdate.success) return profileUpdate
 
-  if (input.role === 'counselor') return { success: true, error: null }
+  if (input.role === 'counselor' || input.role === 'business') return { success: true, error: null }
 
   const created = await createStudentProfileForUser({
     userId: input.userId,

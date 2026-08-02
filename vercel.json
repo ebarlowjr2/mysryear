@@ -1,6 +1,12 @@
 {
-  "crons": [{
-    "path": "/api/cron/scrape-scholarships",
-    "schedule": "0 6 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/scrape-scholarships",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/scholarship-refresh",
+      "schedule": "0 7 * * *"
+    }
+  ]
 }

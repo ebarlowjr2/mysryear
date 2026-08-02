@@ -6,7 +6,21 @@ import { CAREERS } from '../data/careers'
 import LifePathCareerTile from './LifePathCareerTile'
 import { useCareerInterests } from '../lib/use-career-interests'
 
-export default function LifePathDashboard() {
+type Props = {
+  readOnly?: boolean
+  title?: string
+  subtitle?: string
+  badge?: string
+  detailHrefForCareer?: (careerId: string) => string
+}
+
+export default function LifePathDashboard({
+  readOnly = false,
+  title = 'My LifePath Dashboard',
+  subtitle,
+  badge = 'A.U.R.A LifePath',
+  detailHrefForCareer,
+}: Props) {
   const { selected, loading, error, clear } = useCareerInterests(5)
 
   const careers = useMemo(() => {
@@ -49,37 +63,42 @@ export default function LifePathDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <div className="badge">A.U.R.A LifePath</div>
-          <h1 className="mt-3 text-2xl sm:text-3xl font-black">My LifePath Dashboard</h1>
+          <div className="badge">{badge}</div>
+          <h1 className="mt-3 text-2xl sm:text-3xl font-black">{title}</h1>
           <p className="mt-2 text-slate-700 max-w-2xl">
-            Your top career pathways—compact view, fast decisions. Open a path to see the full plan.
+            {subtitle ||
+              'Your top career pathways—compact view, fast decisions. Open a path to see the full plan.'}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/aura/lifepath/select" className="btn-secondary">
-            Edit Career Choices
-          </Link>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              // UI confirmation later; keep simple for now.
-              void clear()
-            }}
-          >
-            Reset
-          </button>
-        </div>
+        {!readOnly ? (
+          <div className="flex gap-3">
+            <Link href="/aura/lifepath/select" className="btn-secondary">
+              Edit Career Choices
+            </Link>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                void clear()
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {error && <div className="text-sm text-rose-700">{error}</div>}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {careers.map((career) => (
-          <LifePathCareerTile key={career.id} career={career} />
+          <LifePathCareerTile
+            key={career.id}
+            career={career}
+            detailHref={detailHrefForCareer?.(career.id)}
+          />
         ))}
       </div>
     </div>
   )
 }
-

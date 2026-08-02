@@ -20,13 +20,15 @@
     "mobile:ios": "npm --workspace apps/mobile run ios",
     "mobile:android": "npm --workspace apps/mobile run android",
     "mobile:verify": "npm --workspace apps/mobile run start -- --help",
+    "scholarships:ingest": "tsx scripts/scholarships/import-scholarships.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "supabase:reset": "supabase db reset"
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

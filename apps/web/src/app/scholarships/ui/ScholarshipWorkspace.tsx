@@ -10,7 +10,12 @@ type Scholarship = {
   description?: string | null
   amount?: number | null
   deadline?: string | null
+  deadline_at?: string | null
+  deadline_type?: string | null
   application_url?: string | null
+  source_url?: string | null
+  last_verified_at?: string | null
+  verification_status?: string | null
   state?: string | null
   minimum_gpa?: number | null
   career_tags?: string[] | null
@@ -82,6 +87,12 @@ function money(value: number | null | undefined) {
 function date(value: string | null | undefined) {
   if (!value) return 'Rolling / TBD'
   return new Date(value).toLocaleDateString()
+}
+
+function deadlineLabel(scholarship: Scholarship) {
+  if (scholarship.deadline_type === 'rolling') return 'Deadline Rolling (accepts applications continuously)'
+  if (!scholarship.deadline && !scholarship.deadline_at) return 'Deadline TBD'
+  return `Deadline ${date(scholarship.deadline || scholarship.deadline_at)}`
 }
 
 export default function ScholarshipWorkspace() {
@@ -243,7 +254,25 @@ export default function ScholarshipWorkspace() {
                     {match.scholarship.state ? <span className="badge">{match.scholarship.state}</span> : null}
                   </div>
                   <h3 className="text-xl font-black tracking-tight">{match.scholarship.title}</h3>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">{match.scholarship.organization || 'Scholarship Provider'} • {money(match.scholarship.amount)} • Deadline {date(match.scholarship.deadline)}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">{match.scholarship.organization || 'Scholarship Provider'} • {money(match.scholarship.amount)} • {deadlineLabel(match.scholarship)}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {match.scholarship.last_verified_at
+                      ? <>Last verified {date(match.scholarship.last_verified_at)}</>
+                      : <>Not yet verified</>}
+                    {(match.scholarship.application_url || match.scholarship.source_url) ? (
+                      <>
+                        {' • '}
+                        <a
+                          className="underline hover:text-brand-700"
+                          href={(match.scholarship.application_url || match.scholarship.source_url) as string}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          View at provider
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
                   {match.scholarship.description ? <p className="mt-3 text-sm text-slate-600 line-clamp-2">{match.scholarship.description}</p> : null}
 
                   <div className="mt-4 grid md:grid-cols-2 gap-4">

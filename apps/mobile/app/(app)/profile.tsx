@@ -47,6 +47,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   parent: 'Parent',
   guardian: 'Guardian',
   counselor: 'Counselor',
+  business: 'Business',
 }
 
 const GRADUATION_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 2)
