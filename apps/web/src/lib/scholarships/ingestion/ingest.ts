@@ -53,7 +53,13 @@ export function isExpired(row: NormalizedScholarshipRow, now: Date): boolean {
 
 function applyLifecycle(row: NormalizedScholarshipRow, now: Date): NormalizedScholarshipRow {
   if (isExpired(row, now)) {
-    return { ...row, active: false, lifecycle_status: 'expired' }
+    // Expired records are archived, never deleted, so history is preserved.
+    return {
+      ...row,
+      active: false,
+      lifecycle_status: 'expired',
+      archived_at: row.archived_at ?? now.toISOString(),
+    }
   }
   return row
 }
@@ -85,6 +91,7 @@ export async function ingestSource(
     updated: 0,
     unchanged: 0,
     rejected: 0,
+    duplicates: 0,
     expired: 0,
     errors,
     startedAt,
@@ -129,14 +136,17 @@ export async function ingestSource(
     }
   }
 
-  // 4. Deduplicate within the batch. Within-source duplicates are rejected.
+  // 4. Deduplicate within the batch (by source+external_id OR canonical URL).
+  //    Within-source duplicates are collapsed and counted (also as rejected for
+  //    backward compatibility with earlier reporting).
   const { unique, duplicates } = deduplicateBatch(validRows)
+  result.duplicates = duplicates.length
   if (duplicates.length > 0) {
     result.rejected += duplicates.length
     for (const dup of duplicates) {
       errors.push({
         externalId: dup.external_id || undefined,
-        message: 'Duplicate identifier within source batch (collapsed)',
+        message: 'Duplicate record within source batch (collapsed by id or canonical URL)',
       })
     }
   }

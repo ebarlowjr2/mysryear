@@ -7,12 +7,15 @@ import type { ScholarshipSourceAdapter } from './types'
 const NOW = new Date('2026-07-21T00:00:00.000Z')
 
 function fixture(overrides: Partial<FixtureScholarship> = {}): FixtureScholarship {
+  const externalId = overrides.externalId ?? 'ext-1'
   return {
-    externalId: overrides.externalId ?? 'ext-1',
+    externalId,
     title: 'Example Scholarship',
     organization: 'Example Foundation',
-    sourceUrl: 'https://example.org/s/1',
-    applicationUrl: 'https://example.org/s/1/apply',
+    // Distinct per record so genuinely-different records are not collapsed by the
+    // canonical-URL dedup pass (which is exercised separately).
+    sourceUrl: `https://example.org/s/${externalId}`,
+    applicationUrl: `https://example.org/s/${externalId}/apply`,
     amountMin: 1000,
     amountMax: 5000,
     deadline: '2026-12-31',
