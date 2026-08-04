@@ -89,6 +89,7 @@ export async function ingestSource(
     normalized: 0,
     inserted: 0,
     updated: 0,
+    reactivated: 0,
     unchanged: 0,
     rejected: 0,
     duplicates: 0,
@@ -137,19 +138,10 @@ export async function ingestSource(
   }
 
   // 4. Deduplicate within the batch (by source+external_id OR canonical URL).
-  //    Within-source duplicates are collapsed and counted (also as rejected for
-  //    backward compatibility with earlier reporting).
+  //    Duplicates are EXPECTED and counted as skipped/deduplicated — never as
+  //    failures or validation rejections, and never added to `errors`.
   const { unique, duplicates } = deduplicateBatch(validRows)
   result.duplicates = duplicates.length
-  if (duplicates.length > 0) {
-    result.rejected += duplicates.length
-    for (const dup of duplicates) {
-      errors.push({
-        externalId: dup.external_id || undefined,
-        message: 'Duplicate record within source batch (collapsed by id or canonical URL)',
-      })
-    }
-  }
 
   // 5. Apply deadline-based lifecycle before diffing against the store.
   const finalRows = unique.map((row) => applyLifecycle(row, now))
@@ -158,6 +150,8 @@ export async function ingestSource(
   const existing = await repository.loadExistingBySource(adapter.sourceName)
   const toInsert: NormalizedScholarshipRow[] = []
   const toUpdate: NormalizedScholarshipRow[] = []
+  let plannedUpdated = 0
+  let plannedReactivated = 0
 
   for (const row of finalRows) {
     if (row.lifecycle_status === 'expired') result.expired += 1
@@ -168,6 +162,12 @@ export async function ingestSource(
       result.unchanged += 1
     } else {
       toUpdate.push(row)
+      // A row that was inactive/expired/archived and is now active again counts
+      // as a reactivation; otherwise it is a normal content update.
+      const wasInactive = prior.active === false || (prior.lifecycle_status ?? 'active') !== 'active'
+      const nowActive = row.active === true && row.lifecycle_status === 'active'
+      if (wasInactive && nowActive) plannedReactivated += 1
+      else plannedUpdated += 1
     }
   }
 
@@ -183,7 +183,9 @@ export async function ingestSource(
       errors.push({ message: `Insert failed: ${errorMessage(err)}` })
     }
     try {
-      result.updated = await repository.update(toUpdate)
+      await repository.update(toUpdate)
+      result.updated = plannedUpdated
+      result.reactivated = plannedReactivated
     } catch (err) {
       errors.push({ message: `Update failed: ${errorMessage(err)}` })
     }
@@ -197,7 +199,8 @@ export async function ingestSource(
   } else {
     // Dry-run: report proposed counts without touching the database.
     result.inserted = toInsert.length
-    result.updated = toUpdate.length
+    result.updated = plannedUpdated
+    result.reactivated = plannedReactivated
     if (options.deactivateMissing) {
       retired = countMissing(existing, seenExternalIds)
     }

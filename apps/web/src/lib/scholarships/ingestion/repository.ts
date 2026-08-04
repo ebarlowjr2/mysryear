@@ -18,8 +18,9 @@ import type {
 } from './types'
 
 /** Build the DB payload for a normalized row. `includeFirstImported` stamps the
- *  first_imported_at column, which should only be set on insert. */
-function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirstImported: boolean) {
+ *  first_imported_at column, which should only be set on insert. Exported for
+ *  unit testing of the legacy-link and column mapping behavior. */
+export function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirstImported: boolean) {
   const payload: Record<string, unknown> = {
     source: row.source,
     external_id: row.external_id,
@@ -66,6 +67,15 @@ function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirst
     raw_source_metadata: row.raw_source_metadata,
   }
   if (includeFirstImported) payload.first_imported_at = nowIso
+
+  // Backward compatibility: mirror a usable provider URL into the legacy `link`
+  // column for older code that still reads it. The canonical `application_url` /
+  // `source_url` / `canonical_url` fields remain authoritative. We only set
+  // `link` when a usable URL exists, so an upsert never overwrites a valid
+  // existing link with NULL/empty (an absent key leaves the stored value intact).
+  const legacyLink = row.application_url || row.source_url || null
+  if (legacyLink) payload.link = legacyLink
+
   return payload
 }
 

@@ -141,6 +141,16 @@ SQL Editor (see `docs/scholarship-ingestion-release.md` conventions). Old and ne
 code coexist: existing `select *` reads are unaffected; feeds gain the view.
 Nothing here deletes data; expired records are archived.
 
+## 8a. Consistency hotfix (migration `20260803120000_scholarship_consistency_hotfix.sql`)
+
+Additive follow-up capturing production-required fixes so a fresh DB build cannot regress:
+- **`scholarships.deadline` and legacy `scholarships.link` made nullable** (guarded; safe if already nullable or absent). `deadline` must be nullable for rolling/unknown deadlines; `link` is a legacy column the pipeline mirrors from the provider URL but which is not always present.
+- **`scholarship_ingestion_runs.reactivated_count`** added so runs classify reactivations separately.
+
+Behavior changes:
+- The importer now mirrors a usable provider URL (`application_url`, falling back to `source_url`) into the legacy `link` column, without ever overwriting a valid existing link with null (the key is omitted when no URL is available). Canonical URL fields remain authoritative.
+- **Duplicates are classified as skipped/deduplicated, never as failures.** Run status is `success` when there are no genuine errors even if duplicates were collapsed; only real normalize/validation/provider/database errors produce `partial`/`failed`. Reactivations are counted separately from updates.
+
 ## 9. Known gaps / follow-ups
 
 - Source-availability HTTP rechecks are modeled (`deriveVerification` accepts a

@@ -45,6 +45,7 @@ export type { RefreshOptions } from './refresh'
 export {
   InMemoryScholarshipRepository,
   SupabaseScholarshipRepository,
+  toDbPayload,
 } from './repository'
 export { normalizeAll } from './sources/source-adapter'
 export { FixtureSourceAdapter } from './sources/fixture-source'
