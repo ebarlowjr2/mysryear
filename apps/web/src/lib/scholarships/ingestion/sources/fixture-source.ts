@@ -24,6 +24,8 @@ export type FixtureScholarship = {
   amountMax?: number
   amountDisplay?: string
   deadline?: string
+  deadlineType?: 'fixed' | 'rolling' | 'unknown'
+  sourceUpdatedAt?: string
   minimumGpa?: number
   gradeLevels?: string[]
   graduationYears?: number[]
@@ -82,6 +84,8 @@ export class FixtureSourceAdapter implements ScholarshipSourceAdapter {
       amountMax: r.amountMax,
       amountDisplay: r.amountDisplay,
       deadline: r.deadline,
+      deadlineType: r.deadlineType,
+      sourceUpdatedAt: r.sourceUpdatedAt,
       applicationUrl: r.applicationUrl,
       minimumGpa: r.minimumGpa,
       gradeLevels: r.gradeLevels,

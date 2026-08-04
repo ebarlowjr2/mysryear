@@ -98,7 +98,9 @@ describe('refreshScholarships', () => {
       repo,
       { trigger: 'scheduled', now: new Date('2026-07-21T00:00:00.000Z') },
     )
-    expect(result.updated).toBe(1)
+    // Reactivation is tracked separately from a plain update.
+    expect(result.reactivated).toBe(1)
+    expect(result.updated).toBe(0)
     stored = await repo.loadExistingBySource('fixture-dataset')
     expect(stored.get('a')?.active).toBe(true)
     expect(stored.get('a')?.lifecycle_status).toBe('active')

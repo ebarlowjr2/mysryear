@@ -163,12 +163,17 @@ export type ScholarshipIngestionResult = {
   normalized: number
   inserted: number
   updated: number
+  /** Existing records that were inactive/expired/archived and became active again. */
+  reactivated: number
   unchanged: number
+  /** Records rejected by validation (genuine data-quality issues). */
   rejected: number
-  /** Records collapsed as duplicates within the batch (by id or canonical URL). */
+  /** Records skipped as duplicates within the batch (by id or canonical URL).
+   *  Deduplication is expected behavior, NOT a failure. */
   duplicates: number
   /** Records transitioned to expired/archived or retired as missing this run. */
   expired: number
+  /** Genuine processing/provider/database errors only (never duplicates). */
   errors: Array<{ externalId?: string; message: string }>
   startedAt: string
   finishedAt: string
@@ -186,11 +191,14 @@ export type ScholarshipRefreshResult = {
   fetched: number
   created: number
   updated: number
+  reactivated: number
   unchanged: number
   archived: number
+  /** Skipped/deduplicated — expected, never counted as a failure. */
   duplicates: number
   flagged: number
   rejected: number
+  /** Genuine processing/validation/provider/database errors only. */
   failed: number
   errors: Array<{ externalId?: string; message: string }>
   startedAt: string
@@ -247,6 +255,7 @@ export type ScholarshipRunLogRecord = {
   fetched_count: number
   created_count: number
   updated_count: number
+  reactivated_count: number
   unchanged_count: number
   archived_count: number
   duplicate_count: number
