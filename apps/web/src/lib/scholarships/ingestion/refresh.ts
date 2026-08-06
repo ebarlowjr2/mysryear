@@ -69,7 +69,7 @@ export async function refreshScholarships(
   // successful imports plus expected duplicates reports success.
   const failed = ingest.errors.length
   const hadWrites =
-    ingest.inserted + ingest.updated + ingest.reactivated + ingest.expired + archivedSweep > 0
+    ingest.inserted + ingest.updated + ingest.reactivated + ingest.revalidated + ingest.expired + archivedSweep > 0
   const status: ScholarshipRefreshResult['status'] =
     failed === 0 ? 'success' : hadWrites ? 'partial' : 'failed'
 
@@ -82,6 +82,7 @@ export async function refreshScholarships(
     updated: ingest.updated,
     reactivated: ingest.reactivated,
     unchanged: ingest.unchanged,
+    revalidated: ingest.revalidated,
     archived: ingest.expired + archivedSweep,
     duplicates: ingest.duplicates,
     // Broken/needs-review flagging happens during per-record source rechecks,

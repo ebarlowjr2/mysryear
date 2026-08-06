@@ -151,6 +151,16 @@ Behavior changes:
 - The importer now mirrors a usable provider URL (`application_url`, falling back to `source_url`) into the legacy `link` column, without ever overwriting a valid existing link with null (the key is omitted when no URL is available). Canonical URL fields remain authoritative.
 - **Duplicates are classified as skipped/deduplicated, never as failures.** Run status is `success` when there are no genuine errors even if duplicates were collapsed; only real normalize/validation/provider/database errors produce `partial`/`failed`. Reactivations are counted separately from updates.
 
+## 8b. Re-observed = re-verified
+
+A scheduled/manual refresh that re-fetches a record from its source and finds it
+unchanged still counts as a **re-verification**: `last_verified_at` /
+`next_verification_at` advance and `verification_status` becomes `verified`
+(`ScholarshipRepository.touchVerification`, reported as `revalidated`). Without
+this, rolling/unknown-deadline records (which are gated on verification within 30
+days) would age out of the student feed even though the daily cron kept
+confirming them. Fixed future-deadline records are unaffected either way.
+
 ## 9. Known gaps / follow-ups
 
 - Source-availability HTTP rechecks are modeled (`deriveVerification` accepts a

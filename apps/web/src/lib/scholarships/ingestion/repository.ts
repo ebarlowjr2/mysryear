@@ -190,6 +190,34 @@ export class InMemoryScholarshipRepository implements ScholarshipRepository {
     return count
   }
 
+  async touchVerification(
+    source: string,
+    externalIds: string[],
+    nowIso: string,
+    nextVerificationAtIso: string,
+  ): Promise<number> {
+    const ids = new Set(externalIds)
+    let count = 0
+    for (const [key, value] of this.store) {
+      if (!key.startsWith(`${source}::`)) continue
+      if (!ids.has(value.external_id) || !value.row) continue
+      const touched: NormalizedScholarshipRow = {
+        ...value.row,
+        last_verified_at: nowIso,
+        next_verification_at: nextVerificationAtIso,
+        verification_status: 'verified',
+      }
+      this.store.set(key, { ...value, row: touched })
+      count += 1
+    }
+    return count
+  }
+
+  /** Test accessor: the stored normalized row for a source/external_id. */
+  peek(source: string, externalId: string): NormalizedScholarshipRow | undefined {
+    return this.store.get(`${source}::${externalId}`)?.row
+  }
+
   async recordRun(run: ScholarshipRunLogRecord): Promise<void> {
     this.runLog.push(run)
   }
@@ -271,6 +299,33 @@ export class SupabaseScholarshipRepository implements ScholarshipRepository {
       .lt('deadline', nowIso.slice(0, 10))
     if (source) query = query.eq('source', source)
     const { data, error } = await query.select('id')
+    if (error) throw new Error(error.message)
+    return (data || []).length
+  }
+
+  /**
+   * Refresh verification timestamps for re-observed, unchanged records. A single
+   * update sets the same "verified now" values for all matched ids, so
+   * rolling/unknown-deadline records keep their 30-day visibility window fresh.
+   */
+  async touchVerification(
+    source: string,
+    externalIds: string[],
+    nowIso: string,
+    nextVerificationAtIso: string,
+  ): Promise<number> {
+    if (externalIds.length === 0) return 0
+    const { data, error } = await this.supabase
+      .from('scholarships')
+      .update({
+        last_verified_at: nowIso,
+        next_verification_at: nextVerificationAtIso,
+        verification_status: 'verified',
+        last_imported_at: nowIso,
+      })
+      .eq('source', source)
+      .in('external_id', externalIds)
+      .select('id')
     if (error) throw new Error(error.message)
     return (data || []).length
   }
