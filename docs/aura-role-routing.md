@@ -21,6 +21,7 @@ A.U.R.A LifePath supports role-specific planning without mixing official student
 - `/aura/lifepath/simulation` is parent/guardian-only and loads Parent Simulation careers.
 - `/aura/lifepath/simulation/select` saves Parent Simulation career choices only.
 - `/aura/lifepath/simulation/career/[id]` shows career detail with a Parent Simulation badge and no official tasks.
+- `/aura/lifepath/recommendations` shows the student-facing parent recommendation inbox.
 
 ### Mobile
 
@@ -105,6 +106,8 @@ Parent Simulation data is never stored in:
 Simulation records are owned by `lifepath_simulations.created_by_user_id`, not by a linked student profile. Simulation interest rows reference only `lifepath_simulations.id`. The simulation tables intentionally do not include `student_profile_id`.
 
 Simulation screens display a visible “Parent Simulation” label and do not generate official student tasks. Baseline Career Health scoring is reused for simulation and remains a documented nonblocking limitation for this sprint.
+
+Student recommendation acknowledgement/dismissal uses `respond_to_lifepath_simulation_share` so students can only change response state and timestamps, not parent messages, recipients, ownership fields, simulation data, or official LifePath records.
 
 ## RLS Assumptions
 

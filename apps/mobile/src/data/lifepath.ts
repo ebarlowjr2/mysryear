@@ -1,5 +1,7 @@
 import {
   CAREERS,
+  calculateParentSimulation,
+  normalizeParentSimulationAssumptions,
   scoreCareerHealth,
   starterTasksForCareer,
   type CareerHealthResult,
@@ -39,7 +41,7 @@ export type ParentSimulation = {
   created_by_user_id: string
   simulation_type: 'parent'
   title: string | null
-  status: 'active' | 'archived'
+  status: 'draft' | 'completed' | 'active' | 'archived'
   created_at?: string | null
   updated_at?: string | null
 }
@@ -371,5 +373,246 @@ export async function deleteLifePathFeedback(
   noteId: string,
 ): Promise<{ success: boolean; error: string | null }> {
   const { error } = await supabase.from('lifepath_feedback').delete().eq('id', noteId)
+  return { success: !error, error: error?.message || null }
+}
+
+export type ParentSimulationAssumptions = import('@mysryear/shared').ParentSimulationAssumptions
+export type ParentSimulationSummary = import('@mysryear/shared').ParentSimulationSummary
+
+export type ParentSimulationScenario = ParentSimulation & {
+  status: 'draft' | 'completed' | 'active' | 'archived'
+  assumptions?: Partial<ParentSimulationAssumptions> | null
+  results?: ParentSimulationSummary | null
+  completed_at?: string | null
+}
+
+export async function listParentSimulationScenarios(
+  userId: string,
+): Promise<ParentSimulationScenario[]> {
+  const { data, error } = await supabase
+    .from('lifepath_simulations')
+    .select('*')
+    .eq('created_by_user_id', userId)
+    .eq('simulation_type', 'parent')
+    .neq('status', 'archived')
+    .order('updated_at', { ascending: false, nullsFirst: false })
+  if (error) {
+    console.warn('Failed to load parent simulations:', error.message)
+    return []
+  }
+  return (data || []) as ParentSimulationScenario[]
+}
+
+export async function saveParentSimulationScenario(input: {
+  userId: string
+  simulationId?: string | null
+  title: string
+  careerIds: string[]
+  assumptions: ParentSimulationAssumptions
+  status: 'draft' | 'completed'
+}): Promise<{
+  success: boolean
+  error: string | null
+  simulationId?: string
+  summary?: ParentSimulationSummary
+}> {
+  const selected = Array.from(new Set(input.careerIds)).slice(0, 5)
+  let simulationId = input.simulationId || null
+  const summary = calculateParentSimulation(selected, input.assumptions)
+
+  if (!simulationId) {
+    const created = await supabase
+      .from('lifepath_simulations')
+      .insert({
+        created_by_user_id: input.userId,
+        simulation_type: 'parent',
+        title: input.title.trim() || 'Parent Simulation',
+        status: input.status,
+        assumptions: input.assumptions,
+        results: summary,
+        completed_at: input.status === 'completed' ? new Date().toISOString() : null,
+      } as never)
+      .select('id')
+      .single()
+    if (created.error || !created.data)
+      return { success: false, error: created.error?.message || 'Could not create simulation' }
+    simulationId = (created.data as { id: string }).id
+  } else {
+    const updated = await supabase
+      .from('lifepath_simulations')
+      .update({
+        title: input.title.trim() || 'Parent Simulation',
+        status: input.status,
+        assumptions: input.assumptions,
+        results: summary,
+        completed_at: input.status === 'completed' ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq('id', simulationId)
+    if (updated.error) return { success: false, error: updated.error.message }
+  }
+
+  const deleted = await supabase
+    .from('lifepath_simulation_interests')
+    .delete()
+    .eq('simulation_id', simulationId)
+  if (deleted.error) return { success: false, error: deleted.error.message }
+  if (selected.length) {
+    const inserted = await supabase.from('lifepath_simulation_interests').insert(
+      selected.map((careerId, index) => ({
+        simulation_id: simulationId,
+        career_id: careerId,
+        rank: index + 1,
+      })) as never,
+    )
+    if (inserted.error) return { success: false, error: inserted.error.message }
+  }
+  return { success: true, error: null, simulationId, summary }
+}
+
+export async function listParentSimulationCareerIdsBySimulation(
+  simulationId: string,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('lifepath_simulation_interests')
+    .select('career_id,rank')
+    .eq('simulation_id', simulationId)
+    .order('rank', { ascending: true, nullsFirst: false })
+  if (error) {
+    console.warn('Failed to load parent simulation careers:', error.message)
+    return []
+  }
+  return (data || []).map((row) => row.career_id as string).filter(Boolean)
+}
+
+export async function duplicateParentSimulationScenario(simulationId: string, userId: string) {
+  const { data: source, error } = await supabase
+    .from('lifepath_simulations')
+    .select('*')
+    .eq('id', simulationId)
+    .eq('created_by_user_id', userId)
+    .maybeSingle()
+  if (error || !source) return { success: false, error: error?.message || 'Simulation not found' }
+  const careerIds = await listParentSimulationCareerIdsBySimulation(simulationId)
+  return saveParentSimulationScenario({
+    userId,
+    title: `${(source as ParentSimulationScenario).title || 'Parent Simulation'} Copy`,
+    careerIds,
+    assumptions: normalizeParentSimulationAssumptions(
+      (source as ParentSimulationScenario).assumptions,
+    ),
+    status: 'draft',
+  })
+}
+
+export async function archiveParentSimulationScenario(simulationId: string) {
+  const { error } = await supabase
+    .from('lifepath_simulations')
+    .update({ status: 'archived', updated_at: new Date().toISOString() } as never)
+    .eq('id', simulationId)
+  return { success: !error, error: error?.message || null }
+}
+
+export async function shareParentSimulationWithStudent(input: {
+  simulationId: string
+  studentProfileId: string
+  userId: string
+  message?: string
+}) {
+  const { error } = await supabase.from('lifepath_simulation_shares').upsert(
+    {
+      simulation_id: input.simulationId,
+      student_profile_id: input.studentProfileId,
+      shared_by_user_id: input.userId,
+      message: input.message?.trim() || null,
+      status: 'active',
+      revoked_at: null,
+      updated_at: new Date().toISOString(),
+    } as never,
+    { onConflict: 'simulation_id,student_profile_id' },
+  )
+  return { success: !error, error: error?.message || null }
+}
+
+export type StudentLifePathRecommendation = {
+  id: string
+  status: 'active' | 'acknowledged' | 'dismissed' | 'revoked'
+  message: string | null
+  shared_at: string | null
+  acknowledged_at: string | null
+  dismissed_at: string | null
+  shared_by_user_id: string
+  parent_name: string
+  simulation: {
+    id: string
+    title: string | null
+    status: string
+    results: ParentSimulationSummary | null
+    completed_at: string | null
+  } | null
+}
+
+export async function listStudentLifePathRecommendations(
+  studentProfileId: string,
+): Promise<{ recommendations: StudentLifePathRecommendation[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('lifepath_simulation_shares')
+    .select(
+      'id,status,message,created_at,acknowledged_at,dismissed_at,shared_by_user_id,lifepath_simulations(id,title,status,results,completed_at)',
+    )
+    .eq('student_profile_id', studentProfileId)
+    .in('status', ['active', 'acknowledged', 'dismissed'])
+    .order('created_at', { ascending: false })
+
+  if (error) return { recommendations: [], error: error.message }
+  const rows = (data || []) as unknown as Array<{
+    id: string
+    status: StudentLifePathRecommendation['status']
+    message: string | null
+    created_at: string | null
+    acknowledged_at: string | null
+    dismissed_at: string | null
+    shared_by_user_id: string
+    lifepath_simulations: StudentLifePathRecommendation['simulation']
+  }>
+  const parentIds = Array.from(new Set(rows.map((row) => row.shared_by_user_id).filter(Boolean)))
+  const parentProfiles = parentIds.length
+    ? await supabase.from('profiles').select('id,full_name,email').in('id', parentIds)
+    : { data: [], error: null }
+  if (parentProfiles.error) return { recommendations: [], error: parentProfiles.error.message }
+  const parentMap = new Map(
+    (parentProfiles.data || []).map((parent) => [parent.id as string, parent]),
+  )
+
+  return {
+    recommendations: rows.map((row) => {
+      const parent = parentMap.get(row.shared_by_user_id)
+      return {
+        id: row.id,
+        status: row.status,
+        message: row.message,
+        shared_at: row.created_at,
+        acknowledged_at: row.acknowledged_at,
+        dismissed_at: row.dismissed_at,
+        shared_by_user_id: row.shared_by_user_id,
+        parent_name:
+          (parent?.full_name as string | null) ||
+          (parent?.email as string | null) ||
+          'Parent/guardian',
+        simulation: row.lifepath_simulations,
+      }
+    }),
+    error: null,
+  }
+}
+
+export async function respondToLifePathRecommendation(
+  shareId: string,
+  response: 'acknowledged' | 'dismissed',
+): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.rpc('respond_to_lifepath_simulation_share', {
+    p_share_id: shareId,
+    p_response: response,
+  })
   return { success: !error, error: error?.message || null }
 }
