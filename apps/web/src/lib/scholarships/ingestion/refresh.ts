@@ -64,8 +64,12 @@ export async function refreshScholarships(
     }
   }
 
+  // `failed` counts only genuine errors (normalize/validation/provider/db).
+  // Duplicates are NOT errors and never appear in ingest.errors, so a run of
+  // successful imports plus expected duplicates reports success.
   const failed = ingest.errors.length
-  const hadWrites = ingest.inserted + ingest.updated + ingest.expired + archivedSweep > 0
+  const hadWrites =
+    ingest.inserted + ingest.updated + ingest.reactivated + ingest.revalidated + ingest.expired + archivedSweep > 0
   const status: ScholarshipRefreshResult['status'] =
     failed === 0 ? 'success' : hadWrites ? 'partial' : 'failed'
 
@@ -76,7 +80,9 @@ export async function refreshScholarships(
     fetched: ingest.fetched,
     created: ingest.inserted,
     updated: ingest.updated,
+    reactivated: ingest.reactivated,
     unchanged: ingest.unchanged,
+    revalidated: ingest.revalidated,
     archived: ingest.expired + archivedSweep,
     duplicates: ingest.duplicates,
     // Broken/needs-review flagging happens during per-record source rechecks,
@@ -116,6 +122,7 @@ export function toRunLog(
     fetched_count: result.fetched,
     created_count: result.created,
     updated_count: result.updated,
+    reactivated_count: result.reactivated,
     unchanged_count: result.unchanged,
     archived_count: result.archived,
     duplicate_count: result.duplicates,

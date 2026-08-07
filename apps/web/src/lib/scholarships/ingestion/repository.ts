@@ -18,8 +18,9 @@ import type {
 } from './types'
 
 /** Build the DB payload for a normalized row. `includeFirstImported` stamps the
- *  first_imported_at column, which should only be set on insert. */
-function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirstImported: boolean) {
+ *  first_imported_at column, which should only be set on insert. Exported for
+ *  unit testing of the legacy-link and column mapping behavior. */
+export function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirstImported: boolean) {
   const payload: Record<string, unknown> = {
     source: row.source,
     external_id: row.external_id,
@@ -66,6 +67,15 @@ function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, includeFirst
     raw_source_metadata: row.raw_source_metadata,
   }
   if (includeFirstImported) payload.first_imported_at = nowIso
+
+  // Backward compatibility: mirror a usable provider URL into the legacy `link`
+  // column for older code that still reads it. The canonical `application_url` /
+  // `source_url` / `canonical_url` fields remain authoritative. We only set
+  // `link` when a usable URL exists, so an upsert never overwrites a valid
+  // existing link with NULL/empty (an absent key leaves the stored value intact).
+  const legacyLink = row.application_url || row.source_url || null
+  if (legacyLink) payload.link = legacyLink
+
   return payload
 }
 
@@ -180,6 +190,34 @@ export class InMemoryScholarshipRepository implements ScholarshipRepository {
     return count
   }
 
+  async touchVerification(
+    source: string,
+    externalIds: string[],
+    nowIso: string,
+    nextVerificationAtIso: string,
+  ): Promise<number> {
+    const ids = new Set(externalIds)
+    let count = 0
+    for (const [key, value] of this.store) {
+      if (!key.startsWith(`${source}::`)) continue
+      if (!ids.has(value.external_id) || !value.row) continue
+      const touched: NormalizedScholarshipRow = {
+        ...value.row,
+        last_verified_at: nowIso,
+        next_verification_at: nextVerificationAtIso,
+        verification_status: 'verified',
+      }
+      this.store.set(key, { ...value, row: touched })
+      count += 1
+    }
+    return count
+  }
+
+  /** Test accessor: the stored normalized row for a source/external_id. */
+  peek(source: string, externalId: string): NormalizedScholarshipRow | undefined {
+    return this.store.get(`${source}::${externalId}`)?.row
+  }
+
   async recordRun(run: ScholarshipRunLogRecord): Promise<void> {
     this.runLog.push(run)
   }
@@ -261,6 +299,33 @@ export class SupabaseScholarshipRepository implements ScholarshipRepository {
       .lt('deadline', nowIso.slice(0, 10))
     if (source) query = query.eq('source', source)
     const { data, error } = await query.select('id')
+    if (error) throw new Error(error.message)
+    return (data || []).length
+  }
+
+  /**
+   * Refresh verification timestamps for re-observed, unchanged records. A single
+   * update sets the same "verified now" values for all matched ids, so
+   * rolling/unknown-deadline records keep their 30-day visibility window fresh.
+   */
+  async touchVerification(
+    source: string,
+    externalIds: string[],
+    nowIso: string,
+    nextVerificationAtIso: string,
+  ): Promise<number> {
+    if (externalIds.length === 0) return 0
+    const { data, error } = await this.supabase
+      .from('scholarships')
+      .update({
+        last_verified_at: nowIso,
+        next_verification_at: nextVerificationAtIso,
+        verification_status: 'verified',
+        last_imported_at: nowIso,
+      })
+      .eq('source', source)
+      .in('external_id', externalIds)
+      .select('id')
     if (error) throw new Error(error.message)
     return (data || []).length
   }

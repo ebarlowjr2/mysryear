@@ -69,12 +69,14 @@ describe('ingestSource — validation and dedup', () => {
     expect(result.errors.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('collapses in-batch duplicates and counts them rejected', async () => {
+  it('collapses in-batch duplicates as skipped/deduplicated, not rejected or failed', async () => {
     const dataset = [fixture({ externalId: 'dup' }), fixture({ externalId: 'dup' })]
     const repo = new InMemoryScholarshipRepository()
     const result = await ingestSource(new FixtureSourceAdapter(dataset), repo, { now: NOW })
     expect(result.inserted).toBe(1)
-    expect(result.rejected).toBe(1)
+    expect(result.duplicates).toBe(1)
+    expect(result.rejected).toBe(0)
+    expect(result.errors).toHaveLength(0)
   })
 })
 

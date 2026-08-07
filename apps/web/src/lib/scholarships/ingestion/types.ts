@@ -163,12 +163,20 @@ export type ScholarshipIngestionResult = {
   normalized: number
   inserted: number
   updated: number
+  /** Existing records that were inactive/expired/archived and became active again. */
+  reactivated: number
   unchanged: number
+  /** Unchanged records whose verification timestamp was refreshed (re-observed
+   *  at the source). A subset of `unchanged`. */
+  revalidated: number
+  /** Records rejected by validation (genuine data-quality issues). */
   rejected: number
-  /** Records collapsed as duplicates within the batch (by id or canonical URL). */
+  /** Records skipped as duplicates within the batch (by id or canonical URL).
+   *  Deduplication is expected behavior, NOT a failure. */
   duplicates: number
   /** Records transitioned to expired/archived or retired as missing this run. */
   expired: number
+  /** Genuine processing/provider/database errors only (never duplicates). */
   errors: Array<{ externalId?: string; message: string }>
   startedAt: string
   finishedAt: string
@@ -186,11 +194,16 @@ export type ScholarshipRefreshResult = {
   fetched: number
   created: number
   updated: number
+  reactivated: number
   unchanged: number
+  /** Unchanged records whose verification timestamp was refreshed this run. */
+  revalidated: number
   archived: number
+  /** Skipped/deduplicated — expected, never counted as a failure. */
   duplicates: number
   flagged: number
   rejected: number
+  /** Genuine processing/validation/provider/database errors only. */
   failed: number
   errors: Array<{ externalId?: string; message: string }>
   startedAt: string
@@ -222,6 +235,20 @@ export interface ScholarshipRepository {
    * Returns the number archived. `source` scopes the sweep when provided.
    */
   archiveExpired?(nowIso: string, source?: string): Promise<number>
+  /**
+   * Refresh verification for records that were re-observed at the source but
+   * whose content did not change. Being seen again in the source IS a
+   * re-verification, so `last_verified_at` / `next_verification_at` advance and
+   * `verification_status` is set to 'verified'. Without this, rolling/unknown-
+   * deadline records would age out of the 30-day visibility window even though
+   * the scheduled refresh keeps confirming them. Returns the number touched.
+   */
+  touchVerification?(
+    source: string,
+    externalIds: string[],
+    nowIso: string,
+    nextVerificationAtIso: string,
+  ): Promise<number>
   /** Record an ingestion/refresh run in the audit log. Best-effort. */
   recordRun?(run: ScholarshipRunLogRecord): Promise<void>
 }
@@ -247,6 +274,7 @@ export type ScholarshipRunLogRecord = {
   fetched_count: number
   created_count: number
   updated_count: number
+  reactivated_count: number
   unchanged_count: number
   archived_count: number
   duplicate_count: number
