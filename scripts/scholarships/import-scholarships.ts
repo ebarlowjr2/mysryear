@@ -140,6 +140,7 @@ async function main() {
   console.log(`  updated:     ${result.updated}${options.dryRun ? ' (proposed)' : ''}`)
   console.log(`  reactivated: ${result.reactivated}${options.dryRun ? ' (proposed)' : ''}`)
   console.log(`  unchanged:   ${result.unchanged}`)
+  console.log(`  revalidated: ${result.revalidated}${options.dryRun ? ' (proposed)' : ''}`)
   console.log(`  duplicates:  ${result.duplicates} (skipped/deduplicated)`)
   console.log(`  rejected:    ${result.rejected}`)
   console.log(`  expired:     ${result.expired}`)

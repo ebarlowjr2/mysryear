@@ -22,7 +22,7 @@ import type {
   ScholarshipSourceAdapter,
   ValidationIssue,
 } from './types'
-import { normalizeImportRecord } from './normalize'
+import { normalizeImportRecord, addDaysIso, DEFAULT_VERIFICATION_INTERVAL_DAYS } from './normalize'
 import { validateRow } from './validate'
 import { deduplicateBatch } from './deduplicate'
 import { normalizeAll } from './sources/source-adapter'
@@ -91,6 +91,7 @@ export async function ingestSource(
     updated: 0,
     reactivated: 0,
     unchanged: 0,
+    revalidated: 0,
     rejected: 0,
     duplicates: 0,
     expired: 0,
@@ -150,6 +151,7 @@ export async function ingestSource(
   const existing = await repository.loadExistingBySource(adapter.sourceName)
   const toInsert: NormalizedScholarshipRow[] = []
   const toUpdate: NormalizedScholarshipRow[] = []
+  const toTouch: string[] = []
   let plannedUpdated = 0
   let plannedReactivated = 0
 
@@ -160,6 +162,9 @@ export async function ingestSource(
       toInsert.push(row)
     } else if (sameState(prior, row)) {
       result.unchanged += 1
+      // Re-observed at the source with no content change: still counts as a
+      // re-verification so the record's freshness window is refreshed.
+      if (row.active) toTouch.push(row.external_id)
     } else {
       toUpdate.push(row)
       // A row that was inactive/expired/archived and is now active again counts
@@ -196,11 +201,25 @@ export async function ingestSource(
         errors.push({ message: `Deactivate-missing failed: ${errorMessage(err)}` })
       }
     }
+    if (toTouch.length > 0 && repository.touchVerification) {
+      try {
+        const nextIso = addDaysIso(now.toISOString(), DEFAULT_VERIFICATION_INTERVAL_DAYS)
+        result.revalidated = await repository.touchVerification(
+          adapter.sourceName,
+          toTouch,
+          now.toISOString(),
+          nextIso,
+        )
+      } catch (err) {
+        errors.push({ message: `Re-verify touch failed: ${errorMessage(err)}` })
+      }
+    }
   } else {
     // Dry-run: report proposed counts without touching the database.
     result.inserted = toInsert.length
     result.updated = plannedUpdated
     result.reactivated = plannedReactivated
+    result.revalidated = toTouch.length
     if (options.deactivateMissing) {
       retired = countMissing(existing, seenExternalIds)
     }
