@@ -444,3 +444,135 @@ end;
 $$;
 
 grant execute on function public.approve_access_request(uuid) to authenticated;
+
+-- 7) Duplicate pending invite prevention and ownership-field hardening.
+create unique index if not exists spri_unique_pending_email_invite_idx
+on public.student_profile_relationship_invites(
+  student_profile_id,
+  lower(invited_email),
+  relationship_role,
+  coalesce(invite_type, 'supporter_invite')
+)
+where status = 'pending' and invited_email is not null;
+
+-- General student profile updates must never alter auth ownership. The claim RPC opens a
+-- transaction-local setting before changing student_user_id / claim metadata.
+create or replace function public.student_profiles_protect_ownership_fields()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.student_user_id is distinct from old.student_user_id
+     or new.managed_by_user_id is distinct from old.managed_by_user_id
+     or new.claim_status is distinct from old.claim_status
+     or new.claimed_at is distinct from old.claimed_at then
+    if coalesce(current_setting('app.allow_student_profile_claim', true), '') <> 'true' then
+      raise exception 'student profile ownership fields are protected';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists student_profiles_protect_ownership_fields on public.student_profiles;
+create trigger student_profiles_protect_ownership_fields
+before update on public.student_profiles
+for each row execute function public.student_profiles_protect_ownership_fields();
+
+-- Recreate the claim RPC after installing the ownership trigger so only this narrow operation
+-- can attach a student auth identity to a managed profile.
+create or replace function public.accept_student_claim_invite(p_invite_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_invite record;
+  v_email text;
+  v_existing_profile uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  v_email := lower(coalesce((auth.jwt() ->> 'email'), ''));
+
+  select * into v_invite
+  from public.student_profile_relationship_invites
+  where id = p_invite_id
+    and status = 'pending'
+    and relationship_role = 'student'
+    and coalesce(invite_type, 'student_claim') in ('student_claim','supporter_invite')
+    and revoked_at is null
+    and (expires_at is null or expires_at > now())
+    and (
+      invited_user_id = auth.uid()
+      or (invited_user_id is null and invited_email is not null and lower(invited_email) = v_email)
+    );
+
+  if not found then
+    raise exception 'Invite not found, expired, revoked, or not eligible';
+  end if;
+
+  select id into v_existing_profile
+  from public.student_profiles
+  where student_user_id = auth.uid()
+    and id <> v_invite.student_profile_id
+  limit 1;
+
+  perform set_config('app.allow_student_profile_claim', 'true', true);
+
+  if v_existing_profile is not null then
+    update public.student_profiles
+    set claim_status = 'claim_conflict', updated_at = now()
+    where id = v_invite.student_profile_id;
+    raise exception 'Student already has a profile; conflict resolution is required';
+  end if;
+
+  update public.student_profile_relationship_invites
+  set status = 'accepted',
+      invited_user_id = auth.uid(),
+      accepted_at = now(),
+      updated_at = now()
+  where id = p_invite_id;
+
+  update public.student_profiles
+  set student_user_id = auth.uid(),
+      claim_status = 'claimed',
+      claimed_at = now(),
+      updated_at = now()
+  where id = v_invite.student_profile_id
+    and student_user_id is null;
+
+  insert into public.family_relationships (student_profile_id, user_id, role)
+  values (v_invite.student_profile_id, auth.uid(), 'student')
+  on conflict (student_profile_id, user_id) do nothing;
+
+  update public.profiles
+  set active_student_profile_id = v_invite.student_profile_id,
+      onboarding_complete = true,
+      updated_at = now()
+  where id = auth.uid();
+end;
+$$;
+
+grant execute on function public.accept_student_claim_invite(uuid) to authenticated;
+
+-- 8) Relationship removal: linked adults can remove their own support relationship.
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_relationships'
+      and policyname = 'family_relationships_delete_self_supporter'
+  ) then
+    create policy family_relationships_delete_self_supporter
+    on public.family_relationships for delete
+    using (
+      user_id = auth.uid()
+      and role in ('parent','guardian','counselor')
+    );
+  end if;
+end $$;

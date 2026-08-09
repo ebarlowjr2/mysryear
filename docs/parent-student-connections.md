@@ -85,6 +85,12 @@ Claim and access RPCs enforce:
 - expired invites rejected
 - single-use acceptance through status transition
 
+Pending duplicate invites are blocked by a partial unique index on student profile, invited email, role, and invite type. Creating another pending invite for the same target returns the existing pending invite instead of creating parallel relationship paths.
+
+Accepted relationship removal is immediate: a linked parent, guardian, or counselor may remove their own `family_relationships` row. Once that row is gone, linked-student access, active-student selection, Parent Action Center state, uploads, LifePath, and dashboard reads must stop resolving through that relationship.
+
+Managed profile ownership is protected separately from ordinary profile edits. General update paths cannot change `student_profiles.student_user_id`, `managed_by_user_id`, `claim_status`, or `claimed_at`; only the claim RPC opens the transaction-local guard that can attach a student login to a managed profile.
+
 ## Web Routes
 
 - `/signup`: parent/guardian account-only signup.

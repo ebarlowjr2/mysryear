@@ -31,6 +31,19 @@ export async function POST(req: Request) {
   if (!invitedEmail) return jsonError('Missing invitedEmail')
   if (!relationshipRole) return jsonError('Missing relationshipRole')
 
+  const { data: existingPending } = await supabase
+    .from('student_profile_relationship_invites')
+    .select('id')
+    .eq('student_profile_id', studentProfileId)
+    .eq('invited_email', invitedEmail)
+    .eq('relationship_role', relationshipRole)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+  if (existingPending?.id) {
+    return NextResponse.json({ ok: true, invite: existingPending, duplicate: true })
+  }
+
   if (relationshipRole === 'student') {
     const { data: inviteId, error: rpcError } = await supabase.rpc('create_student_claim_invite', {
       p_student_profile_id: studentProfileId,
@@ -49,6 +62,7 @@ export async function POST(req: Request) {
       relationship_role: relationshipRole,
       invite_type: inviteType,
       status: 'pending',
+      expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       created_by_user_id: session.user.id,
     })
     .select('*')
@@ -64,6 +78,7 @@ export async function POST(req: Request) {
         invited_email: invitedEmail,
         relationship_role: relationshipRole,
         status: 'pending',
+        expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         created_by_user_id: session.user.id,
       })
       .select('*')
@@ -101,6 +116,7 @@ export async function PATCH(req: Request) {
       .from('student_profile_relationship_invites')
       .update({ status: 'revoked', revoked_at: new Date().toISOString() })
       .eq('id', inviteId)
+      .eq('status', 'pending')
       .select('*')
       .single()
     if (revokeError) return jsonError(revokeError.message)
@@ -181,10 +197,29 @@ export async function PATCH(req: Request) {
   }
 
   // Default path: accept/decline supporter invites, then add family_relationships row on accept.
+  const { data: candidate, error: candidateError } = await supabase
+    .from('student_profile_relationship_invites')
+    .select('id,status,expires_at,revoked_at')
+    .eq('id', inviteId)
+    .single()
+  if (candidateError) return jsonError(candidateError.message)
+  if (!candidate || candidate.status !== 'pending' || candidate.revoked_at) {
+    return jsonError('Invite is not pending or has been revoked', 409)
+  }
+  if (candidate.expires_at && new Date(candidate.expires_at).getTime() <= Date.now()) {
+    return jsonError('Invite has expired', 410)
+  }
+
   const { data: invite, error: updateError } = await supabase
     .from('student_profile_relationship_invites')
-    .update({ status: nextStatus, invited_user_id: session.user.id })
+    .update({
+      status: nextStatus,
+      invited_user_id: session.user.id,
+      accepted_at: action === 'accept' ? new Date().toISOString() : null,
+      declined_at: action === 'decline' ? new Date().toISOString() : null,
+    })
     .eq('id', inviteId)
+    .eq('status', 'pending')
     .select('*')
     .single()
 

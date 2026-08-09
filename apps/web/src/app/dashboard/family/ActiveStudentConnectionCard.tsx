@@ -187,6 +187,31 @@ export default function ActiveStudentConnectionCard({
     }
   }
 
+
+  async function removeMyConnection() {
+    if (!activeStudentProfileId) return
+    const confirmed = window.confirm('Remove your connection to this student? You will lose access until a new invitation is accepted.')
+    if (!confirmed) return
+    setSaving(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/profile/relationships', {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ studentProfileId: activeStudentProfileId }),
+      })
+      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+      if (!res.ok || !json?.ok) {
+        setError(json?.error || 'Could not remove connection')
+        return
+      }
+      await refreshWithMessage('Connection removed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function revokeInvite(inviteId: string) {
     setSaving(true)
     setError(null)
@@ -262,6 +287,11 @@ export default function ActiveStudentConnectionCard({
             <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Connection</div>
             <div className="mt-1 font-black text-slate-950">{relationship?.role || viewerRole || 'supporter'}</div>
             <div className="mt-2 text-sm text-emerald-700">Accepted relationship</div>
+            {relationship?.role === 'parent' || relationship?.role === 'guardian' ? (
+              <button type="button" className="mt-3 text-sm font-bold text-red-700 hover:text-red-800" disabled={saving} onClick={removeMyConnection}>
+                Remove my connection
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
