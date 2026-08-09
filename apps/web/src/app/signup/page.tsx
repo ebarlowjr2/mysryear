@@ -393,8 +393,7 @@ export default function Signup() {
 
             {role === 'parent' || role === 'guardian' ? (
               <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm font-semibold text-brand-800">
-                After email confirmation, you’ll continue to Profile to invite or create a linked
-                student profile.
+                After email confirmation, you’ll continue to the family dashboard. The Active Student Profile card will help you link or create a student profile.
               </div>
             ) : null}
 

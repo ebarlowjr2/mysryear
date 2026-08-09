@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createNextServerSupabaseClient, computePortfolioSummary, computeScholarshipApplicationProgress, computeScholarshipReadiness } from '@mysryear/shared'
+import { createNextServerSupabaseClient, computePortfolioSummary, computeScholarshipApplicationProgress, computeScholarshipReadiness, mergeParentActionCompletions, parentActionTemplatesForStudent } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
 import { computeAcademicHealth, templatesForGrade, type GradeLevel } from '@/lib/student-success'
 
@@ -27,7 +27,36 @@ export async function GET() {
 
   const studentProfileId = await getActiveStudentProfileId()
   const viewerRole = (viewerProfile?.role as string | null) || null
-  if (!studentProfileId) return ok({ studentProfileId: null, viewerRole })
+
+  const { data: ownedStudentProfiles } = await supabase
+    .from('student_profiles')
+    .select('id,first_name,last_name,graduation_year,grade_level,school_id,schools(name)')
+    .eq('student_user_id', session.user.id)
+
+  const { data: linkedRows } = await supabase
+    .from('family_relationships')
+    .select('role,student_profile_id,created_at,student_profiles(id,first_name,last_name,graduation_year,grade_level,school_id,schools(name))')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: true })
+
+  const linkedStudentProfilesMap = new Map<string, Record<string, unknown>>()
+  for (const row of (ownedStudentProfiles || []) as unknown as Record<string, unknown>[]) {
+    if (row.id) linkedStudentProfilesMap.set(String(row.id), row)
+  }
+  for (const row of (linkedRows || []) as unknown as Array<{ student_profiles?: Record<string, unknown> | null }>) {
+    if (row.student_profiles?.id) linkedStudentProfilesMap.set(String(row.student_profiles.id), row.student_profiles)
+  }
+  const linkedStudentProfiles = Array.from(linkedStudentProfilesMap.values())
+
+  const { data: pendingInvites } = await supabase
+    .from('student_profile_relationship_invites')
+    .select('id,student_profile_id,invited_email,relationship_role,invite_type,status,created_at,expires_at')
+    .eq('created_by_user_id', session.user.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(25)
+
+  if (!studentProfileId) return ok({ studentProfileId: null, viewerRole, linkedStudentProfiles, relationships: linkedRows || [], pendingInvites: pendingInvites || [] })
 
   const { data: studentProfile } = await supabase
     .from('student_profiles')
@@ -182,10 +211,28 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(3)
 
+  let parentActions = [] as ReturnType<typeof mergeParentActionCompletions>
+  if (viewerRole === 'parent' || viewerRole === 'guardian') {
+    const { data: completions } = await supabase
+      .from('parent_action_completions')
+      .select('action_key,status,completed_at')
+      .eq('student_profile_id', studentProfileId)
+      .eq('parent_user_id', session.user.id)
+    const templates = parentActionTemplatesForStudent({
+      graduationYear: typeof studentProfile?.graduation_year === 'number' ? studentProfile.graduation_year : null,
+      schoolLevel: null,
+    })
+    parentActions = mergeParentActionCompletions(templates, (completions || []) as [])
+  }
+
   return ok({
     studentProfileId,
     viewerRole,
     activeStudentProfile: studentProfile || null,
+    linkedStudentProfiles,
+    relationships: linkedRows || [],
+    pendingInvites: pendingInvites || [],
+    parentActions,
     gradeLevel,
     academicRecords: records || [],
     latestAcademicRecordAt,

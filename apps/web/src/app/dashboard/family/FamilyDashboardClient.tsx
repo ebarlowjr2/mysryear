@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import ActiveStudentCard from '@/components/ActiveStudentCard'
+import ActiveStudentConnectionCard from './ActiveStudentConnectionCard'
 import ReportCardVault from '@/components/ReportCardVault'
 import StudentSuccessChecklist from '@/components/StudentSuccessChecklist'
 import StatTile from '@/components/StatTile'
-import { BriefcaseBusiness, FileText, GraduationCap, HeartHandshake, Trophy } from 'lucide-react'
+import { BriefcaseBusiness, CheckCircle2, FileText, GraduationCap, HeartHandshake, Trophy } from 'lucide-react'
 
 type DashboardTask = {
   id: string
@@ -29,6 +29,8 @@ type DashboardOpportunity = {
   business_profiles?: { organization_name: string | null } | null
 }
 
+type School = { id: string; name: string; city: string | null; state: string | null }
+type ParentAction = { key: string; title: string; description: string; completionWindow: string; deepLink?: string; completed: boolean; completedAt: string | null }
 type DashboardSummary = {
   ok: boolean
   studentProfileId: string | null
@@ -40,6 +42,10 @@ type DashboardSummary = {
     graduation_year: number | null
     schools?: { name: string | null } | null
   } | null
+  linkedStudentProfiles?: { id: string; first_name: string | null; last_name: string | null; graduation_year: number | null; schools?: { name: string | null } | null }[]
+  relationships?: { role: string; student_profile_id: string; created_at?: string }[]
+  pendingInvites?: { id: string; student_profile_id: string; invited_email: string | null; relationship_role: string; invite_type?: string | null; status: string; created_at: string; expires_at?: string | null }[]
+  parentActions?: ParentAction[]
   latestAcademicRecordAt: string | null
   checklist?: { done: number; total: number }
   tasks?: DashboardTask[]
@@ -64,7 +70,7 @@ type DashboardSummary = {
   error?: string
 }
 
-export default function FamilyDashboardClient() {
+export default function FamilyDashboardClient({ schools }: { schools: School[] }) {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -124,19 +130,15 @@ export default function FamilyDashboardClient() {
         </div>
       ) : null}
 
-      {!loading && !summary?.studentProfileId ? (
-        <div className="card p-8">
-          <h2 className="text-2xl font-black">No student profile selected yet</h2>
-          <p className="mt-2 text-slate-700">
-            Link to a student or create a managed student profile before using the family dashboard.
-          </p>
-          <Link href="/profile" className="btn-primary mt-5 inline-flex">
-            Open Profile
-          </Link>
-        </div>
-      ) : null}
-
-      <ActiveStudentCard studentProfile={summary?.activeStudentProfile || null} />
+      <ActiveStudentConnectionCard
+        activeStudentProfileId={summary?.studentProfileId || null}
+        activeStudentProfile={summary?.activeStudentProfile || null}
+        linkedStudentProfiles={summary?.linkedStudentProfiles || []}
+        relationships={summary?.relationships || []}
+        pendingInvites={summary?.pendingInvites || []}
+        schools={schools}
+        viewerRole={summary?.viewerRole || null}
+      />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
@@ -172,16 +174,21 @@ export default function FamilyDashboardClient() {
             <div>
               <h2 className="text-xl font-black">Parent Action Center</h2>
               <p className="mt-2 text-sm text-slate-700">
-                Concrete ways to help this grading period.
+                Grade-aware actions for how you can support the active student this term.
               </p>
             </div>
           </div>
-          <ul className="mt-5 space-y-2 text-sm text-slate-700 list-disc pl-5">
-            <li>Review the latest report card or transcript upload.</li>
-            <li>Confirm LifePath choices match the student’s interests and budget.</li>
-            <li>Help schedule one career conversation or campus/program visit.</li>
-            <li>Check scholarship readiness and missing documents.</li>
-          </ul>
+          <div className="mt-5 space-y-3">
+            {(summary?.parentActions || []).length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                Link or create a student profile to unlock grade-aware parent actions.
+              </div>
+            ) : (
+              (summary?.parentActions || []).slice(0, 5).map((action) => (
+                <ParentActionRow key={action.key} studentProfileId={summary?.studentProfileId || null} action={action} onChanged={loadSummary} />
+              ))
+            )}
+          </div>
         </div>
         <ReportCardVault />
       </div>
@@ -213,5 +220,43 @@ export default function FamilyDashboardClient() {
 
       <StudentSuccessChecklist tasks={summary?.tasks || []} onChanged={loadSummary} />
     </section>
+  )
+}
+
+
+function ParentActionRow({ studentProfileId, action, onChanged }: { studentProfileId: string | null; action: ParentAction; onChanged: () => void }) {
+  const [saving, setSaving] = useState(false)
+
+  async function toggle() {
+    if (!studentProfileId) return
+    setSaving(true)
+    try {
+      await fetch('/api/parent-actions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ studentProfileId, actionKey: action.key, completed: !action.completed }),
+      })
+      onChanged()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={`rounded-xl border p-4 ${action.completed ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+      <div className="flex items-start gap-3">
+        <button type="button" onClick={toggle} disabled={saving || !studentProfileId} className="mt-0.5 shrink-0" aria-label={action.completed ? 'Mark parent action incomplete' : 'Complete parent action'}>
+          <CheckCircle2 className={`h-5 w-5 ${action.completed ? 'text-emerald-600' : 'text-slate-300'}`} />
+        </button>
+        <div className="min-w-0">
+          <div className="font-bold text-slate-950">{action.title}</div>
+          <div className="mt-1 text-sm text-slate-700">{action.description}</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+            <span>{action.completionWindow}</span>
+            {action.deepLink ? <Link href={action.deepLink} className="text-brand-700 hover:text-brand-800">Open related tool</Link> : null}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

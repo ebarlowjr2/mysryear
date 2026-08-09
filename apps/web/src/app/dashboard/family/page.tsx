@@ -1,6 +1,7 @@
 import { requireSessionProfile } from '@/lib/auth'
 import { dashboardPathForRole, isFamilyRole } from '@/lib/dashboard-roles'
 import { redirect } from 'next/navigation'
+import { createNextServerSupabaseClient } from '@mysryear/shared'
 import FamilyDashboardClient from './FamilyDashboardClient'
 
 export default async function FamilyDashboardPage() {
@@ -9,5 +10,12 @@ export default async function FamilyDashboardPage() {
     redirect(dashboardPathForRole(sp.role))
   }
 
-  return <FamilyDashboardClient />
+  const supabase = await createNextServerSupabaseClient()
+  const { data: schools } = await supabase
+    .from('schools')
+    .select('id,name,city,state')
+    .order('name', { ascending: true })
+    .limit(5000)
+
+  return <FamilyDashboardClient schools={(schools || []) as { id: string; name: string; city: string | null; state: string | null }[]} />
 }

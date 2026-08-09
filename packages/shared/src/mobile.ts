@@ -2,6 +2,8 @@ export type { UserRole } from './types/roles'
 export { USER_ROLES } from './types/roles'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
+export { highSchoolGradeFromGraduationYear, mergeParentActionCompletions, parentActionTemplatesForGrade, parentActionTemplatesForStudent } from './parent-actions'
+export type { ParentActionCompletion, ParentActionGrade, ParentActionItem, ParentActionTemplate } from './parent-actions'
 export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
 
 export { scoreCareerHealth, starterTasksForCareer } from './lifepath'

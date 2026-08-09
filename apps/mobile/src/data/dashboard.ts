@@ -1,8 +1,10 @@
+import { mergeParentActionCompletions, parentActionTemplatesForStudent, type ParentActionItem } from '@mysryear/shared'
 import { supabase } from '../lib/supabase'
 import { getStudentSuccessSummary, type StudentSuccessSummary } from './academic'
 import { listStudentPortfolio } from './portfolio'
 import { averageCareerHealth, listSelectedLifePathCareers } from './lifepath'
 import { listScholarshipMatches } from './scholarships'
+import { getActiveStudentProfile, getCurrentProfile } from './identity'
 
 export type DashboardMetrics = {
   scholarshipsCount: number
@@ -18,6 +20,7 @@ export type DashboardMetrics = {
   lifePathAverageHealth?: number
   lifePathNextAction?: string
   parentNextAction?: string
+  parentActions?: ParentActionItem[]
   portfolioActivitiesCount?: number
   portfolioServiceHoursTotal?: number
   portfolioAchievementsCount?: number
@@ -55,7 +58,11 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     return dueDate >= now && t.status !== 'done'
   }).length
 
-  const success = await getStudentSuccessSummary(userId)
+  const [success, accountProfile] = await Promise.all([
+    getStudentSuccessSummary(userId),
+    getCurrentProfile(userId),
+  ])
+  const activeStudent = await getActiveStudentProfile(userId)
   const portfolio = success.studentProfileId ? await listStudentPortfolio(success.studentProfileId) : null
   const lifePathCareers = success.studentProfileId ? await listSelectedLifePathCareers(success.studentProfileId) : []
   const scholarshipWorkspace = success.studentProfileId ? await listScholarshipMatches(success.studentProfileId).catch((error) => {
@@ -78,6 +85,9 @@ export async function getDashboardMetrics(userId: string): Promise<DashboardMetr
     lifePathAverageHealth: averageCareerHealth(lifePathCareers),
     lifePathNextAction: lifePathCareers.length ? 'Open LifePath and review your next pathway milestone.' : 'Start LifePath by choosing career interests.',
     parentNextAction: success.academicHealth.nextAction,
+    parentActions: accountProfile?.role === 'parent' || accountProfile?.role === 'guardian'
+      ? await listParentActionItems(userId, success.studentProfileId, activeStudent?.graduation_year ?? null)
+      : [],
     portfolioActivitiesCount: portfolio?.summary.activitiesCount || 0,
     portfolioServiceHoursTotal: portfolio?.summary.serviceHoursTotal || 0,
     portfolioAchievementsCount: portfolio?.summary.achievementsCount || 0,
@@ -107,4 +117,52 @@ export async function getNextDeadline(userId: string): Promise<NextDeadline> {
     dueDate: data.due_date,
     category: data.category
   }
+}
+
+
+export async function listParentActionItems(
+  userId: string,
+  studentProfileId: string | null,
+  graduationYear: number | null,
+): Promise<ParentActionItem[]> {
+  if (!studentProfileId) return []
+  const { data, error } = await supabase
+    .from('parent_action_completions')
+    .select('action_key,status,completed_at')
+    .eq('student_profile_id', studentProfileId)
+    .eq('parent_user_id', userId)
+  if (error) {
+    console.warn('Failed to load parent actions:', error.message)
+    return mergeParentActionCompletions(parentActionTemplatesForStudent({ graduationYear }), [])
+  }
+  return mergeParentActionCompletions(parentActionTemplatesForStudent({ graduationYear }), data || [])
+}
+
+export async function toggleParentAction(input: {
+  userId: string
+  studentProfileId: string
+  actionKey: string
+  completed: boolean
+}): Promise<{ success: boolean; error: string | null }> {
+  if (!input.completed) {
+    const deleted = await supabase
+      .from('parent_action_completions')
+      .delete()
+      .eq('student_profile_id', input.studentProfileId)
+      .eq('parent_user_id', input.userId)
+      .eq('action_key', input.actionKey)
+    return { success: !deleted.error, error: deleted.error?.message || null }
+  }
+
+  const upsert = await supabase.from('parent_action_completions').upsert(
+    {
+      student_profile_id: input.studentProfileId,
+      parent_user_id: input.userId,
+      action_key: input.actionKey,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    },
+    { onConflict: 'student_profile_id,parent_user_id,action_key' },
+  )
+  return { success: !upsert.error, error: upsert.error?.message || null }
 }

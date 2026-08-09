@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         studentProfileId?: string
         invitedEmail?: string
         relationshipRole?: 'parent' | 'guardian' | 'counselor' | 'student'
-        inviteType?: 'supporter_invite' | 'access_request'
+        inviteType?: 'supporter_invite' | 'access_request' | 'student_claim'
       }
     | null
   if (!body) return jsonError('Invalid JSON')
@@ -25,11 +25,21 @@ export async function POST(req: Request) {
   const studentProfileId = body.studentProfileId
   const invitedEmail = (body.invitedEmail || '').trim().toLowerCase()
   const relationshipRole = body.relationshipRole
-  const inviteType = body.inviteType || 'supporter_invite'
+  const inviteType = body.inviteType || (relationshipRole === 'student' ? 'student_claim' : 'supporter_invite')
 
   if (!studentProfileId) return jsonError('Missing studentProfileId')
   if (!invitedEmail) return jsonError('Missing invitedEmail')
   if (!relationshipRole) return jsonError('Missing relationshipRole')
+
+  if (relationshipRole === 'student') {
+    const { data: inviteId, error: rpcError } = await supabase.rpc('create_student_claim_invite', {
+      p_student_profile_id: studentProfileId,
+      p_invited_email: invitedEmail,
+      p_expires_days: 14,
+    })
+    if (rpcError) return jsonError(rpcError.message)
+    return NextResponse.json({ ok: true, invite: { id: inviteId, student_profile_id: studentProfileId, invited_email: invitedEmail, relationship_role: 'student', invite_type: 'student_claim', status: 'pending' } })
+  }
 
   const { data, error } = await supabase
     .from('student_profile_relationship_invites')
@@ -76,7 +86,7 @@ export async function PATCH(req: Request) {
   const body = (await req.json().catch(() => null)) as
     | {
         inviteId?: string
-        action?: 'accept' | 'decline'
+        action?: 'accept' | 'decline' | 'revoke'
       }
     | null
   if (!body) return jsonError('Invalid JSON')
@@ -85,6 +95,17 @@ export async function PATCH(req: Request) {
   const action = body.action
   if (!inviteId) return jsonError('Missing inviteId')
   if (!action) return jsonError('Missing action')
+
+  if (action === 'revoke') {
+    const { data: invite, error: revokeError } = await supabase
+      .from('student_profile_relationship_invites')
+      .update({ status: 'revoked', revoked_at: new Date().toISOString() })
+      .eq('id', inviteId)
+      .select('*')
+      .single()
+    if (revokeError) return jsonError(revokeError.message)
+    return NextResponse.json({ ok: true, invite })
+  }
 
   const nextStatus = action === 'accept' ? 'accepted' : 'declined'
 
