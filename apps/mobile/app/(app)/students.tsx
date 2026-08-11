@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useSession } from '../../src/hooks/useSession'
-import { getLinkedStudentProfiles, requestStudentAccessByProfileId, type StudentProfile } from '../../src/data/identity'
+import { createManagedStudentProfile, getLinkedStudentProfiles, requestStudentAccessByProfileId, setActiveStudentProfile, type StudentProfile } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function StudentsScreen() {
@@ -25,6 +25,11 @@ export default function StudentsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [studentProfileId, setStudentProfileId] = useState('')
+  const [studentEmail, setStudentEmail] = useState('')
+  const [managedFirstName, setManagedFirstName] = useState('')
+  const [managedLastName, setManagedLastName] = useState('')
+  const [managedGraduationYear, setManagedGraduationYear] = useState('')
+  const [managedClaimEmail, setManagedClaimEmail] = useState('')
   const [linkLoading, setLinkLoading] = useState(false)
 
   const fetchStudents = useCallback(async () => {
@@ -67,15 +72,58 @@ export default function StudentsScreen() {
         userId: user.id,
         studentProfileId: studentProfileId.trim(),
         relationshipRole: 'parent',
+        invitedEmail: studentEmail.trim() || null,
       })
       if (!result.success) {
         Alert.alert('Error', result.error || 'Failed to send access request')
         return
       }
-      Alert.alert('Access Request Sent', 'The student or an approved guardian can approve your request.', [{ text: 'OK', onPress: () => { setShowLinkModal(false); setStudentProfileId(''); fetchStudents() }}])
+      Alert.alert('Access Request Sent', 'The student or an approved guardian can approve your request.', [{ text: 'OK', onPress: () => { setShowLinkModal(false); setStudentProfileId(''); setStudentEmail(''); fetchStudents() }}])
     } finally {
       setLinkLoading(false)
     }
+  }
+
+  const handleCreateManagedStudent = async () => {
+    if (!managedFirstName.trim() || !managedLastName.trim()) {
+      Alert.alert('Student name required', 'Enter the student first and last name.')
+      return
+    }
+    setLinkLoading(true)
+    try {
+      const result = await createManagedStudentProfile({
+        firstName: managedFirstName.trim(),
+        lastName: managedLastName.trim(),
+        graduationYear: managedGraduationYear ? Number(managedGraduationYear) : null,
+        schoolId: null,
+        relationshipRole: 'parent',
+        inviteStudentEmail: managedClaimEmail.trim() || null,
+      })
+      if (result.error) {
+        Alert.alert('Error', result.error)
+        return
+      }
+      Alert.alert('Student profile created', 'This profile is now active. The student can claim it later.', [{ text: 'OK', onPress: () => {
+        setShowLinkModal(false)
+        setManagedFirstName('')
+        setManagedLastName('')
+        setManagedGraduationYear('')
+        setManagedClaimEmail('')
+        fetchStudents()
+      }}])
+    } finally {
+      setLinkLoading(false)
+    }
+  }
+
+  const handleSelectStudent = async (studentId: string) => {
+    if (!user?.id) return
+    const result = await setActiveStudentProfile(user.id, studentId)
+    if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to switch active student')
+      return
+    }
+    router.push('/(app)' as never)
   }
 
   const getStatusBadge = (status: string) => {
@@ -146,7 +194,7 @@ export default function StudentsScreen() {
                 onPress={() => setShowLinkModal(true)}
               >
                 <Ionicons name="add" size={20} color={colors.white} />
-                <Text style={styles.addButtonText}>Link a Student</Text>
+                <Text style={styles.addButtonText}>Manage Students</Text>
               </TouchableOpacity>
             </View>
 
@@ -166,7 +214,7 @@ export default function StudentsScreen() {
                   <TouchableOpacity 
                     key={student.id} 
                     style={styles.studentCard}
-                    onPress={() => router.push('/(app)' as never)}
+                    onPress={() => handleSelectStudent(student.id)}
                   >
                     <View style={styles.studentAvatar}>
                       <Text style={styles.studentAvatarText}>
@@ -206,8 +254,23 @@ export default function StudentsScreen() {
 
           <View style={styles.modalContent}>
             <Text style={styles.modalDescription}>
-              Enter the student profile ID provided by the student/guardian to request access. Email lookup was removed from mobile because admin user lookup is not safe on the client.
+Request access with the student profile ID your student shares, or create a managed profile and invite the student to claim it later.
             </Text>
+
+            <Text style={styles.sectionTitle}>Link existing student</Text>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Student Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="student@example.com"
+                placeholderTextColor={ui.inputPlaceholder}
+                value={studentEmail}
+                onChangeText={setStudentEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Student Profile ID</Text>
@@ -233,6 +296,28 @@ export default function StudentsScreen() {
               ) : (
                 <Text style={styles.submitButtonText}>Send Link Request</Text>
               )}
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionTitle}>Create managed student profile</Text>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Student First Name</Text>
+              <TextInput style={styles.input} placeholder="First name" placeholderTextColor={ui.inputPlaceholder} value={managedFirstName} onChangeText={setManagedFirstName} />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Student Last Name</Text>
+              <TextInput style={styles.input} placeholder="Last name" placeholderTextColor={ui.inputPlaceholder} value={managedLastName} onChangeText={setManagedLastName} />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Expected Graduation Year</Text>
+              <TextInput style={styles.input} placeholder="2030" placeholderTextColor={ui.inputPlaceholder} value={managedGraduationYear} onChangeText={setManagedGraduationYear} keyboardType="number-pad" />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Student Claim Email optional</Text>
+              <TextInput style={styles.input} placeholder="student@example.com" placeholderTextColor={ui.inputPlaceholder} value={managedClaimEmail} onChangeText={setManagedClaimEmail} keyboardType="email-address" autoCapitalize="none" />
+            </View>
+            <TouchableOpacity style={[styles.secondarySubmitButton, linkLoading && styles.buttonDisabled]} onPress={handleCreateManagedStudent} disabled={linkLoading}>
+              <Text style={styles.secondarySubmitButtonText}>Create Managed Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -461,6 +546,25 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: ui.border,
+    marginVertical: 24,
+  },
+  secondarySubmitButton: {
+    backgroundColor: ui.backgroundSecondary,
+    borderRadius: radius.md,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: ui.border,
+  },
+  secondarySubmitButtonText: {
+    color: ui.primary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   submitButtonText: {
     color: colors.white,

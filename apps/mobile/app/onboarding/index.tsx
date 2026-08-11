@@ -110,7 +110,7 @@ export default function OnboardingScreen() {
 
     setLoading(true)
     try {
-      await completeCanonicalOnboarding({ userId: user.id, email: user.email || undefined, role: 'student' })
+      await completeCanonicalOnboarding({ userId: user.id, email: user.email || undefined, role: role || 'student' })
       await refreshProfile()
       router.replace('/(app)')
     } catch (err) {
@@ -185,14 +185,16 @@ export default function OnboardingScreen() {
 
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>{role === 'counselor' ? 'Counselor Setup' : 'Student Profile'}</Text>
+      <Text style={styles.stepTitle}>{role === 'counselor' ? 'Counselor Setup' : role === 'parent' || role === 'guardian' ? 'Family Setup' : 'Student Profile'}</Text>
       <Text style={styles.stepDescription}>
         {role === 'counselor'
           ? 'Counselor access starts after a student or parent invites you.'
-          : 'Create the student planning profile used across web and mobile.'}
+          : role === 'parent' || role === 'guardian'
+            ? 'You can enter the dashboard now. Link or create a student profile from the Students tab.'
+            : 'Create the student planning profile used across web and mobile.'}
       </Text>
 
-      {role !== 'counselor' && (
+      {role === 'student' && (
         <>
           <View style={styles.formGroup}>
             <Text style={styles.label}>Student First Name</Text>

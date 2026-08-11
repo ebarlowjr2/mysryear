@@ -91,21 +91,10 @@ export async function POST(req: Request) {
       if (relError && !/duplicate key/i.test(relError.message)) return badRequest(relError.message)
     }
   } else if (role === 'parent' || role === 'guardian') {
-    const { data: created, error: createError } = await supabase.from('student_profiles').insert({
-      student_user_id: null,
-      created_by_user_id: session.user.id,
-      first_name: studentProfile?.firstName ?? null,
-      last_name: studentProfile?.lastName ?? null,
-      graduation_year: studentProfile?.graduationYear ?? null,
-      school_id: studentProfile?.schoolId ?? null,
-    }).select('id').single()
-    if (createError) return badRequest(createError.message)
-    activeStudentProfileId = (created?.id as string) || null
-
-    if (activeStudentProfileId) {
-      const { error: relError } = await supabase.from('family_relationships').insert({ student_profile_id: activeStudentProfileId, user_id: session.user.id, role: 'admin' })
-      if (relError && !/duplicate key/i.test(relError.message)) return badRequest(relError.message)
-    }
+    // Parent/guardian account setup is intentionally account-only. Student linking now happens
+    // from the family dashboard Active Student Profile card so parents can enter the app first.
+    activeStudentProfileId = null
+    await supabase.from('profiles').update({ active_student_profile_id: null }).eq('id', session.user.id)
   } else if (role === 'counselor') {
     activeStudentProfileId = null
   }

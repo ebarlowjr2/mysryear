@@ -199,3 +199,9 @@ Canonical flow ownership for the web rebuild:
 - Do counselors require approval from the student only, or student + parent, or either?
 - How should `business/recruiter` roles map later (opportunity posting, visibility, verification)?
 - Parent permissions: can parents edit core student fields by default, or only assist (suggest/assign) unless explicitly granted?
+
+## Current Parent/Guardian Signup Decision
+
+Parent and guardian signup is account-first. Parent/guardian users should not be blocked by student creation, school selection, graduation year, or invitation fields during initial account setup. After authentication and email confirmation, they route to the family dashboard and use the Active Student Profile card to link an existing student, create a managed student profile, or invite a student to claim that managed profile.
+
+Parent Action Center completion state must live in parent-owned records such as `parent_action_completions`, not in `student_success_tasks`. Parent actions are guidance/support tasks for the adult; student success tasks remain student-profile planning work.

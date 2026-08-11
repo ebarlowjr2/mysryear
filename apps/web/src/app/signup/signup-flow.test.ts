@@ -103,8 +103,8 @@ describe('signup flow', () => {
 
   it('branches role-specific post-signup destinations', () => {
     expect(postSignupDestination('student')).toBe('/dashboard')
-    expect(postSignupDestination('parent')).toBe('/profile')
-    expect(postSignupDestination('guardian')).toBe('/profile')
+    expect(postSignupDestination('parent')).toBe('/dashboard/family')
+    expect(postSignupDestination('guardian')).toBe('/dashboard/family')
     expect(postSignupDestination('counselor')).toBe('/profile')
     expect(postSignupDestination('business')).toBe('/business/onboarding')
   })

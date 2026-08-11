@@ -7,6 +7,8 @@ export { createWebSupabaseServerClient, type SupabaseCookieMethods } from './sup
 export { createNextServerSupabaseClient } from './supabase/next-server'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
+export { highSchoolGradeFromGraduationYear, mergeParentActionCompletions, parentActionTemplatesForGrade, parentActionTemplatesForStudent } from './parent-actions'
+export type { ParentActionCompletion, ParentActionGrade, ParentActionItem, ParentActionTemplate } from './parent-actions'
 export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
 export { scoreCareerHealth, starterTasksForCareer } from './lifepath'
 export type { CareerHealthBreakdown, CareerHealthResult, CareerPathForScoring, LifePathStarterTask, DebtRisk, LifePathScenarioId, PathwayType } from './lifepath'

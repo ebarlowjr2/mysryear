@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase'
 
 export type CanonicalRole = 'student' | 'parent' | 'guardian' | 'counselor' | 'business'
 export type RelationshipRole = Exclude<CanonicalRole, 'business'>
-export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired'
+export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked'
 export type InviteType = 'supporter_invite' | 'student_claim' | 'access_request'
 
 export const CANONICAL_ROLES: CanonicalRole[] = ['student', 'parent', 'guardian', 'counselor', 'business']
@@ -66,6 +66,8 @@ export type RelationshipInvite = {
   status: InviteStatus
   created_by_user_id: string
   created_at: string
+  expires_at?: string | null
+  revoked_at?: string | null
 }
 
 function toRole(value: unknown): CanonicalRole | null {
@@ -223,6 +225,64 @@ export async function createStudentProfileForUser(input: {
   return { studentProfile, error: null }
 }
 
+
+export async function createManagedStudentProfile(input: {
+  firstName: string
+  lastName: string
+  graduationYear?: number | null
+  schoolId?: string | null
+  relationshipRole: 'parent' | 'guardian'
+  inviteStudentEmail?: string | null
+}): Promise<{ studentProfileId: string | null; inviteId: string | null; error: string | null }> {
+  const created = await supabase.rpc('create_managed_student_profile', {
+    p_first_name: input.firstName || null,
+    p_last_name: input.lastName || null,
+    p_school_id: input.schoolId || null,
+    p_graduation_year: input.graduationYear || null,
+    p_relationship_role: input.relationshipRole,
+  })
+  if (created.error || !created.data) {
+    return { studentProfileId: null, inviteId: null, error: created.error?.message || 'Failed to create student profile' }
+  }
+
+  const studentProfileId = String(created.data)
+  let inviteId: string | null = null
+  const inviteEmail = input.inviteStudentEmail?.trim().toLowerCase()
+  if (inviteEmail) {
+    const invite = await supabase.rpc('create_student_claim_invite', {
+      p_student_profile_id: studentProfileId,
+      p_invited_email: inviteEmail,
+      p_expires_days: 14,
+    })
+    if (invite.error) return { studentProfileId, inviteId: null, error: invite.error.message }
+    inviteId = invite.data ? String(invite.data) : null
+  }
+
+  const { data: userData } = await supabase.auth.getUser()
+  if (userData.user?.id) await setActiveStudentProfile(userData.user.id, studentProfileId)
+  return { studentProfileId, inviteId, error: null }
+}
+
+export async function createStudentClaimInvite(input: {
+  studentProfileId: string
+  invitedEmail: string
+}): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase.rpc('create_student_claim_invite', {
+    p_student_profile_id: input.studentProfileId,
+    p_invited_email: input.invitedEmail.trim().toLowerCase(),
+    p_expires_days: 14,
+  })
+  return { success: !error, error: error?.message || null }
+}
+
+export async function revokeRelationshipInvite(inviteId: string): Promise<{ success: boolean; error: string | null }> {
+  const { error } = await supabase
+    .from('student_profile_relationship_invites')
+    .update({ status: 'revoked', revoked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', inviteId)
+  return { success: !error, error: error?.message || null }
+}
+
 export async function completeCanonicalOnboarding(input: {
   userId: string
   email?: string
@@ -245,7 +305,10 @@ export async function completeCanonicalOnboarding(input: {
   const profileUpdate = await updateAccountProfile(input.userId, profilePatch)
   if (!profileUpdate.success) return profileUpdate
 
-  if (input.role === 'counselor' || input.role === 'business') return { success: true, error: null }
+  if (input.role === 'counselor' || input.role === 'business' || input.role === 'parent' || input.role === 'guardian') {
+    await setActiveStudentProfile(input.userId, null)
+    return { success: true, error: null }
+  }
 
   const created = await createStudentProfileForUser({
     userId: input.userId,
@@ -384,11 +447,12 @@ export async function requestStudentAccessByProfileId(input: {
   userId: string
   studentProfileId: string
   relationshipRole: 'parent' | 'guardian'
+  invitedEmail?: string | null
 }): Promise<{ success: boolean; error: string | null }> {
   return createRelationshipInvite({
     userId: input.userId,
     studentProfileId: input.studentProfileId,
-    invitedEmail: 'student-profile-owner@mysryear.local',
+    invitedEmail: input.invitedEmail?.trim().toLowerCase() || 'student-profile-owner@mysryear.local',
     relationshipRole: input.relationshipRole,
     inviteType: 'access_request',
   })

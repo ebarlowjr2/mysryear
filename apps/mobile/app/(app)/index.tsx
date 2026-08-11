@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as DocumentPicker from 'expo-document-picker'
 import { useSession } from '../../src/hooks/useSession'
-import { getDashboardMetrics, getStudentSuccessDashboard, DashboardMetrics } from '../../src/data/dashboard'
+import { getDashboardMetrics, getStudentSuccessDashboard, toggleParentAction, DashboardMetrics } from '../../src/data/dashboard'
 import {
   DOCUMENT_TYPE_OPTIONS,
   deleteStudentDocument,
@@ -163,7 +163,7 @@ export default function DashboardScreen() {
         <Text style={styles.heroSubtitle}>
           Manage applications, track scholarships, and plan life after high school.
         </Text>
-        {activeStudentProfile && (
+        {activeStudentProfile ? (
           <View style={styles.activeStudentCard}>
             <Text style={styles.activeStudentLabel}>Active student profile</Text>
             <Text style={styles.activeStudentName}>
@@ -173,6 +173,15 @@ export default function DashboardScreen() {
               {activeStudentProfile.graduation_year ? `Class of ${activeStudentProfile.graduation_year}` : 'Graduation year not set'}
               {activeStudentProfile.schools?.name ? ` • ${activeStudentProfile.schools.name}` : ''}
             </Text>
+          </View>
+        ) : (
+          <View style={styles.activeStudentCard}>
+            <Text style={styles.activeStudentLabel}>Active student profile</Text>
+            <Text style={styles.activeStudentName}>No student connected yet</Text>
+            <Text style={styles.activeStudentMeta}>Parents can link an existing student or create a managed profile from Students.</Text>
+            <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/(app)/students' as never)}>
+              <Text style={styles.smallButtonText}>Manage Students</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -234,18 +243,34 @@ export default function DashboardScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Parent Action Center</Text>
-        <Text style={styles.sectionSubtitle}>{successSummary?.academicHealth.nextAction || 'Upload records and complete one checklist item this week.'}</Text>
+        <Text style={styles.sectionSubtitle}>{(metrics?.parentActions || []).length ? 'Grade-aware actions for supporting the active student.' : 'Link or create a student profile to unlock parent actions.'}</Text>
         <View style={styles.featureGrid}>
-          {(successSummary?.tasks || []).slice(0, 3).map((task) => (
-            <View key={task.id} style={styles.featureCard}>
+          {(metrics?.parentActions || []).slice(0, 4).map((action) => (
+            <TouchableOpacity
+              key={action.key}
+              style={[styles.featureCard, action.completed && styles.completedFeatureCard]}
+              onPress={async () => {
+                if (!user?.id || !successSummary?.studentProfileId) return
+                await toggleParentAction({ userId: user.id, studentProfileId: successSummary.studentProfileId, actionKey: action.key, completed: !action.completed })
+                refreshDashboard()
+              }}
+            >
               <View style={styles.featureIcon}>
-                <Ionicons name={task.upload_required ? 'document-attach-outline' : 'checkmark-circle-outline'} size={24} color={ui.primary} />
+                <Ionicons name={action.completed ? 'checkmark-circle' : 'checkmark-circle-outline'} size={24} color={action.completed ? colors.success : ui.primary} />
               </View>
-              <Text style={styles.featureTitle}>{task.title}</Text>
-              <Text style={styles.featureDesc}>{task.description || 'Student success task'}</Text>
-              <Text style={styles.featureLink}>{task.status.replace('_', ' ')}</Text>
-            </View>
+              <Text style={styles.featureTitle}>{action.title}</Text>
+              <Text style={styles.featureDesc}>{action.description}</Text>
+              <Text style={styles.featureLink}>{action.completed ? 'Completed' : action.completionWindow}</Text>
+            </TouchableOpacity>
           ))}
+          {(metrics?.parentActions || []).length === 0 && (
+            <TouchableOpacity style={styles.featureCard} onPress={() => router.push('/(app)/students' as never)}>
+              <View style={styles.featureIcon}><Ionicons name="people-outline" size={24} color={ui.primary} /></View>
+              <Text style={styles.featureTitle}>Connect a student</Text>
+              <Text style={styles.featureDesc}>Link an existing student or create a managed profile to personalize this dashboard.</Text>
+              <Text style={styles.featureLink}>Open Students</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -625,6 +650,18 @@ const styles = StyleSheet.create({
   featureGrid: {
     gap: 12,
   },
+  smallButton: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    backgroundColor: ui.primary,
+    borderRadius: radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  smallButtonText: {
+    color: colors.white,
+    fontWeight: '700',
+  },
   featureCard: {
     backgroundColor: ui.card,
     borderRadius: radius.lg,
@@ -635,6 +672,10 @@ const styles = StyleSheet.create({
   },
   featureCardDisabled: {
     opacity: 0.7,
+  },
+  completedFeatureCard: {
+    borderColor: colors.success,
+    backgroundColor: '#E8F5E9',
   },
   featureIcon: {
     width: 40,
