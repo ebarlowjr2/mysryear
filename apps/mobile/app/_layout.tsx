@@ -12,17 +12,14 @@ import 'react-native-reanimated'
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext'
 import { ui } from '../src/theme'
 
-export {
-  ErrorBoundary,
-} from 'expo-router'
+export { ErrorBoundary } from 'expo-router'
 
 SplashScreen.preventAutoHideAsync()
 
-
 Sentry.init({
   dsn: 'https://5dba1675162a408154a0f0a72fa3ba8c@o4511417163841536.ingest.us.sentry.io/4511611580448768',
-  sendDefaultPii: true,
-  tracesSampleRate: 1.0,
+  sendDefaultPii: false,
+  tracesSampleRate: 0.2,
 })
 
 function AuthGate() {
