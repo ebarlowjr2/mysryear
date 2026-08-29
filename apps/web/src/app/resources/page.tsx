@@ -5,6 +5,33 @@ import React, { useMemo, useState } from 'react'
 type LinkItem = { label: string; href: string; note?: string }
 
 export default function ResourcesPage() {
+  const schoolCheckItems = [
+    {
+      title: 'Counseling office updates',
+      description: 'Ask where your school posts senior timelines, graduation requirements, and appointment links.',
+    },
+    {
+      title: 'Local scholarships',
+      description: 'Many districts publish local awards, foundation scholarships, and civic group deadlines separately.',
+    },
+    {
+      title: 'Transcript and report-card process',
+      description: 'Confirm how students request official transcripts, unofficial copies, and grade reports.',
+    },
+    {
+      title: 'Testing and fee waivers',
+      description: 'Check SAT, ACT, AP, ASVAB, college application, and FAFSA support events or fee-waiver rules.',
+    },
+    {
+      title: 'College and career events',
+      description: 'Look for college visits, career fairs, trade-program nights, military visits, and parent workshops.',
+    },
+    {
+      title: 'Recommendation letter rules',
+      description: 'Ask how much notice teachers and counselors need and whether your school uses a brag sheet.',
+    },
+  ]
+
   const quickLinks: { title: string; items: LinkItem[] }[] = [
     {
       title: 'FAFSA & Financial Aid',
@@ -384,6 +411,27 @@ export default function ResourcesPage() {
       <p className="mt-2 text-slate-700">
         Start with FAFSA®, then explore loans, scholarships, testing, jobs, and templates.
       </p>
+
+      <section className="card mt-6 overflow-hidden border-brand-100">
+        <div className="bg-gradient-to-r from-brand-700 to-cyan-600 p-6 text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+            School-specific checklist
+          </p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight">Check at your school</h2>
+          <p className="mt-2 max-w-3xl text-sm text-white/90">
+            A lot of the most important deadlines and opportunities are local. Use this list when
+            talking with your counselor, school office, or parent liaison.
+          </p>
+        </div>
+        <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+          {schoolCheckItems.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <h3 className="font-bold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* QUICK LINKS GRID */}
       <div className="mt-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
