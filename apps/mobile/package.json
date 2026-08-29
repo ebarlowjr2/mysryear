@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "config:public": "expo config --type public",
+    "verify": "npm run typecheck && npm run config:public"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

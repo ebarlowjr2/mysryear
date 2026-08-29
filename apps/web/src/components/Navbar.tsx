@@ -57,24 +57,36 @@ export default function Navbar() {
   const [role, setRole] = useState<UserRole | null>(null)
 
   useEffect(() => {
-    const supabase = createWebSupabaseClient()
+    let supabase: ReturnType<typeof createWebSupabaseClient>
+    try {
+      supabase = createWebSupabaseClient()
+    } catch {
+      setIsAuthenticated(false)
+      setRole(null)
+      return
+    }
 
     async function loadSessionRole() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setIsAuthenticated(!!session)
-      if (!session) {
-        setRole(null)
-        return
-      }
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setIsAuthenticated(!!session)
+        if (!session) {
+          setRole(null)
+          return
+        }
 
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .maybeSingle()
-      setRole(toUserRole(data?.role))
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle()
+        setRole(toUserRole(data?.role))
+      } catch {
+        setIsAuthenticated(false)
+        setRole(null)
+      }
     }
 
     void loadSessionRole()
