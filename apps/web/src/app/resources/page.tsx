@@ -7,51 +7,61 @@ type LinkItem = { label: string; href: string; note?: string }
 export default function ResourcesPage() {
   const schoolCheckItems = [
     {
-      title: 'Counseling office updates',
-      description: 'Ask where your school posts senior timelines, graduation requirements, and appointment links.',
+      title: 'Online library access',
+      description:
+        'Check for research databases, academic journals, ebooks, newspapers, industry reports, and professional publications that may be included with tuition.',
     },
     {
-      title: 'Local scholarships',
-      description: 'Many districts publish local awards, foundation scholarships, and civic group deadlines separately.',
+      title: 'Newspaper and magazine subscriptions',
+      description:
+        'Look for free student access to publications like The New York Times, The Wall Street Journal, Financial Times, The Washington Post, Harvard Business Review, and industry journals.',
     },
     {
-      title: 'Transcript and report-card process',
-      description: 'Confirm how students request official transcripts, unofficial copies, and grade reports.',
+      title: 'Free or discounted software',
+      description:
+        'Before buying software, check whether your school provides Microsoft 365, Adobe Creative Cloud, MATLAB, SPSS, SAS, Tableau, ArcGIS, AutoCAD, JetBrains tools, or field-specific licenses.',
     },
     {
-      title: 'Testing and fee waivers',
-      description: 'Check SAT, ACT, AP, ASVAB, college application, and FAFSA support events or fee-waiver rules.',
+      title: 'Cloud computing credits',
+      description:
+        'Students in computer science, data science, engineering, AI, or cybersecurity may have access to AWS, Microsoft Azure, Google Cloud, or university-hosted cloud environments.',
     },
     {
-      title: 'College and career events',
-      description: 'Look for college visits, career fairs, trade-program nights, military visits, and parent workshops.',
+      title: 'GPU and high-performance computing access',
+      description:
+        'Some schools offer GPU clusters, supercomputers, research computing systems, or virtual computing labs that would be expensive to access independently.',
     },
     {
-      title: 'Recommendation letter rules',
-      description: 'Ask how much notice teachers and counselors need and whether your school uses a brag sheet.',
+      title: 'AI tools and student plans',
+      description:
+        'Check school-provided AI tools and company student plans. Some platforms offer free or discounted access after verifying a college email address.',
     },
     {
-      title: 'Dual enrollment and credit options',
-      description: 'Ask whether your student can earn college credit, career credentials, or industry certifications.',
+      title: 'Training platforms and certificates',
+      description:
+        'Your school may already pay for LinkedIn Learning, Coursera, edX, Udemy Business, Skillsoft, or certification-prep platforms.',
     },
     {
-      title: 'Graduation and promotion requirements',
-      description: 'Confirm required credits, end-of-course exams, community service, and any local graduation rules.',
+      title: 'Career services beyond résumé reviews',
+      description:
+        'Ask about mock interviews, career coaching, internship databases, employer introductions, job fairs, professional headshots, salary negotiation help, and alumni networking.',
     },
     {
-      title: 'Activity and volunteer tracking',
-      description: 'Find out whether clubs, service hours, awards, and leadership roles are tracked by the school.',
+      title: 'Entrepreneurship, startup, and research resources',
+      description:
+        'Look for incubators, innovation centers, research labs, pitch competitions, grant programs, patent support, mentorship, and prototype funding.',
     },
     {
-      title: 'Parent communication channels',
-      description: 'Confirm the official app, email list, portal, or newsletter families should monitor every week.',
+      title: 'Hardware, equipment, and facilities',
+      description:
+        'Check for access to 3D printers, makerspaces, cameras, podcast studios, recording equipment, electronics labs, VR gear, computer labs, research hardware, or equipment checkout.',
     },
   ]
 
   const tenThingsTopics = [
     {
       title: '10 Things to Check at Your School',
-      description: 'The first local checklist every student and family should review.',
+      description: 'A practical guide to resources college students may already be paying for.',
       href: '#ten-things-school',
       status: 'Open',
     },
@@ -456,8 +466,9 @@ export default function ResourcesPage() {
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-tight">10 Things to Check</h2>
           <p className="mt-2 max-w-3xl text-sm text-white/90">
-            Start with your school. A lot of the most important deadlines and opportunities are
-            local, and this section will grow into a library of focused “10 things” guides.
+            College gives students access to more than classes. Before paying for another tool,
+            subscription, certification, or piece of equipment, check what your school already
+            provides.
           </p>
         </div>
         <div className="grid gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-3">
