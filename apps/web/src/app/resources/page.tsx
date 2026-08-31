@@ -30,6 +30,43 @@ export default function ResourcesPage() {
       title: 'Recommendation letter rules',
       description: 'Ask how much notice teachers and counselors need and whether your school uses a brag sheet.',
     },
+    {
+      title: 'Dual enrollment and credit options',
+      description: 'Ask whether your student can earn college credit, career credentials, or industry certifications.',
+    },
+    {
+      title: 'Graduation and promotion requirements',
+      description: 'Confirm required credits, end-of-course exams, community service, and any local graduation rules.',
+    },
+    {
+      title: 'Activity and volunteer tracking',
+      description: 'Find out whether clubs, service hours, awards, and leadership roles are tracked by the school.',
+    },
+    {
+      title: 'Parent communication channels',
+      description: 'Confirm the official app, email list, portal, or newsletter families should monitor every week.',
+    },
+  ]
+
+  const tenThingsTopics = [
+    {
+      title: '10 Things to Check at Your School',
+      description: 'The first local checklist every student and family should review.',
+      href: '#ten-things-school',
+      status: 'Open',
+    },
+    {
+      title: '10 Things to Check for Research',
+      description: 'Coming soon: how to verify colleges, careers, programs, and costs.',
+      href: '#',
+      status: 'Coming soon',
+    },
+    {
+      title: '10 Places to Check for Grants',
+      description: 'Coming soon: public, local, employer, school, and nonprofit grant sources.',
+      href: '#',
+      status: 'Coming soon',
+    },
   ]
 
   const quickLinks: { title: string; items: LinkItem[] }[] = [
@@ -412,21 +449,42 @@ export default function ResourcesPage() {
         Start with FAFSA®, then explore loans, scholarships, testing, jobs, and templates.
       </p>
 
-      <section className="card mt-6 overflow-hidden border-brand-100">
+      <section id="ten-things-school" className="card mt-6 overflow-hidden border-brand-100">
         <div className="bg-gradient-to-r from-brand-700 to-cyan-600 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
-            School-specific checklist
+            10 things guide
           </p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight">Check at your school</h2>
+          <h2 className="mt-2 text-2xl font-black tracking-tight">10 Things to Check</h2>
           <p className="mt-2 max-w-3xl text-sm text-white/90">
-            A lot of the most important deadlines and opportunities are local. Use this list when
-            talking with your counselor, school office, or parent liaison.
+            Start with your school. A lot of the most important deadlines and opportunities are
+            local, and this section will grow into a library of focused “10 things” guides.
           </p>
         </div>
+        <div className="grid gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-3">
+          {tenThingsTopics.map((topic) => (
+            <a
+              key={topic.title}
+              href={topic.href}
+              aria-disabled={topic.status !== 'Open'}
+              className="rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-bold text-slate-950">{topic.title}</h3>
+                <span className="shrink-0 rounded-full bg-brand-50 px-2 py-1 text-xs font-bold text-brand-700">
+                  {topic.status}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{topic.description}</p>
+            </a>
+          ))}
+        </div>
         <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
-          {schoolCheckItems.map((item) => (
+          {schoolCheckItems.map((item, index) => (
             <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <h3 className="font-bold text-slate-950">{item.title}</h3>
+              <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
+                Thing {index + 1}
+              </p>
+              <h3 className="mt-1 font-bold text-slate-950">{item.title}</h3>
               <p className="mt-2 text-sm leading-6 text-slate-700">{item.description}</p>
             </div>
           ))}
