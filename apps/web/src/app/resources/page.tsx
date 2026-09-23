@@ -1,84 +1,11 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from '@mysryear/shared'
 
 type LinkItem = { label: string; href: string; note?: string }
 
 export default function ResourcesPage() {
-  const schoolCheckItems = [
-    {
-      title: 'Online library access',
-      description:
-        'Check for research databases, academic journals, ebooks, newspapers, industry reports, and professional publications that may be included with tuition.',
-    },
-    {
-      title: 'Newspaper and magazine subscriptions',
-      description:
-        'Look for free student access to publications like The New York Times, The Wall Street Journal, Financial Times, The Washington Post, Harvard Business Review, and industry journals.',
-    },
-    {
-      title: 'Free or discounted software',
-      description:
-        'Before buying software, check whether your school provides Microsoft 365, Adobe Creative Cloud, MATLAB, SPSS, SAS, Tableau, ArcGIS, AutoCAD, JetBrains tools, or field-specific licenses.',
-    },
-    {
-      title: 'Cloud computing credits',
-      description:
-        'Students in computer science, data science, engineering, AI, or cybersecurity may have access to AWS, Microsoft Azure, Google Cloud, or university-hosted cloud environments.',
-    },
-    {
-      title: 'GPU and high-performance computing access',
-      description:
-        'Some schools offer GPU clusters, supercomputers, research computing systems, or virtual computing labs that would be expensive to access independently.',
-    },
-    {
-      title: 'AI tools and student plans',
-      description:
-        'Check school-provided AI tools and company student plans. Some platforms offer free or discounted access after verifying a college email address.',
-    },
-    {
-      title: 'Training platforms and certificates',
-      description:
-        'Your school may already pay for LinkedIn Learning, Coursera, edX, Udemy Business, Skillsoft, or certification-prep platforms.',
-    },
-    {
-      title: 'Career services beyond résumé reviews',
-      description:
-        'Ask about mock interviews, career coaching, internship databases, employer introductions, job fairs, professional headshots, salary negotiation help, and alumni networking.',
-    },
-    {
-      title: 'Entrepreneurship, startup, and research resources',
-      description:
-        'Look for incubators, innovation centers, research labs, pitch competitions, grant programs, patent support, mentorship, and prototype funding.',
-    },
-    {
-      title: 'Hardware, equipment, and facilities',
-      description:
-        'Check for access to 3D printers, makerspaces, cameras, podcast studios, recording equipment, electronics labs, VR gear, computer labs, research hardware, or equipment checkout.',
-    },
-  ]
-
-  const tenThingsTopics = [
-    {
-      title: '10 Things to Check at Your School',
-      description: 'A practical guide to resources college students may already be paying for.',
-      href: '#ten-things-school',
-      status: 'Open',
-    },
-    {
-      title: '10 Things to Check for Research',
-      description: 'Coming soon: how to verify colleges, careers, programs, and costs.',
-      href: '#',
-      status: 'Coming soon',
-    },
-    {
-      title: '10 Places to Check for Grants',
-      description: 'Coming soon: public, local, employer, school, and nonprofit grant sources.',
-      href: '#',
-      status: 'Coming soon',
-    },
-  ]
-
   const quickLinks: { title: string; items: LinkItem[] }[] = [
     {
       title: 'FAFSA & Financial Aid',
@@ -472,17 +399,17 @@ export default function ResourcesPage() {
           </p>
         </div>
         <div className="grid gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-3">
-          {tenThingsTopics.map((topic) => (
+          {TEN_THINGS_TOPICS.map((topic) => (
             <a
               key={topic.title}
-              href={topic.href}
-              aria-disabled={topic.status !== 'Open'}
+              href={topic.status === 'open' ? '#ten-things-school' : '#'}
+              aria-disabled={topic.status !== 'open'}
               className="rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:shadow-sm"
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="font-bold text-slate-950">{topic.title}</h3>
                 <span className="shrink-0 rounded-full bg-brand-50 px-2 py-1 text-xs font-bold text-brand-700">
-                  {topic.status}
+                  {topic.status === 'open' ? 'Open' : 'Coming soon'}
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-slate-700">{topic.description}</p>
@@ -490,7 +417,7 @@ export default function ResourcesPage() {
           ))}
         </div>
         <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
-          {schoolCheckItems.map((item, index) => (
+          {SCHOOL_RESOURCE_CHECKS.map((item, index) => (
             <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
                 Thing {index + 1}

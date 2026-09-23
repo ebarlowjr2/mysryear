@@ -1,10 +1,24 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as DocumentPicker from 'expo-document-picker'
 import { useSession } from '../../src/hooks/useSession'
-import { getDashboardMetrics, getStudentSuccessDashboard, toggleParentAction, DashboardMetrics } from '../../src/data/dashboard'
+import {
+  getDashboardMetrics,
+  getStudentSuccessDashboard,
+  toggleParentAction,
+  DashboardMetrics,
+} from '../../src/data/dashboard'
 import {
   DOCUMENT_TYPE_OPTIONS,
   deleteStudentDocument,
@@ -65,7 +79,6 @@ export default function DashboardScreen() {
     setRefreshing(true)
     fetchData(user.id)
   }, [fetchData, user?.id])
-
 
   const refreshDashboard = useCallback(() => {
     if (!user?.id) return
@@ -145,7 +158,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
@@ -167,10 +180,14 @@ export default function DashboardScreen() {
           <View style={styles.activeStudentCard}>
             <Text style={styles.activeStudentLabel}>Active student profile</Text>
             <Text style={styles.activeStudentName}>
-              {[activeStudentProfile.first_name, activeStudentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+              {[activeStudentProfile.first_name, activeStudentProfile.last_name]
+                .filter(Boolean)
+                .join(' ') || 'Student'}
             </Text>
             <Text style={styles.activeStudentMeta}>
-              {activeStudentProfile.graduation_year ? `Class of ${activeStudentProfile.graduation_year}` : 'Graduation year not set'}
+              {activeStudentProfile.graduation_year
+                ? `Class of ${activeStudentProfile.graduation_year}`
+                : 'Graduation year not set'}
               {activeStudentProfile.schools?.name ? ` • ${activeStudentProfile.schools.name}` : ''}
             </Text>
           </View>
@@ -178,8 +195,13 @@ export default function DashboardScreen() {
           <View style={styles.activeStudentCard}>
             <Text style={styles.activeStudentLabel}>Active student profile</Text>
             <Text style={styles.activeStudentName}>No student connected yet</Text>
-            <Text style={styles.activeStudentMeta}>Parents can link an existing student or create a managed profile from Students.</Text>
-            <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/(app)/students' as never)}>
+            <Text style={styles.activeStudentMeta}>
+              Parents can link an existing student or create a managed profile from Students.
+            </Text>
+            <TouchableOpacity
+              style={styles.smallButton}
+              onPress={() => router.push('/(app)/students' as never)}
+            >
               <Text style={styles.smallButtonText}>Manage Students</Text>
             </TouchableOpacity>
           </View>
@@ -189,21 +211,21 @@ export default function DashboardScreen() {
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Academic Health</Text>
-          <Text style={styles.statValue}>
-            {metrics?.academicHealthScore ?? 0}/100
-          </Text>
-          <Text style={styles.statDesc}>
-            {metrics?.academicHealthLabel || 'Needs Attention'}
-          </Text>
+          <Text style={styles.statValue}>{metrics?.academicHealthScore ?? 0}/100</Text>
+          <Text style={styles.statDesc}>{metrics?.academicHealthLabel || 'Needs Attention'}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Report Card</Text>
-          <Text style={styles.statValue}>{metrics?.reportCardStatus === 'updated' ? 'Updated' : 'Missing'}</Text>
+          <Text style={styles.statValue}>
+            {metrics?.reportCardStatus === 'updated' ? 'Updated' : 'Missing'}
+          </Text>
           <Text style={styles.statDesc}>Latest academic record</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Checklist</Text>
-          <Text style={styles.statValue}>{metrics?.checklistDone ?? 0}/{metrics?.checklistTotal ?? 0}</Text>
+          <Text style={styles.statValue}>
+            {metrics?.checklistDone ?? 0}/{metrics?.checklistTotal ?? 0}
+          </Text>
           <Text style={styles.statDesc}>Grade-level success tasks</Text>
         </View>
         <View style={styles.statCard}>
@@ -237,13 +259,19 @@ export default function DashboardScreen() {
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Scholarship Ready</Text>
           <Text style={styles.statValue}>{metrics?.portfolioScholarshipReadinessScore ?? 0}%</Text>
-          <Text style={styles.statDesc}>{metrics?.portfolioScholarshipReadinessLabel || 'Portfolio checklist'}</Text>
+          <Text style={styles.statDesc}>
+            {metrics?.portfolioScholarshipReadinessLabel || 'Portfolio checklist'}
+          </Text>
         </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Parent Action Center</Text>
-        <Text style={styles.sectionSubtitle}>{(metrics?.parentActions || []).length ? 'Grade-aware actions for supporting the active student.' : 'Link or create a student profile to unlock parent actions.'}</Text>
+        <Text style={styles.sectionSubtitle}>
+          {(metrics?.parentActions || []).length
+            ? 'Grade-aware actions for supporting the active student.'
+            : 'Link or create a student profile to unlock parent actions.'}
+        </Text>
         <View style={styles.featureGrid}>
           {(metrics?.parentActions || []).slice(0, 4).map((action) => (
             <TouchableOpacity
@@ -251,23 +279,41 @@ export default function DashboardScreen() {
               style={[styles.featureCard, action.completed && styles.completedFeatureCard]}
               onPress={async () => {
                 if (!user?.id || !successSummary?.studentProfileId) return
-                await toggleParentAction({ userId: user.id, studentProfileId: successSummary.studentProfileId, actionKey: action.key, completed: !action.completed })
+                await toggleParentAction({
+                  userId: user.id,
+                  studentProfileId: successSummary.studentProfileId,
+                  actionKey: action.key,
+                  completed: !action.completed,
+                })
                 refreshDashboard()
               }}
             >
               <View style={styles.featureIcon}>
-                <Ionicons name={action.completed ? 'checkmark-circle' : 'checkmark-circle-outline'} size={24} color={action.completed ? colors.success : ui.primary} />
+                <Ionicons
+                  name={action.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                  size={24}
+                  color={action.completed ? colors.success : ui.primary}
+                />
               </View>
               <Text style={styles.featureTitle}>{action.title}</Text>
               <Text style={styles.featureDesc}>{action.description}</Text>
-              <Text style={styles.featureLink}>{action.completed ? 'Completed' : action.completionWindow}</Text>
+              <Text style={styles.featureLink}>
+                {action.completed ? 'Completed' : action.completionWindow}
+              </Text>
             </TouchableOpacity>
           ))}
           {(metrics?.parentActions || []).length === 0 && (
-            <TouchableOpacity style={styles.featureCard} onPress={() => router.push('/(app)/students' as never)}>
-              <View style={styles.featureIcon}><Ionicons name="people-outline" size={24} color={ui.primary} /></View>
+            <TouchableOpacity
+              style={styles.featureCard}
+              onPress={() => router.push('/(app)/students' as never)}
+            >
+              <View style={styles.featureIcon}>
+                <Ionicons name="people-outline" size={24} color={ui.primary} />
+              </View>
               <Text style={styles.featureTitle}>Connect a student</Text>
-              <Text style={styles.featureDesc}>Link an existing student or create a managed profile to personalize this dashboard.</Text>
+              <Text style={styles.featureDesc}>
+                Link an existing student or create a managed profile to personalize this dashboard.
+              </Text>
               <Text style={styles.featureLink}>Open Students</Text>
             </TouchableOpacity>
           )}
@@ -276,7 +322,10 @@ export default function DashboardScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Document Upload</Text>
-        <Text style={styles.sectionSubtitle}>Upload report cards, transcripts, test scores, resumes, and certifications for the active student profile.</Text>
+        <Text style={styles.sectionSubtitle}>
+          Upload report cards, transcripts, test scores, resumes, and certifications for the active
+          student profile.
+        </Text>
         <View style={styles.uploadCard}>
           <Text style={styles.uploadLabel}>Document type</Text>
           <View style={styles.chipRow}>
@@ -286,7 +335,11 @@ export default function DashboardScreen() {
                 style={[styles.chip, documentType === option.value && styles.chipActive]}
                 onPress={() => setDocumentType(option.value)}
               >
-                <Text style={[styles.chipText, documentType === option.value && styles.chipTextActive]}>{option.label}</Text>
+                <Text
+                  style={[styles.chipText, documentType === option.value && styles.chipTextActive]}
+                >
+                  {option.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -294,28 +347,55 @@ export default function DashboardScreen() {
           <View style={styles.formRow}>
             <View style={styles.formField}>
               <Text style={styles.uploadLabel}>School year</Text>
-              <TextInput style={styles.uploadInput} value={schoolYear} onChangeText={setSchoolYear} placeholder="2025-2026" />
+              <TextInput
+                style={styles.uploadInput}
+                value={schoolYear}
+                onChangeText={setSchoolYear}
+                placeholder="2025-2026"
+              />
             </View>
             <View style={styles.formField}>
               <Text style={styles.uploadLabel}>Grading period</Text>
-              <TextInput style={styles.uploadInput} value={gradingPeriod} onChangeText={setGradingPeriod} placeholder="Q1" />
+              <TextInput
+                style={styles.uploadInput}
+                value={gradingPeriod}
+                onChangeText={setGradingPeriod}
+                placeholder="Q1"
+              />
             </View>
           </View>
 
           <View style={styles.formRow}>
             <View style={styles.formField}>
               <Text style={styles.uploadLabel}>GPA optional</Text>
-              <TextInput style={styles.uploadInput} value={gpa} onChangeText={setGpa} placeholder="3.5" keyboardType="decimal-pad" />
+              <TextInput
+                style={styles.uploadInput}
+                value={gpa}
+                onChangeText={setGpa}
+                placeholder="3.5"
+                keyboardType="decimal-pad"
+              />
             </View>
             <View style={styles.formField}>
               <Text style={styles.uploadLabel}>Notes optional</Text>
-              <TextInput style={styles.uploadInput} value={notes} onChangeText={setNotes} placeholder="Notes" />
+              <TextInput
+                style={styles.uploadInput}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Notes"
+              />
             </View>
           </View>
 
-          <TouchableOpacity style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]} onPress={handlePickAndUpload} disabled={uploading}>
+          <TouchableOpacity
+            style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
+            onPress={handlePickAndUpload}
+            disabled={uploading}
+          >
             <Ionicons name="cloud-upload-outline" size={20} color={colors.white} />
-            <Text style={styles.uploadButtonText}>{uploading ? 'Uploading...' : 'Choose File & Upload'}</Text>
+            <Text style={styles.uploadButtonText}>
+              {uploading ? 'Uploading...' : 'Choose File & Upload'}
+            </Text>
           </TouchableOpacity>
           {uploadMessage && <Text style={styles.uploadMessage}>{uploadMessage}</Text>}
         </View>
@@ -329,7 +409,10 @@ export default function DashboardScreen() {
               <View key={file.id} style={styles.documentRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.documentName}>{file.file_name}</Text>
-                  <Text style={styles.documentMeta}>{file.upload_context || 'document'} • {new Date(file.created_at).toLocaleDateString()}</Text>
+                  <Text style={styles.documentMeta}>
+                    {file.upload_context || 'document'} •{' '}
+                    {new Date(file.created_at).toLocaleDateString()}
+                  </Text>
                 </View>
                 <TouchableOpacity onPress={() => handleDeleteDocument(file.id)}>
                   <Ionicons name="trash-outline" size={20} color={colors.error} />
@@ -342,10 +425,12 @@ export default function DashboardScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Everything in one place</Text>
-        <Text style={styles.sectionSubtitle}>Replace sticky notes and scattered tabs with a simple dashboard.</Text>
-        
+        <Text style={styles.sectionSubtitle}>
+          Replace sticky notes and scattered tabs with a simple dashboard.
+        </Text>
+
         <View style={styles.featureGrid}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.featureCard}
             onPress={() => router.push('/aura' as never)}
           >
@@ -353,11 +438,13 @@ export default function DashboardScreen() {
               <Ionicons name="map-outline" size={24} color={ui.primary} />
             </View>
             <Text style={styles.featureTitle}>A.U.R.A LifePath</Text>
-            <Text style={styles.featureDesc}>{metrics?.lifePathNextAction || 'Compare careers, cost, and Career Health.'}</Text>
+            <Text style={styles.featureDesc}>
+              {metrics?.lifePathNextAction || 'Compare careers, cost, and Career Health.'}
+            </Text>
             <Text style={styles.featureLink}>Open</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.featureCard}
             onPress={() => router.push('/(app)/scholarships')}
           >
@@ -365,11 +452,13 @@ export default function DashboardScreen() {
               <Ionicons name="school-outline" size={24} color={ui.primary} />
             </View>
             <Text style={styles.featureTitle}>Scholarship Finder</Text>
-            <Text style={styles.featureDesc}>Curated sources with filters for GPA, state, major, and deadlines.</Text>
+            <Text style={styles.featureDesc}>
+              Curated sources with filters for GPA, state, major, and deadlines.
+            </Text>
             <Text style={styles.featureLink}>Open</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.featureCard}
             onPress={() => router.push('/(app)/planner')}
           >
@@ -377,7 +466,9 @@ export default function DashboardScreen() {
               <Ionicons name="calendar-outline" size={24} color={ui.primary} />
             </View>
             <Text style={styles.featureTitle}>Senior Year Timeline</Text>
-            <Text style={styles.featureDesc}>Milestones you can customize for your state and goals.</Text>
+            <Text style={styles.featureDesc}>
+              Milestones you can customize for your state and goals.
+            </Text>
             <Text style={styles.featureLink}>Open</Text>
           </TouchableOpacity>
 
@@ -385,28 +476,47 @@ export default function DashboardScreen() {
             <View style={styles.featureIcon}>
               <Ionicons name="document-text-outline" size={24} color={ui.textMuted} />
             </View>
-            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>Application Tracker</Text>
-            <Text style={styles.featureDesc}>Track each school with tasks, essays, and documents.</Text>
+            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>
+              Application Tracker
+            </Text>
+            <Text style={styles.featureDesc}>
+              Track each school with tasks, essays, and documents.
+            </Text>
             <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
 
-          <TouchableOpacity 
-            style={styles.featureCard}
-            onPress={() => router.push('/test-prep')}
-          >
+          <TouchableOpacity style={styles.featureCard} onPress={() => router.push('/test-prep')}>
             <View style={styles.featureIcon}>
               <Ionicons name="school-outline" size={24} color={ui.primary} />
             </View>
             <Text style={styles.featureTitle}>Test Prep</Text>
-            <Text style={styles.featureDesc}>Prepare for SAT, ACT, AP exams, and more standardized tests.</Text>
+            <Text style={styles.featureDesc}>
+              Prepare for SAT, ACT, AP exams, and more standardized tests.
+            </Text>
             <Text style={styles.featureLink}>Open</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.featureCard}
+            onPress={() => router.push('/resources' as never)}
+          >
+            <View style={styles.featureIcon}>
+              <Ionicons name="library-outline" size={24} color={ui.primary} />
+            </View>
+            <Text style={styles.featureTitle}>10 Things to Check</Text>
+            <Text style={styles.featureDesc}>
+              Find resources, software, training, and support your school may already provide.
+            </Text>
+            <Text style={styles.featureLink}>Open Guide</Text>
           </TouchableOpacity>
 
           <View style={[styles.featureCard, styles.featureCardDisabled]}>
             <View style={styles.featureIcon}>
               <Ionicons name="folder-outline" size={24} color={ui.textMuted} />
             </View>
-            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>Essay & Resume Vault</Text>
+            <Text style={[styles.featureTitle, styles.featureTextDisabled]}>
+              Essay & Resume Vault
+            </Text>
             <Text style={styles.featureDesc}>Keep drafts, feedback, and activity lists tidy.</Text>
             <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>

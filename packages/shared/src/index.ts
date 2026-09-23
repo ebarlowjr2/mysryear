@@ -7,16 +7,60 @@ export { createWebSupabaseServerClient, type SupabaseCookieMethods } from './sup
 export { createNextServerSupabaseClient } from './supabase/next-server'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
-export { highSchoolGradeFromGraduationYear, mergeParentActionCompletions, parentActionTemplatesForGrade, parentActionTemplatesForStudent } from './parent-actions'
-export type { ParentActionCompletion, ParentActionGrade, ParentActionItem, ParentActionTemplate } from './parent-actions'
-export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
+export {
+  highSchoolGradeFromGraduationYear,
+  mergeParentActionCompletions,
+  parentActionTemplatesForGrade,
+  parentActionTemplatesForStudent,
+} from './parent-actions'
+export type {
+  ParentActionCompletion,
+  ParentActionGrade,
+  ParentActionItem,
+  ParentActionTemplate,
+} from './parent-actions'
+export type {
+  AcademicHealthInput,
+  AcademicHealthResult,
+  GradeLevel,
+  SuccessTaskTemplate,
+} from './student-success'
 export { scoreCareerHealth, starterTasksForCareer } from './lifepath'
-export type { CareerHealthBreakdown, CareerHealthResult, CareerPathForScoring, LifePathStarterTask, DebtRisk, LifePathScenarioId, PathwayType } from './lifepath'
+export type {
+  CareerHealthBreakdown,
+  CareerHealthResult,
+  CareerPathForScoring,
+  LifePathStarterTask,
+  DebtRisk,
+  LifePathScenarioId,
+  PathwayType,
+} from './lifepath'
 export { computePortfolioSummary } from './portfolio'
 export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
 
 export { CAREERS, CATEGORIES } from './career-catalog'
 export type { CareerPath, CareerMilestone, CohortOpportunity } from './career-catalog'
 
-export { buildScholarshipApplicationTaskSeeds, computeScholarshipApplicationProgress, computeScholarshipReadiness, computeScholarshipMatch, explainScholarshipMatch, identifyMissingRequirements } from './scholarships'
-export type { ScholarshipApplicationProgress, ScholarshipApplicationTaskSeed, ScholarshipApplicationTaskStatus, ScholarshipForMatching, ScholarshipMatchResult, ScholarshipReadinessResult, ScholarshipRequirement, ScholarshipRequirementType, ScholarshipStatus, StudentScholarshipProfile } from './scholarships'
+export {
+  buildScholarshipApplicationTaskSeeds,
+  computeScholarshipApplicationProgress,
+  computeScholarshipReadiness,
+  computeScholarshipMatch,
+  explainScholarshipMatch,
+  identifyMissingRequirements,
+} from './scholarships'
+export type {
+  ScholarshipApplicationProgress,
+  ScholarshipApplicationTaskSeed,
+  ScholarshipApplicationTaskStatus,
+  ScholarshipForMatching,
+  ScholarshipMatchResult,
+  ScholarshipReadinessResult,
+  ScholarshipRequirement,
+  ScholarshipRequirementType,
+  ScholarshipStatus,
+  StudentScholarshipProfile,
+} from './scholarships'
+
+export { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from './resources'
+export type { SchoolResourceCheck, TenThingsTopic } from './resources'
