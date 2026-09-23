@@ -2,9 +2,24 @@ export type { UserRole } from './types/roles'
 export { USER_ROLES } from './types/roles'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
-export { highSchoolGradeFromGraduationYear, mergeParentActionCompletions, parentActionTemplatesForGrade, parentActionTemplatesForStudent } from './parent-actions'
-export type { ParentActionCompletion, ParentActionGrade, ParentActionItem, ParentActionTemplate } from './parent-actions'
-export type { AcademicHealthInput, AcademicHealthResult, GradeLevel, SuccessTaskTemplate } from './student-success'
+export {
+  highSchoolGradeFromGraduationYear,
+  mergeParentActionCompletions,
+  parentActionTemplatesForGrade,
+  parentActionTemplatesForStudent,
+} from './parent-actions'
+export type {
+  ParentActionCompletion,
+  ParentActionGrade,
+  ParentActionItem,
+  ParentActionTemplate,
+} from './parent-actions'
+export type {
+  AcademicHealthInput,
+  AcademicHealthResult,
+  GradeLevel,
+  SuccessTaskTemplate,
+} from './student-success'
 
 export { scoreCareerHealth, starterTasksForCareer } from './lifepath'
 export type {
@@ -21,3 +36,6 @@ export type { PortfolioSummary, PortfolioSummaryInput } from './portfolio'
 
 export { CAREERS, CATEGORIES } from './career-catalog'
 export type { CareerPath, CareerMilestone, CohortOpportunity } from './career-catalog'
+
+export { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from './resources'
+export type { SchoolResourceCheck, TenThingsTopic } from './resources'
