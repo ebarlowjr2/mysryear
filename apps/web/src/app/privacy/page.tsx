@@ -42,6 +42,14 @@ export default function PrivacyPage() {
           </p>
         </div>
         <div className="card p-6">
+          <h2 className="text-xl font-black text-slate-950">Account And Data Deletion</h2>
+          <p className="mt-2">
+            Signed-in users can permanently delete their account from Profile. Student-owned and
+            unclaimed managed profiles, their planning records, and their uploaded files are removed
+            as part of that process. Support can also help with deletion questions.
+          </p>
+        </div>
+        <div className="card p-6">
           <h2 className="text-xl font-black text-slate-950">Contact</h2>
           <p className="mt-2">
             For privacy questions or deletion requests, contact us through the support page.
