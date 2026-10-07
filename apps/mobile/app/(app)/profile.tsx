@@ -30,16 +30,59 @@ import {
   type RelationshipInvite,
 } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
+import { deleteMyAccount } from '../../src/data/account'
 
 const US_STATES = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
-  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-  'Wisconsin', 'Wyoming'
+  'Alabama',
+  'Alaska',
+  'Arizona',
+  'Arkansas',
+  'California',
+  'Colorado',
+  'Connecticut',
+  'Delaware',
+  'Florida',
+  'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
+  'North Carolina',
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming',
 ]
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -55,7 +98,7 @@ const GRADUATION_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFull
 export default function ProfileScreen() {
   const { user, signOut } = useAuth()
   const router = useRouter()
-  
+
   const [profile, setProfile] = useState<ProfileWithSchool | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -76,20 +119,23 @@ export default function ProfileScreen() {
   const [pendingInvites, setPendingInvites] = useState<RelationshipInvite[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
-    
+
     try {
       setError(null)
       const data = await getMyProfile(user.id)
       setProfile(data)
-      
+
       // Initialize form state from profile
       if (data) {
         setFirstName(data.first_name || '')
         setLastName(data.last_name || '')
-        setGraduationYear(data.activeStudentProfile?.graduation_year ?? data.graduation_year ?? null)
+        setGraduationYear(
+          data.activeStudentProfile?.graduation_year ?? data.graduation_year ?? null,
+        )
         setState(data.state || '')
         setCounty(data.county || '')
         setNotificationsTasks(data.notifications_tasks ?? true)
@@ -135,9 +181,9 @@ export default function ProfileScreen() {
     if (!user?.id) return
 
     setSaving(true)
-    
+
     const updates: ProfileUpdate = {}
-    
+
     // Only include changed fields
     if (firstName !== (profile?.first_name || '')) {
       updates.first_name = firstName || null
@@ -147,7 +193,8 @@ export default function ProfileScreen() {
     }
     // Update full_name when first/last name changes
     if (updates.first_name !== undefined || updates.last_name !== undefined) {
-      const newFirstName = updates.first_name !== undefined ? updates.first_name : profile?.first_name
+      const newFirstName =
+        updates.first_name !== undefined ? updates.first_name : profile?.first_name
       const newLastName = updates.last_name !== undefined ? updates.last_name : profile?.last_name
       updates.full_name = [newFirstName, newLastName].filter(Boolean).join(' ') || null
     }
@@ -174,8 +221,12 @@ export default function ProfileScreen() {
       return
     }
 
-    const { success, error: updateError } = await updateMyProfile(user.id, updates, profile?.activeStudentProfile?.id)
-    
+    const { success, error: updateError } = await updateMyProfile(
+      user.id,
+      updates,
+      profile?.activeStudentProfile?.id,
+    )
+
     setSaving(false)
 
     if (!success) {
@@ -194,7 +245,9 @@ export default function ProfileScreen() {
     if (profile) {
       setFirstName(profile.first_name || '')
       setLastName(profile.last_name || '')
-      setGraduationYear(profile.activeStudentProfile?.graduation_year ?? profile.graduation_year ?? null)
+      setGraduationYear(
+        profile.activeStudentProfile?.graduation_year ?? profile.graduation_year ?? null,
+      )
       setState(profile.state || '')
       setCounty(profile.county || '')
       setNotificationsTasks(profile.notifications_tasks ?? true)
@@ -209,7 +262,6 @@ export default function ProfileScreen() {
     }
     return profile?.full_name || user?.email?.split('@')[0] || 'User'
   }
-
 
   const handleSelectStudentProfile = async (studentProfileId: string) => {
     if (!user?.id) return
@@ -242,7 +294,9 @@ export default function ProfileScreen() {
   }
 
   const handleInviteResponse = async (inviteId: string, accept: boolean) => {
-    const result = accept ? await acceptRelationshipInvite(inviteId) : await declineRelationshipInvite(inviteId)
+    const result = accept
+      ? await acceptRelationshipInvite(inviteId)
+      : await declineRelationshipInvite(inviteId)
     if (!result.success) {
       Alert.alert('Error', result.error || 'Failed to update invite')
       return
@@ -257,6 +311,43 @@ export default function ProfileScreen() {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
     }
     return name.charAt(0).toUpperCase()
+  }
+
+  const permanentlyDeleteAccount = async () => {
+    setDeletingAccount(true)
+    const result = await deleteMyAccount()
+    setDeletingAccount(false)
+
+    if (!result.success) {
+      Alert.alert('Account not deleted', result.error || 'Could not delete your account.')
+    }
+  }
+
+  const confirmAccountDeletion = () => {
+    Alert.alert(
+      'Delete account?',
+      'This permanently removes your account and student-owned data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () =>
+            Alert.alert(
+              'Permanently delete account',
+              'Your account, student-owned planning records, and uploaded files will be deleted.',
+              [
+                { text: 'Keep Account', style: 'cancel' },
+                {
+                  text: 'Delete Permanently',
+                  style: 'destructive',
+                  onPress: () => void permanentlyDeleteAccount(),
+                },
+              ],
+            ),
+        },
+      ],
+    )
   }
 
   if (loading) {
@@ -285,11 +376,7 @@ export default function ProfileScreen() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={ui.primary}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ui.primary} />
       }
     >
       {/* Header with Avatar */}
@@ -299,22 +386,15 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.displayName}>{getDisplayName()}</Text>
         <Text style={styles.memberBadge}>My SR Year Member</Text>
-        
+
         {!isEditing ? (
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => setIsEditing(true)}
-          >
+          <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
             <Ionicons name="pencil" size={16} color={ui.primary} />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.editActions}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleCancel}
-              disabled={saving}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={saving}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -335,7 +415,7 @@ export default function ProfileScreen() {
       {/* A) Account Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-        
+
         {isEditing ? (
           <>
             <View style={styles.inputRow}>
@@ -367,12 +447,12 @@ export default function ProfileScreen() {
             <Text style={styles.infoValue}>{getDisplayName()}</Text>
           </View>
         )}
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Email</Text>
           <Text style={styles.infoValue}>{user?.email}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Account Type</Text>
           <Text style={styles.infoValue}>
@@ -381,18 +461,23 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-
       {/* Active Student Profile */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Active Student Profile</Text>
         {profile?.activeStudentProfile ? (
           <View style={styles.studentProfileCard}>
             <Text style={styles.studentProfileName}>
-              {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+              {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name]
+                .filter(Boolean)
+                .join(' ') || 'Student'}
             </Text>
             <Text style={styles.studentProfileMeta}>
-              {profile.activeStudentProfile.graduation_year ? `Class of ${profile.activeStudentProfile.graduation_year}` : 'Graduation year not set'}
-              {profile.activeStudentProfile.schools?.name ? ` • ${profile.activeStudentProfile.schools.name}` : ''}
+              {profile.activeStudentProfile.graduation_year
+                ? `Class of ${profile.activeStudentProfile.graduation_year}`
+                : 'Graduation year not set'}
+              {profile.activeStudentProfile.schools?.name
+                ? ` • ${profile.activeStudentProfile.schools.name}`
+                : ''}
             </Text>
           </View>
         ) : (
@@ -406,12 +491,15 @@ export default function ProfileScreen() {
                 key={studentProfile.id}
                 style={[
                   styles.switchProfileButton,
-                  profile.activeStudentProfile?.id === studentProfile.id && styles.switchProfileButtonActive,
+                  profile.activeStudentProfile?.id === studentProfile.id &&
+                    styles.switchProfileButtonActive,
                 ]}
                 onPress={() => handleSelectStudentProfile(studentProfile.id)}
               >
                 <Text style={styles.switchProfileText}>
-                  {[studentProfile.first_name, studentProfile.last_name].filter(Boolean).join(' ') || 'Student'}
+                  {[studentProfile.first_name, studentProfile.last_name]
+                    .filter(Boolean)
+                    .join(' ') || 'Student'}
                   {studentProfile.graduation_year ? ` • ${studentProfile.graduation_year}` : ''}
                 </Text>
               </TouchableOpacity>
@@ -425,7 +513,9 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>Supporters</Text>
         {profile?.activeStudentProfile ? (
           <>
-            <Text style={styles.toggleDesc}>Invite a parent, guardian, or counselor to support this student profile.</Text>
+            <Text style={styles.toggleDesc}>
+              Invite a parent, guardian, or counselor to support this student profile.
+            </Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.input}
@@ -441,7 +531,10 @@ export default function ProfileScreen() {
               {(['parent', 'guardian', 'counselor'] as const).map((roleOption) => (
                 <TouchableOpacity
                   key={roleOption}
-                  style={[styles.inviteRoleButton, inviteRole === roleOption && styles.inviteRoleButtonActive]}
+                  style={[
+                    styles.inviteRoleButton,
+                    inviteRole === roleOption && styles.inviteRoleButtonActive,
+                  ]}
                   onPress={() => setInviteRole(roleOption)}
                 >
                   <Text style={styles.inviteRoleText}>{roleOption}</Text>
@@ -454,7 +547,9 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <Text style={styles.infoValue}>Create or select a student profile before inviting supporters.</Text>
+          <Text style={styles.infoValue}>
+            Create or select a student profile before inviting supporters.
+          </Text>
         )}
 
         {pendingInvites.length > 0 && (
@@ -463,12 +558,20 @@ export default function ProfileScreen() {
             {pendingInvites.map((invite) => (
               <View key={invite.id} style={styles.pendingInviteCard}>
                 <Text style={styles.studentProfileName}>{invite.relationship_role} invite</Text>
-                <Text style={styles.studentProfileMeta}>{invite.invited_email || 'Sent to your account'}</Text>
+                <Text style={styles.studentProfileMeta}>
+                  {invite.invited_email || 'Sent to your account'}
+                </Text>
                 <View style={styles.editActions}>
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => handleInviteResponse(invite.id, false)}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => handleInviteResponse(invite.id, false)}
+                  >
                     <Text style={styles.cancelButtonText}>Decline</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.saveButton} onPress={() => handleInviteResponse(invite.id, true)}>
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={() => handleInviteResponse(invite.id, true)}
+                  >
                     <Text style={styles.saveButtonText}>Accept</Text>
                   </TouchableOpacity>
                 </View>
@@ -481,14 +584,16 @@ export default function ProfileScreen() {
       {/* B) School Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>School</Text>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Current School</Text>
           <Text style={styles.infoValue}>
-            {profile?.activeStudentProfile?.schools?.name || profile?.schoolMembership?.school?.name || 'Not set'}
+            {profile?.activeStudentProfile?.schools?.name ||
+              profile?.schoolMembership?.school?.name ||
+              'Not set'}
           </Text>
         </View>
-        
+
         {profile?.schoolMembership?.school && (
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Location</Text>
@@ -499,11 +604,8 @@ export default function ProfileScreen() {
             </Text>
           </View>
         )}
-        
-        <TouchableOpacity
-          style={styles.changeButton}
-          onPress={() => router.push('/(app)/school')}
-        >
+
+        <TouchableOpacity style={styles.changeButton} onPress={() => router.push('/(app)/school')}>
           <Text style={styles.changeButtonText}>
             {profile?.schoolMembership ? 'Change School' : 'Add School'}
           </Text>
@@ -514,7 +616,7 @@ export default function ProfileScreen() {
       {/* C) Graduation Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Graduation</Text>
-        
+
         {isEditing ? (
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Graduation Year</Text>
@@ -531,7 +633,7 @@ export default function ProfileScreen() {
                 color={ui.textMuted}
               />
             </TouchableOpacity>
-            
+
             {showYearPicker && (
               <View style={styles.pickerOptions}>
                 <TouchableOpacity
@@ -572,7 +674,9 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Graduation Year</Text>
             <Text style={styles.infoValue}>
-              {profile?.activeStudentProfile?.graduation_year || profile?.graduation_year || 'Not set'}
+              {profile?.activeStudentProfile?.graduation_year ||
+                profile?.graduation_year ||
+                'Not set'}
             </Text>
           </View>
         )}
@@ -581,7 +685,7 @@ export default function ProfileScreen() {
       {/* D) Location Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Location</Text>
-        
+
         {isEditing ? (
           <>
             <View style={styles.inputGroup}>
@@ -599,7 +703,7 @@ export default function ProfileScreen() {
                   color={ui.textMuted}
                 />
               </TouchableOpacity>
-              
+
               {showStatePicker && (
                 <ScrollView style={styles.pickerOptionsScroll} nestedScrollEnabled>
                   <TouchableOpacity
@@ -614,10 +718,7 @@ export default function ProfileScreen() {
                   {US_STATES.map((s) => (
                     <TouchableOpacity
                       key={s}
-                      style={[
-                        styles.pickerOption,
-                        state === s && styles.pickerOptionSelected,
-                      ]}
+                      style={[styles.pickerOption, state === s && styles.pickerOptionSelected]}
                       onPress={() => {
                         setState(s)
                         setShowStatePicker(false)
@@ -636,7 +737,7 @@ export default function ProfileScreen() {
                 </ScrollView>
               )}
             </View>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>County</Text>
               <TextInput
@@ -665,7 +766,7 @@ export default function ProfileScreen() {
       {/* E) Preferences Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
-        
+
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
             <Text style={styles.toggleLabel}>Task Reminders</Text>
@@ -679,7 +780,7 @@ export default function ProfileScreen() {
             thumbColor={notificationsTasks ? ui.primary : ui.textMuted}
           />
         </View>
-        
+
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
             <Text style={styles.toggleLabel}>Deadline Reminders</Text>
@@ -698,10 +799,21 @@ export default function ProfileScreen() {
       {/* F) Actions Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actions</Text>
-        
+
         <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.deleteAccountButton, deletingAccount && styles.actionDisabled]}
+          onPress={confirmAccountDeletion}
+          disabled={deletingAccount}
+        >
+          <Ionicons name="trash-outline" size={20} color={colors.white} />
+          <Text style={styles.deleteAccountText}>
+            {deletingAccount ? 'Deleting Account…' : 'Delete Account'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -980,6 +1092,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.error,
     gap: 8,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.error,
+    borderRadius: radius.md,
+    padding: 16,
+    marginTop: 12,
+    gap: 8,
+  },
+  deleteAccountText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  actionDisabled: {
+    opacity: 0.6,
   },
   logoutText: {
     color: colors.error,
