@@ -34,8 +34,9 @@ export default function OnboardingForm({
     return schools.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 50)
   }, [schoolQuery, schools])
 
-  const needsStudentProfile = role === 'student' || role === 'parent' || role === 'guardian'
+  const needsStudentProfile = role === 'student'
   const needsSchoolAndGradYear = role === 'student'
+  const isFamilyRole = role === 'parent' || role === 'guardian'
   const isBusiness = role === 'business'
   const canSubmit =
     !loading &&
@@ -170,6 +171,12 @@ export default function OnboardingForm({
           </div>
         </div>
       )}
+
+      {isFamilyRole ? (
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-slate-800">
+          Parent and guardian setup no longer requires adding a student here. You’ll land on the family dashboard, where the Active Student Profile card lets you link an existing student or create a managed student profile.
+        </div>
+      ) : null}
 
       {role === 'counselor' ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">

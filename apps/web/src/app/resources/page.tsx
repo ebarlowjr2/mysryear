@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from '@mysryear/shared'
 
 type LinkItem = { label: string; href: string; note?: string }
 
@@ -384,6 +385,49 @@ export default function ResourcesPage() {
       <p className="mt-2 text-slate-700">
         Start with FAFSA®, then explore loans, scholarships, testing, jobs, and templates.
       </p>
+
+      <section id="ten-things-school" className="card mt-6 overflow-hidden border-brand-100">
+        <div className="bg-gradient-to-r from-brand-700 to-cyan-600 p-6 text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+            10 things guide
+          </p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight">10 Things to Check</h2>
+          <p className="mt-2 max-w-3xl text-sm text-white/90">
+            College gives students access to more than classes. Before paying for another tool,
+            subscription, certification, or piece of equipment, check what your school already
+            provides.
+          </p>
+        </div>
+        <div className="grid gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-3">
+          {TEN_THINGS_TOPICS.map((topic) => (
+            <a
+              key={topic.title}
+              href={topic.status === 'open' ? '#ten-things-school' : '#'}
+              aria-disabled={topic.status !== 'open'}
+              className="rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-bold text-slate-950">{topic.title}</h3>
+                <span className="shrink-0 rounded-full bg-brand-50 px-2 py-1 text-xs font-bold text-brand-700">
+                  {topic.status === 'open' ? 'Open' : 'Coming soon'}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{topic.description}</p>
+            </a>
+          ))}
+        </div>
+        <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
+          {SCHOOL_RESOURCE_CHECKS.map((item, index) => (
+            <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
+                Thing {index + 1}
+              </p>
+              <h3 className="mt-1 font-bold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* QUICK LINKS GRID */}
       <div className="mt-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6">

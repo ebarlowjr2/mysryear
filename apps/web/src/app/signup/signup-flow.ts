@@ -53,7 +53,7 @@ export function requiresGraduationYear(role: UserRole) {
 
 export function postSignupDestination(role: UserRole) {
   if (role === 'business') return '/business/onboarding'
-  if (role === 'parent' || role === 'guardian') return '/profile'
+  if (role === 'parent' || role === 'guardian') return '/dashboard/family'
   if (role === 'counselor') return '/profile'
   return '/dashboard'
 }

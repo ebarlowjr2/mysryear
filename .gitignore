@@ -35,6 +35,7 @@ yarn-error.log*
 
 # build tooling caches
 **/.vite
+supabase/.temp/
 
 # env files (can opt-in for committing if needed)
 .env*

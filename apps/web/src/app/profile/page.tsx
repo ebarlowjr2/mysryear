@@ -4,6 +4,7 @@ import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
 import RelationshipInvites from './ui/RelationshipInvites'
 import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
 import LinkedSupporters from './ui/LinkedSupporters'
+import DeleteAccountPanel from './ui/DeleteAccountPanel'
 import { CalendarDays, Megaphone, Users } from 'lucide-react'
 
 type SchoolRow = { name: string | null } | null
@@ -389,6 +390,8 @@ export default async function ProfilePage() {
           </div>
         </div>
       ) : null}
+
+      <DeleteAccountPanel />
     </section>
   )
 }
