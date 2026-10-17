@@ -76,6 +76,17 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
+    // Report-card sources use a separate private bucket. Remove them before cascading profiles.
+    const cards = await admin.from('student_report_cards').select('source_path').in('student_profile_id', studentProfileIds)
+    if (cards.error && !['42P01', 'PGRST205'].includes(cards.error.code)) {
+      return NextResponse.json({ error: 'Could not prepare report-card deletion.' }, { status: 500 })
+    }
+    const sources = (cards.data || []).map(card => card.source_path).filter((path): path is string => Boolean(path))
+    if (sources.length) {
+      const removed = await admin.storage.from('report-card-sources').remove(sources)
+      if (removed.error) return NextResponse.json({ error: 'Could not remove report-card photos.' }, { status: 500 })
+    }
+
     const { error: profileDeleteError } = await admin
       .from('student_profiles')
       .delete()

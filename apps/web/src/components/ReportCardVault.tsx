@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { canManageReportCards, emptyReportCard } from '@mysryear/shared'
 import { useAuthSession } from '@/lib/use-auth-session'
 
 type AcademicRecord = {
@@ -19,10 +21,11 @@ export default function ReportCardVault() {
   const [records, setRecords] = useState<AcademicRecord[]>([])
   const [message, setMessage] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [canAddReportCard, setCanAddReportCard] = useState(false)
 
   // Metadata inputs
-  const [documentType, setDocumentType] = useState('academic_report_card')
-  const [schoolYear, setSchoolYear] = useState('2025-2026')
+  const [documentType, setDocumentType] = useState('academic_progress_report')
+  const [schoolYear, setSchoolYear] = useState(() => emptyReportCard().school_year || '')
   const [gradingPeriod, setGradingPeriod] = useState('Q1')
   const [gradeLevel, setGradeLevel] = useState('9')
   const [gpa, setGpa] = useState('')
@@ -49,9 +52,10 @@ export default function ReportCardVault() {
     try {
       const res = await fetch('/api/dashboard/summary')
       const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; academicRecords?: AcademicRecord[] }
+        | { ok?: boolean; academicRecords?: AcademicRecord[]; viewerRole?: string }
         | null
       if (json?.ok && Array.isArray(json.academicRecords)) setRecords(json.academicRecords)
+      setCanAddReportCard(canManageReportCards(json?.viewerRole))
     } finally {
       setLoading(false)
     }
@@ -72,7 +76,8 @@ export default function ReportCardVault() {
     setUploading(true)
     setMessage('')
     try {
-      const formData = new FormData(e.currentTarget)
+      const form = e.currentTarget
+      const formData = new FormData(form)
       formData.set('upload_context', uploadContext)
       formData.set('document_type', documentType)
       formData.set('school_year', schoolYear)
@@ -90,7 +95,7 @@ export default function ReportCardVault() {
         return
       }
       setMessage('Uploaded.')
-      e.currentTarget.reset()
+      form.reset()
       await load()
     } finally {
       setUploading(false)
@@ -101,7 +106,7 @@ export default function ReportCardVault() {
     <div className="card p-6">
       <h3 className="text-lg font-bold">Report Card Vault</h3>
       <p className="mt-2 text-sm text-slate-700">
-        Upload report cards, transcripts, and test score documents for the active student profile.
+        View digital report cards, or store other academic documents for the active student profile.
       </p>
 
       {!isAuthenticated && (
@@ -112,6 +117,8 @@ export default function ReportCardVault() {
 
       {isAuthenticated && (
         <>
+          {canAddReportCard && <Link href="/grades" className="btn-primary mt-4">View Grades / Add Report Card</Link>}
+          <p className="mt-4 text-sm text-slate-600">Other academic documents</p>
           <form onSubmit={onUpload} className="mt-4 space-y-3">
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
@@ -123,7 +130,6 @@ export default function ReportCardVault() {
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
                 >
-                  <option value="academic_report_card">Report card</option>
                   <option value="academic_progress_report">Progress report</option>
                   <option value="academic_transcript">Transcript</option>
                   <option value="academic_test_score">Test score</option>

@@ -26,7 +26,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession()
 
   const pathname = request.nextUrl.pathname
+  // Grades endpoints validate cookie or mobile bearer auth themselves and return JSON 401/403.
   const isPublicApiRoute =
+    pathname === '/api/grades' ||
+    pathname.startsWith('/api/grades/') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/integrations/google/authorize') ||
     pathname.startsWith('/api/scholarships')

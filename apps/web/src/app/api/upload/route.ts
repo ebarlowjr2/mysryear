@@ -24,6 +24,10 @@ export async function POST(req: Request) {
     const notes = form.get('notes')
     const studentProfileIdFromForm = form.get('student_profile_id')
 
+    if (uploadContext === 'academic_report_card' || documentType === 'report_card' || documentType === 'academic_report_card') {
+      return NextResponse.json({ error: 'Use Grades to review and save a digital report card.', href: '/grades' }, { status: 409 })
+    }
+
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file received' }, { status: 400 })
     }

@@ -35,7 +35,7 @@ export default function DashboardScreen() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [activeStudentProfile, setActiveStudentProfile] = useState<StudentProfile | null>(null)
   const [successSummary, setSuccessSummary] = useState<StudentSuccessSummary | null>(null)
-  const [documentType, setDocumentType] = useState<MobileDocumentType>('report_card')
+  const [documentType, setDocumentType] = useState<MobileDocumentType>('progress_report')
   const [schoolYear, setSchoolYear] = useState('2025-2026')
   const [gradingPeriod, setGradingPeriod] = useState('')
   const [gpa, setGpa] = useState('')
@@ -323,25 +323,30 @@ export default function DashboardScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Document Upload</Text>
         <Text style={styles.sectionSubtitle}>
-          Upload report cards, transcripts, test scores, resumes, and certifications for the active
-          student profile.
+          Upload transcripts, progress reports, test scores, resumes, and certifications for the
+          active student profile.
         </Text>
         <View style={styles.uploadCard}>
           <Text style={styles.uploadLabel}>Document type</Text>
           <View style={styles.chipRow}>
-            {DOCUMENT_TYPE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={[styles.chip, documentType === option.value && styles.chipActive]}
-                onPress={() => setDocumentType(option.value)}
-              >
-                <Text
-                  style={[styles.chipText, documentType === option.value && styles.chipTextActive]}
+            {DOCUMENT_TYPE_OPTIONS.filter((option) => option.value !== 'report_card').map(
+              (option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[styles.chip, documentType === option.value && styles.chipActive]}
+                  onPress={() => setDocumentType(option.value)}
                 >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.chipText,
+                      documentType === option.value && styles.chipTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
 
           <View style={styles.formRow}>
