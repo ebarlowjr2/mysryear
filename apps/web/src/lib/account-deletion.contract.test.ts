@@ -21,6 +21,7 @@ describe('account deletion contract', () => {
   it('keeps the service-role key server-side and deletes owned storage', () => {
     expect(route).toContain('createServiceRoleClient')
     expect(route).toContain("admin.storage.from('user-uploads').remove(filePaths)")
+    expect(route).toContain("admin.storage.from('report-card-sources').remove(sources)")
     expect(route).toContain('admin.auth.admin.deleteUser(user.id)')
     expect(mobileHelper).not.toContain('SUPABASE_SERVICE_ROLE_KEY')
   })

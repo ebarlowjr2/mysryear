@@ -342,6 +342,15 @@ export async function createAcademicRecordForUpload(input: {
 export async function uploadStudentDocument(
   input: UploadStudentDocumentInput,
 ): Promise<{ file: UploadedFile | null; error: string | null }> {
+  // A report card needs the reviewed digital-record workflow, not the legacy file path.
+  if (input.documentType === 'report_card') {
+    return {
+      file: null,
+      error:
+        'Digital report cards need review before saving. Use Grades on the MySRYear website while native capture is being added.',
+    }
+  }
+
   const context = uploadContextForDocumentType(input.documentType)
   const cleanName = safeFileName(input.fileName)
   const path = `${input.studentProfileId}/${Date.now()}-${cleanName}`

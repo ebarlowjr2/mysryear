@@ -14,6 +14,7 @@ const publicLinks: NavLink[] = [{ href: '/resources', label: 'Resources' }]
 
 const studentLinks: NavLink[] = [
   { href: '/dashboard/student', label: 'Dashboard' },
+  { href: '/grades', label: 'Grades' },
   { href: '/aura', label: 'A.U.R.A' },
   { href: '/scholarships', label: 'Scholarships' },
   { href: '/opportunities', label: 'Opportunities' },
@@ -40,7 +41,8 @@ const businessLinks: NavLink[] = [
 
 function roleLinks(role: UserRole | null): NavLink[] {
   if (role === 'business') return businessLinks
-  if (role === 'parent' || role === 'guardian') return familyLinks
+  if (role === 'parent') return [familyLinks[0], { href: '/grades', label: 'Grades' }, ...familyLinks.slice(1)]
+  if (role === 'guardian') return familyLinks
   if (role === 'counselor') return counselorLinks
   if (role === 'student') return studentLinks
   return publicLinks

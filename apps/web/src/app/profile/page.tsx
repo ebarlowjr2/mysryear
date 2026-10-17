@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { canManageReportCards } from '@mysryear/shared'
 import { requireSessionProfile } from '@/lib/auth'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
 import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
@@ -391,6 +393,7 @@ export default async function ProfilePage() {
         </div>
       ) : null}
 
+      {canManageReportCards(sp.role) && <Link href="/grades" className="btn-primary">View Grades &amp; Report Cards</Link>}
       <DeleteAccountPanel />
     </section>
   )
