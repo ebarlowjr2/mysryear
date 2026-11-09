@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { canManageReportCards } from '@mysryear/shared'
+import { canManageReportCards, ROLE_LABELS, type UserRole } from '@mysryear/shared'
 import { requireSessionProfile } from '@/lib/auth'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
 import ActiveStudentProfileSelector from './ui/ActiveStudentProfileSelector'
@@ -124,9 +124,11 @@ export default async function ProfilePage() {
   const isBusiness = role === 'business'
   const isCounselor = role === 'counselor'
   const isFamily = role === 'parent' || role === 'guardian'
+  const isGuardian = role === 'guardian'
   const isStudent = role === 'student'
   const canEditActiveStudentProfile = isStudent || isFamily
   const showStudentProfileSections = !isBusiness
+  const roleLabel = role && ROLE_LABELS[role as UserRole] ? ROLE_LABELS[role as UserRole] : role || '—'
 
   const { data: businessProfile } = isBusiness
     ? await supabase
@@ -152,7 +154,7 @@ export default async function ProfilePage() {
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold text-slate-600">Role</div>
-            <div className="mt-1 font-black">{role || '—'}</div>
+            <div className="mt-1 font-black">{roleLabel}</div>
           </div>
           <div className="card p-4">
             <div className="text-xs font-semibold text-slate-600">Onboarding</div>
@@ -218,9 +220,19 @@ export default async function ProfilePage() {
             <div className="card p-4">
               <div className="text-xs font-semibold text-slate-600">What’s Next</div>
               <div className="mt-2 text-sm text-slate-700 space-y-1">
-                <div>1. Invite a parent/guardian/counselor below.</div>
-                <div>2. Build LifePath in A.U.R.A.</div>
-                <div>3. Upload documents and track milestones.</div>
+                {isFamily ? (
+                  <>
+                    <div>1. Review this student’s school and graduation details.</div>
+                    <div>2. Check in on LifePath choices together.</div>
+                    <div>3. Manage {isGuardian ? 'guardian' : 'parent'}, counselor, and student connections below.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>1. Invite a parent/guardian/counselor below.</div>
+                    <div>2. Build LifePath in A.U.R.A.</div>
+                    <div>3. Upload documents and track milestones.</div>
+                  </>
+                )}
               </div>
             </div>
           </div>

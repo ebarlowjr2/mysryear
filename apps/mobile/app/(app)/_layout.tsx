@@ -3,16 +3,17 @@ import { Ionicons } from '@expo/vector-icons'
 import { ui } from '../../src/theme'
 import { useAuth } from '../../src/contexts/AuthContext'
 import type { UserRole } from '../../src/data/profile'
+import { isFamilyRole } from '@mysryear/shared'
 
 export default function AppLayout() {
   const { profile } = useAuth()
   const role: UserRole = (profile?.role as UserRole) || 'student'
 
   const isStudent = role === 'student'
-  const isParent = role === 'parent'
+  const isFamily = isFamilyRole(role)
   const isCounselor = role === 'counselor'
-  // Legacy teacher/business mobile roles are intentionally not canonical yet.
-  const isBusiness = false
+  const isBusiness = role === 'business'
+  const dashboardTitle = isFamily ? 'Family' : isCounselor ? 'Counselor' : isBusiness ? 'Business' : 'Dashboard'
 
   return (
     <Tabs
@@ -33,7 +34,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: dashboardTitle,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -58,7 +59,7 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="school" size={size} color={color} />
           ),
-          href: isStudent || isParent ? '/scholarships' : null,
+          href: isStudent || isFamily ? '/scholarships' : null,
         }}
       />
       
@@ -70,7 +71,7 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
-          href: isParent ? ('/students' as const) : null,
+          href: isFamily ? ('/students' as const) : null,
         }}
       />
       
@@ -94,7 +95,9 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="briefcase" size={size} color={color} />
           ),
-          href: isBusiness ? ('/listings' as const) : null,
+          // The legacy listings screen writes to the retired opportunities table.
+          // Keep it out of role navigation until it uses business_opportunities.
+          href: null,
         }}
       />
       
@@ -107,7 +110,7 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy" size={size} color={color} />
           ),
-          href: isStudent || isParent ? ('/portfolio' as never) : null,
+          href: isStudent || isFamily ? ('/portfolio' as never) : null,
         }}
       />
       

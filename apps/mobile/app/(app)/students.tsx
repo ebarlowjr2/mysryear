@@ -14,12 +14,15 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useSession } from '../../src/hooks/useSession'
+import { useAuth } from '../../src/contexts/AuthContext'
 import { createManagedStudentProfile, getLinkedStudentProfiles, requestStudentAccessByProfileId, setActiveStudentProfile, type StudentProfile } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function StudentsScreen() {
   const { user, loading: sessionLoading } = useSession()
+  const { profile } = useAuth()
   const router = useRouter()
+  const relationshipRole: 'parent' | 'guardian' = profile?.role === 'guardian' ? 'guardian' : 'parent'
   const [students, setStudents] = useState<StudentProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -61,7 +64,7 @@ export default function StudentsScreen() {
 
   const handleLinkStudent = async () => {
     if (!studentProfileId.trim()) {
-      Alert.alert('Student profile required', 'Enter the student profile ID provided by the student or guardian.')
+      Alert.alert('Student profile required', 'Enter the student profile ID shared by the student or an approved supporter.')
       return
     }
 
@@ -71,14 +74,14 @@ export default function StudentsScreen() {
       const result = await requestStudentAccessByProfileId({
         userId: user.id,
         studentProfileId: studentProfileId.trim(),
-        relationshipRole: 'parent',
+        relationshipRole,
         invitedEmail: studentEmail.trim() || null,
       })
       if (!result.success) {
         Alert.alert('Error', result.error || 'Failed to send access request')
         return
       }
-      Alert.alert('Access Request Sent', 'The student or an approved guardian can approve your request.', [{ text: 'OK', onPress: () => { setShowLinkModal(false); setStudentProfileId(''); setStudentEmail(''); fetchStudents() }}])
+      Alert.alert('Access Request Sent', 'The student or an approved supporter can approve your request.', [{ text: 'OK', onPress: () => { setShowLinkModal(false); setStudentProfileId(''); setStudentEmail(''); fetchStudents() }}])
     } finally {
       setLinkLoading(false)
     }
@@ -96,7 +99,7 @@ export default function StudentsScreen() {
         lastName: managedLastName.trim(),
         graduationYear: managedGraduationYear ? Number(managedGraduationYear) : null,
         schoolId: null,
-        relationshipRole: 'parent',
+        relationshipRole,
         inviteStudentEmail: managedClaimEmail.trim() || null,
       })
       if (result.error) {
@@ -168,7 +171,7 @@ export default function StudentsScreen() {
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.title}>My Students</Text>
-              <Text style={styles.subtitle}>Monitor and support your student's journey</Text>
+              <Text style={styles.subtitle}>Manage the student profiles connected to your family account</Text>
             </View>
             <TouchableOpacity 
               style={styles.addIconButton}
@@ -201,7 +204,7 @@ export default function StudentsScreen() {
             <View style={styles.infoCard}>
               <Ionicons name="information-circle-outline" size={20} color={ui.primary} />
               <Text style={styles.infoText}>
-                Once linked, you'll be able to view your student's tasks, saved scholarships, and assign new tasks to help them stay on track.
+                Once linked, you can review your student’s progress, documents, scholarships, and family action items.
               </Text>
             </View>
           </>
@@ -254,7 +257,7 @@ export default function StudentsScreen() {
 
           <View style={styles.modalContent}>
             <Text style={styles.modalDescription}>
-Request access with the student profile ID your student shares, or create a managed profile and invite the student to claim it later.
+Request access with a student profile ID shared by the student, or create a managed profile and invite the student to claim it later.
             </Text>
 
             <Text style={styles.sectionTitle}>Link existing student</Text>

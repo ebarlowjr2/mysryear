@@ -15,14 +15,15 @@ export async function PATCH(req: Request) {
 
   if (!session) return error('Not authenticated', 401)
 
-  // Counselors are read/support only; do not allow checklist mutation.
+  // Official student success tasks are owned by the student. Family actions use
+  // parent_action_completions instead, so supporters never alter student progress.
   const { data: viewerProfile, error: viewerErr } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .maybeSingle()
   if (viewerErr) return error(viewerErr.message)
-  if ((viewerProfile?.role as string | null) === 'counselor') return error('Forbidden', 403)
+  if ((viewerProfile?.role as string | null) !== 'student') return error('Forbidden', 403)
 
   const body = (await req.json().catch(() => null)) as
     | {

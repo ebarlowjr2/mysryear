@@ -101,8 +101,9 @@ export async function GET() {
       status: 'not_started' as const,
     }))
 
-  if (toInsert.length > 0) {
-    // Best-effort; if RLS blocks or table isn't migrated yet, ignore.
+  if (viewerRole === 'student' && toInsert.length > 0) {
+    // Only students seed their official checklist. Family completion is stored
+    // separately in parent_action_completions.
     await supabase.from('student_success_tasks').insert(toInsert)
   }
 
