@@ -1,5 +1,6 @@
 export type { UserRole } from './types/roles'
 export { USER_ROLES } from './types/roles'
+export { ROLE_LABELS, familyActionCenterLabel, familyRoleNoun, isFamilyRole } from './role-presentation'
 
 export { getSupabaseEnv } from './supabase/env'
 export { createWebSupabaseClient } from './supabase/browser'

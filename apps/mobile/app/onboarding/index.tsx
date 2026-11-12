@@ -52,6 +52,12 @@ const ROLE_OPTIONS: RoleOption[] = [
     description: 'Support students by invitation',
     icon: 'briefcase-outline',
   },
+  {
+    value: 'business',
+    label: 'Business',
+    description: 'Create opportunities for students and families',
+    icon: 'storefront-outline',
+  },
 ]
 
 export default function OnboardingScreen() {
@@ -185,12 +191,14 @@ export default function OnboardingScreen() {
 
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>{role === 'counselor' ? 'Counselor Setup' : role === 'parent' || role === 'guardian' ? 'Family Setup' : 'Student Profile'}</Text>
+      <Text style={styles.stepTitle}>{role === 'counselor' ? 'Counselor Setup' : role === 'business' ? 'Business Setup' : role === 'parent' || role === 'guardian' ? 'Family Setup' : 'Student Profile'}</Text>
       <Text style={styles.stepDescription}>
         {role === 'counselor'
           ? 'Counselor access starts after a student or parent invites you.'
+          : role === 'business'
+            ? 'You can set up your organization and begin posting student opportunities from your Business dashboard.'
           : role === 'parent' || role === 'guardian'
-            ? 'You can enter the dashboard now. Link or create a student profile from the Students tab.'
+            ? 'You can enter the Family dashboard now. Link or create a student profile from the Students tab.'
             : 'Create the student planning profile used across web and mobile.'}
       </Text>
 

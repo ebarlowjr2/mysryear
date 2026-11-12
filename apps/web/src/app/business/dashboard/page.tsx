@@ -4,9 +4,12 @@ import { createNextServerSupabaseClient } from '@mysryear/shared'
 import BusinessProfileForm from '../ui/BusinessProfileForm'
 import BusinessOpportunityActions from '../ui/BusinessOpportunityActions'
 import { labelFromValue, type BusinessOpportunity } from '../ui/business-types'
+import { dashboardPathForRole } from '@/lib/dashboard-roles'
+import { redirect } from 'next/navigation'
 
 export default async function BusinessDashboardPage() {
-  await requireSessionProfile('/business/dashboard')
+  const sp = await requireSessionProfile('/business/dashboard')
+  if (sp.role !== 'business') redirect(dashboardPathForRole(sp.role))
   const supabase = await createNextServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
 

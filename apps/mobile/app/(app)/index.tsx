@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as DocumentPicker from 'expo-document-picker'
 import { useSession } from '../../src/hooks/useSession'
+import { useAuth } from '../../src/contexts/AuthContext'
 import {
   getDashboardMetrics,
   getStudentSuccessDashboard,
@@ -27,11 +28,15 @@ import {
   type StudentSuccessSummary,
 } from '../../src/data/academic'
 import { getActiveStudentProfile, type StudentProfile } from '../../src/data/identity'
+import { familyActionCenterLabel, isFamilyRole } from '@mysryear/shared'
 import { colors, ui, radius, shadow } from '../../src/theme'
 
 export default function DashboardScreen() {
   const { user, loading: sessionLoading } = useSession()
+  const { profile } = useAuth()
   const router = useRouter()
+  const role = profile?.role || 'student'
+  const isFamily = isFamilyRole(role)
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [activeStudentProfile, setActiveStudentProfile] = useState<StudentProfile | null>(null)
   const [successSummary, setSuccessSummary] = useState<StudentSuccessSummary | null>(null)
@@ -157,6 +162,14 @@ export default function DashboardScreen() {
     )
   }
 
+  if (role === 'business') {
+    return <RoleDashboardLanding title="Business Dashboard" description="Business opportunity posting is currently available on the MySRYear website. Your mobile account remains separate from student planning tools." actionLabel="Open Profile" actionHref="/(app)/profile" onNavigate={(path) => router.push(path as never)} icon="briefcase-outline" />
+  }
+
+  if (role === 'counselor') {
+    return <RoleDashboardLanding title="Counselor Dashboard" description="Use approved, read-only student support tools and school resources." actionLabel="Open School Tools" actionHref="/(app)/school" onNavigate={(path) => router.push(path as never)} icon="people-outline" />
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -171,10 +184,12 @@ export default function DashboardScreen() {
       }
     >
       <View style={styles.hero}>
-        <Text style={styles.badge}>Built for Students & Parents</Text>
-        <Text style={styles.heroTitle}>Your senior year, organized and stress-less.</Text>
+        <Text style={styles.badge}>{isFamily ? 'Family Dashboard' : 'Student Success'}</Text>
+        <Text style={styles.heroTitle}>{isFamily ? 'Support your student, one step at a time.' : 'Your senior year, organized and stress-less.'}</Text>
         <Text style={styles.heroSubtitle}>
-          Manage applications, track scholarships, and plan life after high school.
+          {isFamily
+            ? 'Review academic progress, documents, LifePath choices, and practical next steps for the student you manage.'
+            : 'Manage applications, track scholarships, and plan life after high school.'}
         </Text>
         {activeStudentProfile ? (
           <View style={styles.activeStudentCard}>
@@ -196,13 +211,15 @@ export default function DashboardScreen() {
             <Text style={styles.activeStudentLabel}>Active student profile</Text>
             <Text style={styles.activeStudentName}>No student connected yet</Text>
             <Text style={styles.activeStudentMeta}>
-              Parents can link an existing student or create a managed profile from Students.
+              {isFamily
+                ? 'Link an existing student or create a managed profile from Students.'
+                : 'Complete your student profile to unlock your academic and planning tools.'}
             </Text>
             <TouchableOpacity
               style={styles.smallButton}
-              onPress={() => router.push('/(app)/students' as never)}
+              onPress={() => router.push((isFamily ? '/(app)/students' : '/(app)/profile') as never)}
             >
-              <Text style={styles.smallButtonText}>Manage Students</Text>
+              <Text style={styles.smallButtonText}>{isFamily ? 'Manage Students' : 'Open Profile'}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -265,12 +282,12 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Parent Action Center</Text>
+      {isFamily ? <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{familyActionCenterLabel(role)}</Text>
         <Text style={styles.sectionSubtitle}>
           {(metrics?.parentActions || []).length
             ? 'Grade-aware actions for supporting the active student.'
-            : 'Link or create a student profile to unlock parent actions.'}
+            : 'Link or create a student profile to unlock family actions.'}
         </Text>
         <View style={styles.featureGrid}>
           {(metrics?.parentActions || []).slice(0, 4).map((action) => (
@@ -318,7 +335,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </View> : null}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Document Upload</Text>
@@ -429,9 +446,9 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Everything in one place</Text>
+        <Text style={styles.sectionTitle}>{isFamily ? 'Family planning tools' : 'Everything in one place'}</Text>
         <Text style={styles.sectionSubtitle}>
-          Replace sticky notes and scattered tabs with a simple dashboard.
+          {isFamily ? 'Open planning tools for the active student without leaving your family workspace.' : 'Replace sticky notes and scattered tabs with a simple dashboard.'}
         </Text>
 
         <View style={styles.featureGrid}>
@@ -463,7 +480,7 @@ export default function DashboardScreen() {
             <Text style={styles.featureLink}>Open</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {!isFamily ? <TouchableOpacity
             style={styles.featureCard}
             onPress={() => router.push('/(app)/planner')}
           >
@@ -475,7 +492,7 @@ export default function DashboardScreen() {
               Milestones you can customize for your state and goals.
             </Text>
             <Text style={styles.featureLink}>Open</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> : null}
 
           <View style={[styles.featureCard, styles.featureCardDisabled]}>
             <View style={styles.featureIcon}>
@@ -490,7 +507,7 @@ export default function DashboardScreen() {
             <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
 
-          <TouchableOpacity style={styles.featureCard} onPress={() => router.push('/test-prep')}>
+          {!isFamily ? <TouchableOpacity style={styles.featureCard} onPress={() => router.push('/test-prep')}>
             <View style={styles.featureIcon}>
               <Ionicons name="school-outline" size={24} color={ui.primary} />
             </View>
@@ -499,7 +516,7 @@ export default function DashboardScreen() {
               Prepare for SAT, ACT, AP exams, and more standardized tests.
             </Text>
             <Text style={styles.featureLink}>Open</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> : null}
 
           <TouchableOpacity
             style={styles.featureCard}
@@ -528,6 +545,35 @@ export default function DashboardScreen() {
         </View>
       </View>
     </ScrollView>
+  )
+}
+
+function RoleDashboardLanding({
+  title,
+  description,
+  actionLabel,
+  actionHref,
+  icon,
+  onNavigate,
+}: {
+  title: string
+  description: string
+  actionLabel: string
+  actionHref: string
+  icon: keyof typeof Ionicons.glyphMap
+  onNavigate: (path: string) => void
+}) {
+  return (
+    <View style={styles.centerContainer}>
+      <View style={styles.roleLandingIcon}>
+        <Ionicons name={icon} size={38} color={ui.primary} />
+      </View>
+      <Text style={styles.roleLandingTitle}>{title}</Text>
+      <Text style={styles.roleLandingDescription}>{description}</Text>
+      <TouchableOpacity style={styles.roleLandingButton} onPress={() => onNavigate(actionHref)}>
+        <Text style={styles.roleLandingButtonText}>{actionLabel}</Text>
+      </TouchableOpacity>
+    </View>
   )
 }
 
@@ -561,6 +607,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 12,
     fontWeight: '600',
+  },
+  roleLandingIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: ui.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  roleLandingTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: ui.text,
+    textAlign: 'center',
+  },
+  roleLandingDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: ui.textSecondary,
+    textAlign: 'center',
+    marginTop: 10,
+    maxWidth: 320,
+  },
+  roleLandingButton: {
+    backgroundColor: ui.primary,
+    borderRadius: radius.md,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginTop: 24,
+  },
+  roleLandingButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '700',
   },
   hero: {
     padding: 24,

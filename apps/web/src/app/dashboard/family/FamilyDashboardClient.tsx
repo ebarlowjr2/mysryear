@@ -7,6 +7,7 @@ import ReportCardVault from '@/components/ReportCardVault'
 import StudentSuccessChecklist from '@/components/StudentSuccessChecklist'
 import StatTile from '@/components/StatTile'
 import { BriefcaseBusiness, CheckCircle2, FileText, GraduationCap, HeartHandshake, Trophy } from 'lucide-react'
+import { familyActionCenterLabel } from '@mysryear/shared'
 
 type DashboardTask = {
   id: string
@@ -107,6 +108,7 @@ export default function FamilyDashboardClient({ schools }: { schools: School[] }
         .filter(Boolean)
         .join(' ') || 'your student'
     : 'your student'
+  const actionCenterLabel = familyActionCenterLabel(summary?.viewerRole as 'parent' | 'guardian' | null)
 
   return (
     <section className="container-prose py-14 space-y-8">
@@ -172,7 +174,7 @@ export default function FamilyDashboardClient({ schools }: { schools: School[] }
           <div className="flex items-start gap-3">
             <HeartHandshake className="mt-1 h-7 w-7 text-brand-600" />
             <div>
-              <h2 className="text-xl font-black">Parent Action Center</h2>
+              <h2 className="text-xl font-black">{actionCenterLabel}</h2>
               <p className="mt-2 text-sm text-slate-700">
                 Grade-aware actions for how you can support the active student this term.
               </p>
@@ -181,7 +183,7 @@ export default function FamilyDashboardClient({ schools }: { schools: School[] }
           <div className="mt-5 space-y-3">
             {(summary?.parentActions || []).length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                Link or create a student profile to unlock grade-aware parent actions.
+                Link or create a student profile to unlock grade-aware family actions.
               </div>
             ) : (
               (summary?.parentActions || []).slice(0, 5).map((action) => (
@@ -218,7 +220,7 @@ export default function FamilyDashboardClient({ schools }: { schools: School[] }
         </Link>
       </div>
 
-      <StudentSuccessChecklist tasks={summary?.tasks || []} onChanged={loadSummary} />
+      <StudentSuccessChecklist tasks={summary?.tasks || []} onChanged={loadSummary} readOnly />
     </section>
   )
 }

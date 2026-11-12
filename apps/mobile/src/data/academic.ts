@@ -6,7 +6,7 @@ import {
   type GradeLevel,
 } from '@mysryear/shared'
 import { supabase } from '../lib/supabase'
-import { getActiveStudentProfile } from './identity'
+import { getActiveStudentProfile, getCurrentProfile } from './identity'
 
 export type UploadedFile = {
   id: string
@@ -96,6 +96,7 @@ export async function getUploadedFiles(studentProfileId: string): Promise<Upload
 async function ensureStudentSuccessTasks(
   studentProfileId: string,
   gradeLevel: GradeLevel,
+  canSeedOfficialTasks: boolean,
 ): Promise<StudentSuccessTask[]> {
   const templates = templatesForGrade(gradeLevel)
   const existing = await supabase
@@ -118,7 +119,8 @@ async function ensureStudentSuccessTasks(
       status: 'not_started',
     }))
 
-  if (toInsert.length > 0) {
+  if (canSeedOfficialTasks && toInsert.length > 0) {
+    // Family action completion is separate from official student checklist data.
     await supabase.from('student_success_tasks').insert(toInsert)
   }
 
@@ -137,7 +139,10 @@ async function ensureStudentSuccessTasks(
 }
 
 export async function getStudentSuccessSummary(userId: string): Promise<StudentSuccessSummary> {
-  const studentProfile = await getActiveStudentProfile(userId)
+  const [studentProfile, accountProfile] = await Promise.all([
+    getActiveStudentProfile(userId),
+    getCurrentProfile(userId),
+  ])
   if (!studentProfile?.id) {
     const health = computeAcademicHealth({
       gpa: null,
@@ -163,7 +168,7 @@ export async function getStudentSuccessSummary(userId: string): Promise<StudentS
   const [academicRecords, uploadedFiles, tasks, interests] = await Promise.all([
     getAcademicRecords(studentProfile.id),
     getUploadedFiles(studentProfile.id),
-    ensureStudentSuccessTasks(studentProfile.id, gradeLevel),
+    ensureStudentSuccessTasks(studentProfile.id, gradeLevel, accountProfile?.role === 'student'),
     supabase
       .from('student_career_interests')
       .select('career_id')

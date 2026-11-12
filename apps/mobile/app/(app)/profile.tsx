@@ -120,6 +120,10 @@ export default function ProfileScreen() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const isFamily = profile?.role === 'parent' || profile?.role === 'guardian'
+  const isStudent = profile?.role === 'student'
+  const isBusiness = profile?.role === 'business'
+  const canManageActiveStudent = isStudent || isFamily
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -198,7 +202,7 @@ export default function ProfileScreen() {
       const newLastName = updates.last_name !== undefined ? updates.last_name : profile?.last_name
       updates.full_name = [newFirstName, newLastName].filter(Boolean).join(' ') || null
     }
-    if (graduationYear !== profile?.graduation_year) {
+    if (canManageActiveStudent && graduationYear !== profile?.graduation_year) {
       updates.graduation_year = graduationYear
     }
     if (state !== (profile?.state || '')) {
@@ -274,7 +278,7 @@ export default function ProfileScreen() {
   }
 
   const handleInviteSupporter = async () => {
-    if (!user?.id || !profile?.activeStudentProfile?.id) return
+    if (!canManageActiveStudent || !user?.id || !profile?.activeStudentProfile?.id) return
     if (!inviteEmail.trim()) {
       Alert.alert('Email required', 'Enter the parent, guardian, or counselor email.')
       return
@@ -326,7 +330,9 @@ export default function ProfileScreen() {
   const confirmAccountDeletion = () => {
     Alert.alert(
       'Delete account?',
-      'This permanently removes your account and student-owned data. This action cannot be undone.',
+      isStudent
+        ? 'This permanently removes your account and student-owned data. This action cannot be undone.'
+        : 'This permanently removes your account. Student profiles and records connected to your account are managed separately.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -335,7 +341,9 @@ export default function ProfileScreen() {
           onPress: () =>
             Alert.alert(
               'Permanently delete account',
-              'Your account, student-owned planning records, and uploaded files will be deleted.',
+              isStudent
+                ? 'Your account, student-owned planning records, and uploaded files will be deleted.'
+                : 'Your account will be deleted. This does not grant deletion of a linked student’s records.',
               [
                 { text: 'Keep Account', style: 'cancel' },
                 {
@@ -385,7 +393,7 @@ export default function ProfileScreen() {
           <Text style={styles.avatarText}>{getInitials()}</Text>
         </View>
         <Text style={styles.displayName}>{getDisplayName()}</Text>
-        <Text style={styles.memberBadge}>My SR Year Member</Text>
+        <Text style={styles.memberBadge}>{isFamily ? 'My SR Year Family Member' : 'My SR Year Member'}</Text>
 
         {!isEditing ? (
           <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
@@ -461,10 +469,11 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {!isBusiness && <>
       {/* Active Student Profile */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Active Student Profile</Text>
-        {profile?.activeStudentProfile ? (
+        <Text style={styles.sectionTitle}>{isFamily ? 'Student You Are Supporting' : 'Active Student Profile'}</Text>
+        {profile?.activeStudentProfile && canManageActiveStudent ? (
           <View style={styles.studentProfileCard}>
             <Text style={styles.studentProfileName}>
               {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name]
@@ -480,6 +489,8 @@ export default function ProfileScreen() {
                 : ''}
             </Text>
           </View>
+        ) : profile?.activeStudentProfile ? (
+          <Text style={styles.infoValue}>View-only student support access.</Text>
         ) : (
           <Text style={styles.infoValue}>No active student profile yet.</Text>
         )}
@@ -510,11 +521,13 @@ export default function ProfileScreen() {
 
       {/* Relationship Invites */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Supporters</Text>
-        {profile?.activeStudentProfile ? (
+        <Text style={styles.sectionTitle}>{isFamily ? 'Family Connections' : 'Supporters'}</Text>
+        {profile?.activeStudentProfile && canManageActiveStudent ? (
           <>
             <Text style={styles.toggleDesc}>
-              Invite a parent, guardian, or counselor to support this student profile.
+              {isFamily
+                ? 'Manage the approved adults and school supporters connected to this student profile.'
+                : 'Invite a parent, guardian, or counselor to support this student profile.'}
             </Text>
             <View style={styles.inputGroup}>
               <TextInput
@@ -546,6 +559,8 @@ export default function ProfileScreen() {
               <Ionicons name="send-outline" size={16} color={ui.primary} />
             </TouchableOpacity>
           </>
+        ) : profile?.activeStudentProfile ? (
+          <Text style={styles.infoValue}>Student relationships are managed by the student or their family.</Text>
         ) : (
           <Text style={styles.infoValue}>
             Create or select a student profile before inviting supporters.
@@ -583,10 +598,10 @@ export default function ProfileScreen() {
 
       {/* B) School Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>School</Text>
+        <Text style={styles.sectionTitle}>{isFamily ? "Student's School" : 'School'}</Text>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Current School</Text>
+          <Text style={styles.infoLabel}>{isFamily ? "Student's Current School" : 'Current School'}</Text>
           <Text style={styles.infoValue}>
             {profile?.activeStudentProfile?.schools?.name ||
               profile?.schoolMembership?.school?.name ||
@@ -605,21 +620,23 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.changeButton} onPress={() => router.push('/(app)/school')}>
-          <Text style={styles.changeButtonText}>
-            {profile?.schoolMembership ? 'Change School' : 'Add School'}
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={ui.primary} />
-        </TouchableOpacity>
+        {profile?.role === 'counselor' && (
+          <TouchableOpacity style={styles.changeButton} onPress={() => router.push('/(app)/school')}>
+            <Text style={styles.changeButtonText}>
+              {profile?.schoolMembership ? 'Change School' : 'Add School'}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={ui.primary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* C) Graduation Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Graduation</Text>
+        <Text style={styles.sectionTitle}>{isFamily ? "Student's Graduation" : 'Graduation'}</Text>
 
-        {isEditing ? (
+        {isEditing && canManageActiveStudent ? (
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Graduation Year</Text>
+            <Text style={styles.inputLabel}>{isFamily ? "Student's Graduation Year" : 'Graduation Year'}</Text>
             <TouchableOpacity
               style={styles.pickerButton}
               onPress={() => setShowYearPicker(!showYearPicker)}
@@ -672,7 +689,7 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Graduation Year</Text>
+            <Text style={styles.infoLabel}>{isFamily ? "Student's Graduation Year" : 'Graduation Year'}</Text>
             <Text style={styles.infoValue}>
               {profile?.activeStudentProfile?.graduation_year ||
                 profile?.graduation_year ||
@@ -681,6 +698,7 @@ export default function ProfileScreen() {
           </View>
         )}
       </View>
+      </>}
 
       {/* D) Location Section */}
       <View style={styles.section}>
