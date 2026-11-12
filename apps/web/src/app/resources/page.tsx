@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
-import { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from '@mysryear/shared'
+import Link from 'next/link'
+import { TEN_THINGS_TOPICS } from '@mysryear/shared'
+import { ArrowRight, BookOpenCheck } from 'lucide-react'
 
 type LinkItem = { label: string; href: string; note?: string }
 
@@ -386,46 +388,44 @@ export default function ResourcesPage() {
         Start with FAFSA®, then explore loans, scholarships, testing, jobs, and templates.
       </p>
 
-      <section id="ten-things-school" className="card mt-6 overflow-hidden border-brand-100">
-        <div className="bg-gradient-to-r from-brand-700 to-cyan-600 p-6 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
-            10 things guide
-          </p>
-          <h2 className="mt-2 text-2xl font-black tracking-tight">10 Things to Check</h2>
-          <p className="mt-2 max-w-3xl text-sm text-white/90">
-            College gives students access to more than classes. Before paying for another tool,
-            subscription, certification, or piece of equipment, check what your school already
-            provides.
-          </p>
-        </div>
-        <div className="grid gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-3">
-          {TEN_THINGS_TOPICS.map((topic) => (
-            <a
-              key={topic.title}
-              href={topic.status === 'open' ? '#ten-things-school' : '#'}
-              aria-disabled={topic.status !== 'open'}
-              className="rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="font-bold text-slate-950">{topic.title}</h3>
-                <span className="shrink-0 rounded-full bg-brand-50 px-2 py-1 text-xs font-bold text-brand-700">
-                  {topic.status === 'open' ? 'Open' : 'Coming soon'}
-                </span>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{topic.description}</p>
-            </a>
-          ))}
-        </div>
-        <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3">
-          {SCHOOL_RESOURCE_CHECKS.map((item, index) => (
-            <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-brand-700">
-                Thing {index + 1}
-              </p>
-              <h3 className="mt-1 font-bold text-slate-950">{item.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-700">{item.description}</p>
+      <section className="mt-8 border-y border-slate-200 py-8 sm:py-10">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+              <BookOpenCheck className="h-6 w-6" aria-hidden="true" />
             </div>
-          ))}
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-slate-950">
+                10 Things to Check
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-700">
+                Start with the resources your school may already include before you spend money
+                elsewhere.
+              </p>
+            </div>
+          </div>
+          <Link href="/resources/ten-things-school" className="btn-primary shrink-0">
+            Open full guide
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-5 text-sm">
+          {TEN_THINGS_TOPICS.map((topic) =>
+            topic.status === 'open' ? (
+              <Link
+                key={topic.title}
+                href="/resources/ten-things-school"
+                className="font-semibold text-brand-700 hover:text-brand-800"
+              >
+                {topic.title}
+              </Link>
+            ) : (
+              <span key={topic.title} className="text-slate-500">
+                {topic.title}{' '}
+                <span className="text-xs font-semibold uppercase tracking-wide">Coming soon</span>
+              </span>
+            ),
+          )}
         </div>
       </section>
 
