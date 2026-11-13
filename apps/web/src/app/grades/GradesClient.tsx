@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { emptyReportCard, parseReportCard, type ReportCardData } from '@mysryear/shared'
 import { prepareReportPhoto } from '@/lib/grades/photo'
+import { groupReportCardsBySchoolYear } from '@/lib/grades/year-groups'
 
 type Student = {
   id: string
@@ -77,6 +78,89 @@ function GradeTable({ data }: { data: ReportCardData }) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+function ReportCardDetails({ record, student }: { record: Card; student: Student }) {
+  return (
+    <article className="border-t border-slate-200 px-4 py-5 first:border-t-0 sm:px-6">
+      <div className="flex flex-wrap justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-bold">{nameOf(student)}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Grade {record.data.grade_level}
+            {record.data.school_name ? ` · ${record.data.school_name}` : ''}
+          </p>
+        </div>
+        <span className="badge self-start">Family reviewed</span>
+      </div>
+      <div className="mt-4">
+        <GradeTable data={record.data} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-600">
+        <span>Attendance: {record.data.attendance.scope || 'Period not reported'}</span>
+        <span>Absences: {record.data.attendance.absences ?? 'Not reported'}</span>
+        <span>Tardies: {record.data.attendance.tardies ?? 'Not reported'}</span>
+      </div>
+      <div className="mt-4 flex flex-wrap justify-between gap-3 text-xs text-slate-500">
+        <p>
+          Reviewed {new Date(record.reviewed_at).toLocaleDateString()}. School-reported grades; not
+          a verified transcript.
+        </p>
+        {record.source_path && (
+          <a
+            className="font-semibold text-brand-700 underline"
+            href={`/api/grades/source?id=${record.id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View source photo
+          </a>
+        )}
+      </div>
+    </article>
+  )
+}
+
+function SchoolYearSection({
+  schoolYear,
+  records,
+  student,
+  defaultOpen,
+}: {
+  schoolYear: string
+  records: Card[]
+  student: Student
+  defaultOpen: boolean
+}) {
+  const gradeLevels = Array.from(
+    new Set(records.map((record) => record.data.grade_level).filter(Boolean)),
+  )
+  const gradeLabel =
+    gradeLevels.length === 1 ? `Grade ${gradeLevels[0]}` : `${gradeLevels.length} grade levels`
+
+  return (
+    <details className="card group overflow-hidden" open={defaultOpen}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-5 marker:content-none sm:px-6">
+        <div>
+          <h2 className="text-xl font-bold">{schoolYear}</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            {records.length} {records.length === 1 ? 'report card' : 'report cards'} · {gradeLabel}
+          </p>
+        </div>
+        <span className="rounded-full border border-slate-300 px-3 py-1 text-sm font-semibold text-brand-700 group-open:hidden">
+          View year
+        </span>
+        <span className="hidden rounded-full border border-slate-300 px-3 py-1 text-sm font-semibold text-brand-700 group-open:inline">
+          Hide year
+        </span>
+      </summary>
+      <div className="border-t border-slate-200">
+        {records.map((record) => (
+          <ReportCardDetails key={record.id} record={record} student={student} />
+        ))}
+      </div>
+    </details>
   )
 }
 
@@ -536,13 +620,11 @@ export default function GradesClient() {
   const [switching, setSwitching] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [year, setYear] = useState('')
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
     setOverview(null)
     setError('')
-    setYear('')
     jsonRequest(`/api/grades${studentId ? `?student=${encodeURIComponent(studentId)}` : ''}`, {
       signal: controller.signal,
     })
@@ -577,12 +659,7 @@ export default function GradesClient() {
     }
   }
   const student = overview?.students.find((s) => s.id === overview.activeStudentId)
-  const years = Array.from(
-    new Set(
-      overview?.records.map((r) => r.data.school_year).filter((y): y is string => Boolean(y)) || [],
-    ),
-  )
-  const records = overview?.records.filter((r) => !year || r.data.school_year === year) || []
+  const schoolYearGroups = groupReportCardsBySchoolYear(overview?.records || [])
   return (
     <section className="container-prose py-10 space-y-6">
       <Link href="/dashboard" className="text-sm font-semibold text-brand-700">
@@ -682,22 +759,7 @@ export default function GradesClient() {
             ) : (
               student && (
                 <>
-                  {years.length > 1 && (
-                    <label className="block text-sm font-semibold">
-                      School year
-                      <select
-                        className={`${inputStyle} mt-2 sm:max-w-xs`}
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                      >
-                        <option value="">All school years</option>
-                        {years.map((y) => (
-                          <option key={y}>{y}</option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-                  {!records.length ? (
+                  {!schoolYearGroups.length ? (
                     <div className="card p-8 text-center">
                       <h2 className="text-xl font-bold">
                         A clearer view of {nameOf(student)}&apos;s progress
@@ -711,46 +773,21 @@ export default function GradesClient() {
                       </button>
                     </div>
                   ) : (
-                    records.map((r) => (
-                      <article className="card p-4 sm:p-6 space-y-4" key={r.id}>
-                        <div className="flex flex-wrap justify-between gap-3">
-                          <div>
-                            <h2 className="text-xl font-bold">
-                              {nameOf(student)} · {r.data.school_year}
-                            </h2>
-                            <p className="mt-1 text-sm text-slate-600">
-                              Grade {r.data.grade_level}
-                              {r.data.school_name ? ` · ${r.data.school_name}` : ''}
-                            </p>
-                          </div>
-                          <span className="badge self-start">Family reviewed</span>
-                        </div>
-                        <GradeTable data={r.data} />
-                        <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-                          <span>
-                            Attendance: {r.data.attendance.scope || 'Period not reported'}
-                          </span>
-                          <span>Absences: {r.data.attendance.absences ?? 'Not reported'}</span>
-                          <span>Tardies: {r.data.attendance.tardies ?? 'Not reported'}</span>
-                        </div>
-                        <div className="flex flex-wrap justify-between gap-3 text-xs text-slate-500">
-                          <p>
-                            Reviewed {new Date(r.reviewed_at).toLocaleDateString()}. School-reported
-                            grades; not a verified transcript.
-                          </p>
-                          {r.source_path && (
-                            <a
-                              className="font-semibold text-brand-700 underline"
-                              href={`/api/grades/source?id=${r.id}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              View source photo
-                            </a>
-                          )}
-                        </div>
-                      </article>
-                    ))
+                    <div className="space-y-4">
+                      <p className="text-sm text-slate-600">
+                        Open a school year to view its report cards. The most recent year is open by
+                        default.
+                      </p>
+                      {schoolYearGroups.map((group, index) => (
+                        <SchoolYearSection
+                          key={group.schoolYear}
+                          schoolYear={group.schoolYear}
+                          records={group.records}
+                          student={student}
+                          defaultOpen={index === 0}
+                        />
+                      ))}
+                    </div>
                   )}
                 </>
               )
