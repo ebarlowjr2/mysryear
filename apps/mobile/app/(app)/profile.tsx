@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Share,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -23,10 +24,13 @@ import {
 } from '../../src/data/profile'
 import {
   acceptRelationshipInvite,
+  createStudentFamilyLinkCode,
   createRelationshipInvite,
   declineRelationshipInvite,
   getPendingRelationshipInvites,
+  revokeStudentFamilyLinkCodes,
   setActiveStudentProfile,
+  type StudentFamilyLinkCode,
   type RelationshipInvite,
 } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
@@ -119,6 +123,8 @@ export default function ProfileScreen() {
   const [pendingInvites, setPendingInvites] = useState<RelationshipInvite[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
+  const [familyLinkCode, setFamilyLinkCode] = useState<StudentFamilyLinkCode | null>(null)
+  const [familyLinkSaving, setFamilyLinkSaving] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const isFamily = profile?.role === 'parent' || profile?.role === 'guardian'
   const isStudent = profile?.role === 'student'
@@ -308,6 +314,58 @@ export default function ProfileScreen() {
     await fetchProfile()
   }
 
+  const handleCreateFamilyLinkCode = async () => {
+    setFamilyLinkSaving(true)
+    try {
+      const result = await createStudentFamilyLinkCode()
+      if (!result.code) {
+        Alert.alert('Could not create code', result.error || 'Please try again.')
+        return
+      }
+      setFamilyLinkCode(result.code)
+    } finally {
+      setFamilyLinkSaving(false)
+    }
+  }
+
+  const handleShareFamilyLinkCode = async () => {
+    if (!familyLinkCode) return
+    try {
+      await Share.share({
+        message: `MySRYear Family Link Code: ${familyLinkCode.formattedCode}. It expires at ${new Date(familyLinkCode.expiresAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Use it only to request a connection; I will approve it in MySRYear.`,
+      })
+    } catch {
+      Alert.alert('Could not share code', 'Please copy or write down the family link code instead.')
+    }
+  }
+
+  const handleRevokeFamilyLinkCode = () => {
+    Alert.alert(
+      'Revoke family link code?',
+      'The current code will stop working immediately. You can create a new one anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: async () => {
+            setFamilyLinkSaving(true)
+            try {
+              const result = await revokeStudentFamilyLinkCodes()
+              if (!result.success) {
+                Alert.alert('Could not revoke code', result.error || 'Please try again.')
+                return
+              }
+              setFamilyLinkCode(null)
+            } finally {
+              setFamilyLinkSaving(false)
+            }
+          },
+        },
+      ],
+    )
+  }
+
   const getInitials = () => {
     const name = getDisplayName()
     const parts = name.split(' ')
@@ -393,7 +451,9 @@ export default function ProfileScreen() {
           <Text style={styles.avatarText}>{getInitials()}</Text>
         </View>
         <Text style={styles.displayName}>{getDisplayName()}</Text>
-        <Text style={styles.memberBadge}>{isFamily ? 'My SR Year Family Member' : 'My SR Year Member'}</Text>
+        <Text style={styles.memberBadge}>
+          {isFamily ? 'My SR Year Family Member' : 'My SR Year Member'}
+        </Text>
 
         {!isEditing ? (
           <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
@@ -469,236 +529,322 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {!isBusiness && <>
-      {/* Active Student Profile */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{isFamily ? 'Student You Are Supporting' : 'Active Student Profile'}</Text>
-        {profile?.activeStudentProfile && canManageActiveStudent ? (
-          <View style={styles.studentProfileCard}>
-            <Text style={styles.studentProfileName}>
-              {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name]
-                .filter(Boolean)
-                .join(' ') || 'Student'}
+      {!isBusiness && (
+        <>
+          {/* Active Student Profile */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {isFamily ? 'Student You Are Supporting' : 'Active Student Profile'}
             </Text>
-            <Text style={styles.studentProfileMeta}>
-              {profile.activeStudentProfile.graduation_year
-                ? `Class of ${profile.activeStudentProfile.graduation_year}`
-                : 'Graduation year not set'}
-              {profile.activeStudentProfile.schools?.name
-                ? ` • ${profile.activeStudentProfile.schools.name}`
-                : ''}
-            </Text>
-          </View>
-        ) : profile?.activeStudentProfile ? (
-          <Text style={styles.infoValue}>View-only student support access.</Text>
-        ) : (
-          <Text style={styles.infoValue}>No active student profile yet.</Text>
-        )}
-
-        {(profile?.linkedStudentProfiles?.length || 0) > 1 && (
-          <View style={styles.profileSwitchList}>
-            {profile?.linkedStudentProfiles.map((studentProfile) => (
-              <TouchableOpacity
-                key={studentProfile.id}
-                style={[
-                  styles.switchProfileButton,
-                  profile.activeStudentProfile?.id === studentProfile.id &&
-                    styles.switchProfileButtonActive,
-                ]}
-                onPress={() => handleSelectStudentProfile(studentProfile.id)}
-              >
-                <Text style={styles.switchProfileText}>
-                  {[studentProfile.first_name, studentProfile.last_name]
+            {profile?.activeStudentProfile && canManageActiveStudent ? (
+              <View style={styles.studentProfileCard}>
+                <Text style={styles.studentProfileName}>
+                  {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name]
                     .filter(Boolean)
                     .join(' ') || 'Student'}
-                  {studentProfile.graduation_year ? ` • ${studentProfile.graduation_year}` : ''}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Relationship Invites */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{isFamily ? 'Family Connections' : 'Supporters'}</Text>
-        {profile?.activeStudentProfile && canManageActiveStudent ? (
-          <>
-            <Text style={styles.toggleDesc}>
-              {isFamily
-                ? 'Manage the approved adults and school supporters connected to this student profile.'
-                : 'Invite a parent, guardian, or counselor to support this student profile.'}
-            </Text>
-            <View style={styles.inputGroup}>
-              <TextInput
-                style={styles.input}
-                value={inviteEmail}
-                onChangeText={setInviteEmail}
-                placeholder="supporter@email.com"
-                placeholderTextColor={ui.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-            <View style={styles.inviteRoleRow}>
-              {(['parent', 'guardian', 'counselor'] as const).map((roleOption) => (
-                <TouchableOpacity
-                  key={roleOption}
-                  style={[
-                    styles.inviteRoleButton,
-                    inviteRole === roleOption && styles.inviteRoleButtonActive,
-                  ]}
-                  onPress={() => setInviteRole(roleOption)}
-                >
-                  <Text style={styles.inviteRoleText}>{roleOption}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity style={styles.changeButton} onPress={handleInviteSupporter}>
-              <Text style={styles.changeButtonText}>Send Invite</Text>
-              <Ionicons name="send-outline" size={16} color={ui.primary} />
-            </TouchableOpacity>
-          </>
-        ) : profile?.activeStudentProfile ? (
-          <Text style={styles.infoValue}>Student relationships are managed by the student or their family.</Text>
-        ) : (
-          <Text style={styles.infoValue}>
-            Create or select a student profile before inviting supporters.
-          </Text>
-        )}
-
-        {pendingInvites.length > 0 && (
-          <View style={styles.pendingInviteList}>
-            <Text style={styles.inputLabel}>Pending invites for you</Text>
-            {pendingInvites.map((invite) => (
-              <View key={invite.id} style={styles.pendingInviteCard}>
-                <Text style={styles.studentProfileName}>{invite.relationship_role} invite</Text>
                 <Text style={styles.studentProfileMeta}>
-                  {invite.invited_email || 'Sent to your account'}
+                  {profile.activeStudentProfile.graduation_year
+                    ? `Class of ${profile.activeStudentProfile.graduation_year}`
+                    : 'Graduation year not set'}
+                  {profile.activeStudentProfile.schools?.name
+                    ? ` • ${profile.activeStudentProfile.schools.name}`
+                    : ''}
                 </Text>
-                <View style={styles.editActions}>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => handleInviteResponse(invite.id, false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Decline</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.saveButton}
-                    onPress={() => handleInviteResponse(invite.id, true)}
-                  >
-                    <Text style={styles.saveButtonText}>Accept</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
-            ))}
-          </View>
-        )}
-      </View>
+            ) : profile?.activeStudentProfile ? (
+              <Text style={styles.infoValue}>View-only student support access.</Text>
+            ) : (
+              <Text style={styles.infoValue}>No active student profile yet.</Text>
+            )}
 
-      {/* B) School Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{isFamily ? "Student's School" : 'School'}</Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>{isFamily ? "Student's Current School" : 'Current School'}</Text>
-          <Text style={styles.infoValue}>
-            {profile?.activeStudentProfile?.schools?.name ||
-              profile?.schoolMembership?.school?.name ||
-              'Not set'}
-          </Text>
-        </View>
-
-        {profile?.schoolMembership?.school && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Location</Text>
-            <Text style={styles.infoValue}>
-              {[profile.schoolMembership.school.city, profile.schoolMembership.school.state]
-                .filter(Boolean)
-                .join(', ') || 'N/A'}
-            </Text>
-          </View>
-        )}
-
-        {profile?.role === 'counselor' && (
-          <TouchableOpacity style={styles.changeButton} onPress={() => router.push('/(app)/school')}>
-            <Text style={styles.changeButtonText}>
-              {profile?.schoolMembership ? 'Change School' : 'Add School'}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={ui.primary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* C) Graduation Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{isFamily ? "Student's Graduation" : 'Graduation'}</Text>
-
-        {isEditing && canManageActiveStudent ? (
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>{isFamily ? "Student's Graduation Year" : 'Graduation Year'}</Text>
-            <TouchableOpacity
-              style={styles.pickerButton}
-              onPress={() => setShowYearPicker(!showYearPicker)}
-            >
-              <Text style={graduationYear ? styles.pickerText : styles.pickerPlaceholder}>
-                {graduationYear || 'Select year'}
-              </Text>
-              <Ionicons
-                name={showYearPicker ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={ui.textMuted}
-              />
-            </TouchableOpacity>
-
-            {showYearPicker && (
-              <View style={styles.pickerOptions}>
-                <TouchableOpacity
-                  style={styles.pickerOption}
-                  onPress={() => {
-                    setGraduationYear(null)
-                    setShowYearPicker(false)
-                  }}
-                >
-                  <Text style={styles.pickerOptionText}>Not set</Text>
-                </TouchableOpacity>
-                {GRADUATION_YEARS.map((year) => (
+            {(profile?.linkedStudentProfiles?.length || 0) > 1 && (
+              <View style={styles.profileSwitchList}>
+                {profile?.linkedStudentProfiles.map((studentProfile) => (
                   <TouchableOpacity
-                    key={year}
+                    key={studentProfile.id}
                     style={[
-                      styles.pickerOption,
-                      graduationYear === year && styles.pickerOptionSelected,
+                      styles.switchProfileButton,
+                      profile.activeStudentProfile?.id === studentProfile.id &&
+                        styles.switchProfileButtonActive,
                     ]}
-                    onPress={() => {
-                      setGraduationYear(year)
-                      setShowYearPicker(false)
-                    }}
+                    onPress={() => handleSelectStudentProfile(studentProfile.id)}
                   >
-                    <Text
-                      style={[
-                        styles.pickerOptionText,
-                        graduationYear === year && styles.pickerOptionTextSelected,
-                      ]}
-                    >
-                      {year}
+                    <Text style={styles.switchProfileText}>
+                      {[studentProfile.first_name, studentProfile.last_name]
+                        .filter(Boolean)
+                        .join(' ') || 'Student'}
+                      {studentProfile.graduation_year ? ` • ${studentProfile.graduation_year}` : ''}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             )}
           </View>
-        ) : (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{isFamily ? "Student's Graduation Year" : 'Graduation Year'}</Text>
-            <Text style={styles.infoValue}>
-              {profile?.activeStudentProfile?.graduation_year ||
-                profile?.graduation_year ||
-                'Not set'}
+
+          {/* Relationship Invites */}
+          {isStudent && profile?.activeStudentProfile ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Connect a Parent or Guardian</Text>
+              <View style={styles.familyLinkCard}>
+                <Text style={styles.familyLinkDescription}>
+                  Create a one-time Family Link Code instead of sharing a student profile ID. You
+                  will approve every connection request.
+                </Text>
+                {familyLinkCode ? (
+                  <>
+                    <Text style={styles.familyLinkCode}>{familyLinkCode.formattedCode}</Text>
+                    <Text style={styles.familyLinkExpiry}>
+                      Expires at{' '}
+                      {new Date(familyLinkCode.expiresAt).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                      . Creating a new code invalidates this one.
+                    </Text>
+                    <View style={styles.familyLinkActions}>
+                      <TouchableOpacity
+                        style={styles.changeButton}
+                        onPress={handleShareFamilyLinkCode}
+                        disabled={familyLinkSaving}
+                      >
+                        <Text style={styles.changeButtonText}>Share Code</Text>
+                        <Ionicons name="share-outline" size={16} color={ui.primary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.changeButton}
+                        onPress={handleCreateFamilyLinkCode}
+                        disabled={familyLinkSaving}
+                      >
+                        <Text style={styles.changeButtonText}>
+                          {familyLinkSaving ? 'Creating...' : 'New Code'}
+                        </Text>
+                        <Ionicons name="refresh-outline" size={16} color={ui.primary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.familyLinkRevokeButton}
+                        onPress={handleRevokeFamilyLinkCode}
+                        disabled={familyLinkSaving}
+                      >
+                        <Text style={styles.familyLinkRevokeText}>Revoke</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.changeButton}
+                    onPress={handleCreateFamilyLinkCode}
+                    disabled={familyLinkSaving}
+                  >
+                    {familyLinkSaving ? (
+                      <ActivityIndicator size="small" color={ui.primary} />
+                    ) : (
+                      <>
+                        <Text style={styles.changeButtonText}>Create Family Link Code</Text>
+                        <Ionicons name="key-outline" size={16} color={ui.primary} />
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {isFamily ? 'Family Connections' : 'Supporters'}
             </Text>
+            {profile?.activeStudentProfile && canManageActiveStudent ? (
+              <>
+                <Text style={styles.toggleDesc}>
+                  {isFamily
+                    ? 'Manage the approved adults and school supporters connected to this student profile.'
+                    : 'Invite a parent, guardian, or counselor to support this student profile.'}
+                </Text>
+                <View style={styles.inputGroup}>
+                  <TextInput
+                    style={styles.input}
+                    value={inviteEmail}
+                    onChangeText={setInviteEmail}
+                    placeholder="supporter@email.com"
+                    placeholderTextColor={ui.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                <View style={styles.inviteRoleRow}>
+                  {(['parent', 'guardian', 'counselor'] as const).map((roleOption) => (
+                    <TouchableOpacity
+                      key={roleOption}
+                      style={[
+                        styles.inviteRoleButton,
+                        inviteRole === roleOption && styles.inviteRoleButtonActive,
+                      ]}
+                      onPress={() => setInviteRole(roleOption)}
+                    >
+                      <Text style={styles.inviteRoleText}>{roleOption}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity style={styles.changeButton} onPress={handleInviteSupporter}>
+                  <Text style={styles.changeButtonText}>Send Invite</Text>
+                  <Ionicons name="send-outline" size={16} color={ui.primary} />
+                </TouchableOpacity>
+              </>
+            ) : profile?.activeStudentProfile ? (
+              <Text style={styles.infoValue}>
+                Student relationships are managed by the student or their family.
+              </Text>
+            ) : (
+              <Text style={styles.infoValue}>
+                Create or select a student profile before inviting supporters.
+              </Text>
+            )}
+
+            {pendingInvites.length > 0 && (
+              <View style={styles.pendingInviteList}>
+                <Text style={styles.inputLabel}>Pending invites for you</Text>
+                {pendingInvites.map((invite) => (
+                  <View key={invite.id} style={styles.pendingInviteCard}>
+                    <Text style={styles.studentProfileName}>{invite.relationship_role} invite</Text>
+                    <Text style={styles.studentProfileMeta}>
+                      {invite.invited_email || 'Sent to your account'}
+                    </Text>
+                    <View style={styles.editActions}>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => handleInviteResponse(invite.id, false)}
+                      >
+                        <Text style={styles.cancelButtonText}>Decline</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.saveButton}
+                        onPress={() => handleInviteResponse(invite.id, true)}
+                      >
+                        <Text style={styles.saveButtonText}>Accept</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-        )}
-      </View>
-      </>}
+
+          {/* B) School Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{isFamily ? "Student's School" : 'School'}</Text>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>
+                {isFamily ? "Student's Current School" : 'Current School'}
+              </Text>
+              <Text style={styles.infoValue}>
+                {profile?.activeStudentProfile?.schools?.name ||
+                  profile?.schoolMembership?.school?.name ||
+                  'Not set'}
+              </Text>
+            </View>
+
+            {profile?.schoolMembership?.school && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Location</Text>
+                <Text style={styles.infoValue}>
+                  {[profile.schoolMembership.school.city, profile.schoolMembership.school.state]
+                    .filter(Boolean)
+                    .join(', ') || 'N/A'}
+                </Text>
+              </View>
+            )}
+
+            {profile?.role === 'counselor' && (
+              <TouchableOpacity
+                style={styles.changeButton}
+                onPress={() => router.push('/(app)/school')}
+              >
+                <Text style={styles.changeButtonText}>
+                  {profile?.schoolMembership ? 'Change School' : 'Add School'}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={ui.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* C) Graduation Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {isFamily ? "Student's Graduation" : 'Graduation'}
+            </Text>
+
+            {isEditing && canManageActiveStudent ? (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {isFamily ? "Student's Graduation Year" : 'Graduation Year'}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerButton}
+                  onPress={() => setShowYearPicker(!showYearPicker)}
+                >
+                  <Text style={graduationYear ? styles.pickerText : styles.pickerPlaceholder}>
+                    {graduationYear || 'Select year'}
+                  </Text>
+                  <Ionicons
+                    name={showYearPicker ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={ui.textMuted}
+                  />
+                </TouchableOpacity>
+
+                {showYearPicker && (
+                  <View style={styles.pickerOptions}>
+                    <TouchableOpacity
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        setGraduationYear(null)
+                        setShowYearPicker(false)
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>Not set</Text>
+                    </TouchableOpacity>
+                    {GRADUATION_YEARS.map((year) => (
+                      <TouchableOpacity
+                        key={year}
+                        style={[
+                          styles.pickerOption,
+                          graduationYear === year && styles.pickerOptionSelected,
+                        ]}
+                        onPress={() => {
+                          setGraduationYear(year)
+                          setShowYearPicker(false)
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerOptionText,
+                            graduationYear === year && styles.pickerOptionTextSelected,
+                          ]}
+                        >
+                          {year}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>
+                  {isFamily ? "Student's Graduation Year" : 'Graduation Year'}
+                </Text>
+                <Text style={styles.infoValue}>
+                  {profile?.activeStudentProfile?.graduation_year ||
+                    profile?.graduation_year ||
+                    'Not set'}
+                </Text>
+              </View>
+            )}
+          </View>
+        </>
+      )}
 
       {/* D) Location Section */}
       <View style={styles.section}>
@@ -1077,6 +1223,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: ui.primary,
     fontWeight: '500',
+  },
+  familyLinkCard: {
+    backgroundColor: ui.primaryLight,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: ui.cardBorder,
+    padding: 16,
+  },
+  familyLinkDescription: {
+    color: ui.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  familyLinkCode: {
+    color: ui.text,
+    fontFamily: 'monospace',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    marginTop: 16,
+  },
+  familyLinkExpiry: {
+    color: ui.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  familyLinkActions: {
+    gap: 4,
+    marginTop: 12,
+  },
+  familyLinkRevokeButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+  },
+  familyLinkRevokeText: {
+    color: colors.error,
+    fontSize: 15,
+    fontWeight: '600',
   },
   toggleRow: {
     flexDirection: 'row',

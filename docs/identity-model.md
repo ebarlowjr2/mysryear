@@ -83,7 +83,7 @@ Notes:
 
 ### Parent requests access (student approval)
 
-1. Parent sends a request (by student email or claim link)
+1. Parent sends a request using the student's one-time Family Link Code or student email
 2. Student reviews request → approves/declines
 3. Approval creates `family_relationships` membership
 

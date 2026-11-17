@@ -128,7 +128,8 @@ export default async function ProfilePage() {
   const isStudent = role === 'student'
   const canEditActiveStudentProfile = isStudent || isFamily
   const showStudentProfileSections = !isBusiness
-  const roleLabel = role && ROLE_LABELS[role as UserRole] ? ROLE_LABELS[role as UserRole] : role || '—'
+  const roleLabel =
+    role && ROLE_LABELS[role as UserRole] ? ROLE_LABELS[role as UserRole] : role || '—'
 
   const { data: businessProfile } = isBusiness
     ? await supabase
@@ -224,7 +225,10 @@ export default async function ProfilePage() {
                   <>
                     <div>1. Review this student’s school and graduation details.</div>
                     <div>2. Check in on LifePath choices together.</div>
-                    <div>3. Manage {isGuardian ? 'guardian' : 'parent'}, counselor, and student connections below.</div>
+                    <div>
+                      3. Manage {isGuardian ? 'guardian' : 'parent'}, counselor, and student
+                      connections below.
+                    </div>
                   </>
                 ) : (
                   <>
@@ -400,12 +404,17 @@ export default async function ProfilePage() {
               activeStudentProfileId={activeStudentProfileId}
               invitesCreated={(invitesCreated || []) as unknown as InviteRow[]}
               invitesReceived={(invitesReceived || []) as unknown as InviteRow[]}
+              viewerRole={role}
             />
           </div>
         </div>
       ) : null}
 
-      {canManageReportCards(sp.role) && <Link href="/grades" className="btn-primary">View Grades &amp; Report Cards</Link>}
+      {canManageReportCards(sp.role) && (
+        <Link href="/grades" className="btn-primary">
+          View Grades &amp; Report Cards
+        </Link>
+      )}
       <DeleteAccountPanel />
     </section>
   )
