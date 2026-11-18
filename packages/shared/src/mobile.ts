@@ -41,5 +41,31 @@ export type { CareerPath, CareerMilestone, CohortOpportunity } from './career-ca
 export { SCHOOL_RESOURCE_CHECKS, TEN_THINGS_TOPICS } from './resources'
 export type { SchoolResourceCheck, TenThingsTopic } from './resources'
 
+export {
+  COLLEGE_GUIDES,
+  GUIDE_CATEGORIES,
+  GUIDE_AUDIENCE_LABELS,
+  GUIDE_STAGE_LABELS,
+  GUIDE_STAGE_ORDER,
+  GUIDE_TIMING_LABELS,
+  getGuideBySlug,
+  getGuideCategory,
+  getGuidesByCategory,
+  getRelatedGuides,
+  searchGuides,
+  filterGuides,
+  startHereForStage,
+} from './college-guides'
+export type {
+  CollegeGuide,
+  GuideCategory,
+  GuideCategorySlug,
+  GuideAudience,
+  GuideStage,
+  GuideTiming,
+  GuideFilter,
+  OfficialSource,
+} from './college-guides'
+
 export { canManageReportCards, emptyReportCard, parseReportCard, REPORT_CARD_JSON_SCHEMA } from './report-cards'
 export type { ReportCardData, ReportCardCourse, ReportCardGrade } from './report-cards'
