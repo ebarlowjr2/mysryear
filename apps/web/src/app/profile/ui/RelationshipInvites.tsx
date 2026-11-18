@@ -11,9 +11,25 @@ type InviteRow = {
   student_profile_id: string
   invited_email: string | null
   relationship_role: 'parent' | 'guardian' | 'counselor' | 'student'
-  invite_type?: 'supporter_invite' | 'access_request' | null
-  status: 'pending' | 'accepted' | 'declined' | 'expired'
+  invite_type?: 'supporter_invite' | 'access_request' | 'student_claim' | null
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked'
   created_at: string
+}
+
+function formatRole(role: InviteRow['relationship_role']) {
+  return role.charAt(0).toUpperCase() + role.slice(1)
+}
+
+function receivedInviteTitle(invite: InviteRow) {
+  if (invite.invite_type === 'access_request') {
+    return `${formatRole(invite.relationship_role)} connection request`
+  }
+
+  if (invite.invite_type === 'student_claim') {
+    return 'Student profile claim invitation'
+  }
+
+  return `${formatRole(invite.relationship_role)} invitation`
 }
 
 export default function RelationshipInvites({
@@ -175,7 +191,7 @@ export default function RelationshipInvites({
                   <div className="min-w-0">
                     <div className="text-sm font-semibold truncate">{i.invited_email || '—'}</div>
                     <div className="text-xs text-slate-600">
-                      {i.relationship_role} • {i.status}
+                      {formatRole(i.relationship_role)} • {i.status}
                     </div>
                   </div>
                 </div>
@@ -185,7 +201,15 @@ export default function RelationshipInvites({
         </div>
 
         <div className="card p-4">
-          <div className="text-sm font-black">Invites for you</div>
+          <div className="text-sm font-black">
+            {isStudent ? 'Connection requests awaiting your approval' : 'Invites for you'}
+          </div>
+          {isStudent ? (
+            <p className="mt-1 text-sm text-slate-700">
+              Accept only a parent or guardian you know. They cannot access your profile unless you
+              approve their request.
+            </p>
+          ) : null}
           <div className="mt-3 space-y-2">
             {received.length === 0 ? (
               <div className="text-sm text-slate-600">No invites yet.</div>
@@ -196,11 +220,12 @@ export default function RelationshipInvites({
                   className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold truncate">
-                      {i.invite_type === 'access_request' ? 'Access request' : 'Invite'}:{' '}
-                      {i.relationship_role}
+                    <div className="text-sm font-semibold truncate">{receivedInviteTitle(i)}</div>
+                    <div className="text-xs text-slate-600">
+                      {isStudent && i.invite_type === 'access_request' && i.status === 'pending'
+                        ? 'Awaiting your decision'
+                        : i.status}
                     </div>
-                    <div className="text-xs text-slate-600">{i.status}</div>
                   </div>
                   {i.status === 'pending' ? (
                     <div className="flex items-center gap-2">

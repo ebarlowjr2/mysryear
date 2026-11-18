@@ -14,6 +14,8 @@ type PendingInvite = {
   created_at: string
 }
 
+const SUPPORTER_ROLES = new Set(['parent', 'guardian', 'counselor'])
+
 function shortId(id: string) {
   if (!id) return '—'
   return `${id.slice(0, 8)}…${id.slice(-4)}`
@@ -33,6 +35,10 @@ export default function LinkedSupporters({
   linked: LinkedRelationship[]
   pendingInvites: PendingInvite[]
 }) {
+  // A student's own membership row is an authorization record, not a supporter.
+  // Keep it in the database while excluding it from this supporter-facing list.
+  const supporters = linked.filter((relationship) => SUPPORTER_ROLES.has(relationship.role))
+
   return (
     <div className="card p-6">
       <div className="flex items-start justify-between gap-4">
@@ -40,16 +46,17 @@ export default function LinkedSupporters({
           <div className="badge">Relationships</div>
           <h3 className="mt-2 text-lg font-black">Linked Supporters</h3>
           <p className="mt-1 text-sm text-slate-700">
-            These people can access this student profile based on their role. Counselors are read/support access only.
+            These people can access this student profile based on their role. Counselors are
+            read/support access only.
           </p>
         </div>
       </div>
 
       <div className="mt-4 space-y-2">
-        {linked.length === 0 ? (
+        {supporters.length === 0 ? (
           <div className="text-sm text-slate-600">No linked supporters yet.</div>
         ) : (
-          linked.map((r) => (
+          supporters.map((r) => (
             <div
               key={`${r.user_id}:${r.role}`}
               className="flex items-center justify-between gap-3 border border-slate-200 rounded-lg p-3 bg-white"
@@ -61,7 +68,9 @@ export default function LinkedSupporters({
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">
                     {formatRole(r.role)}
-                    {r.user_id === currentUserId ? <span className="text-slate-500"> (You)</span> : null}
+                    {r.user_id === currentUserId ? (
+                      <span className="text-slate-500"> (You)</span>
+                    ) : null}
                   </div>
                   <div className="text-xs text-slate-600">User: {shortId(r.user_id)}</div>
                 </div>
@@ -80,7 +89,9 @@ export default function LinkedSupporters({
         <div className="text-sm font-black">Pending invites</div>
         <div className="mt-3 space-y-2">
           {pendingInvites.length === 0 ? (
-            <div className="text-sm text-slate-600">No pending invites for this student profile.</div>
+            <div className="text-sm text-slate-600">
+              No pending invites for this student profile.
+            </div>
           ) : (
             pendingInvites.map((i) => (
               <div
@@ -101,4 +112,3 @@ export default function LinkedSupporters({
     </div>
   )
 }
-

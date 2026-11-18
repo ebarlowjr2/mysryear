@@ -99,6 +99,22 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 const GRADUATION_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 2)
 
+function formatRelationshipRole(role: RelationshipInvite['relationship_role']) {
+  return role.charAt(0).toUpperCase() + role.slice(1)
+}
+
+function relationshipInviteLabel(invite: RelationshipInvite) {
+  if (invite.invite_type === 'access_request') {
+    return `${formatRelationshipRole(invite.relationship_role)} connection request`
+  }
+
+  if (invite.invite_type === 'student_claim') {
+    return 'Student profile claim invitation'
+  }
+
+  return `${formatRelationshipRole(invite.relationship_role)} invitation`
+}
+
 export default function ProfileScreen() {
   const { user, signOut } = useAuth()
   const router = useRouter()
@@ -130,6 +146,7 @@ export default function ProfileScreen() {
   const isStudent = profile?.role === 'student'
   const isBusiness = profile?.role === 'business'
   const canManageActiveStudent = isStudent || isFamily
+  const canInviteSupporters = isStudent && Boolean(profile?.activeStudentProfile?.id)
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -284,7 +301,7 @@ export default function ProfileScreen() {
   }
 
   const handleInviteSupporter = async () => {
-    if (!canManageActiveStudent || !user?.id || !profile?.activeStudentProfile?.id) return
+    if (!canInviteSupporters || !user?.id || !profile?.activeStudentProfile?.id) return
     if (!inviteEmail.trim()) {
       Alert.alert('Email required', 'Enter the parent, guardian, or counselor email.')
       return
@@ -654,12 +671,10 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}>
               {isFamily ? 'Family Connections' : 'Supporters'}
             </Text>
-            {profile?.activeStudentProfile && canManageActiveStudent ? (
+            {canInviteSupporters ? (
               <>
                 <Text style={styles.toggleDesc}>
-                  {isFamily
-                    ? 'Manage the approved adults and school supporters connected to this student profile.'
-                    : 'Invite a parent, guardian, or counselor to support this student profile.'}
+                  Invite a parent, guardian, or counselor to support this student profile.
                 </Text>
                 <View style={styles.inputGroup}>
                   <TextInput
@@ -691,6 +706,20 @@ export default function ProfileScreen() {
                   <Ionicons name="send-outline" size={16} color={ui.primary} />
                 </TouchableOpacity>
               </>
+            ) : isFamily ? (
+              <>
+                <Text style={styles.infoValue}>
+                  Connect to and manage student profiles from My Students. Students approve access
+                  requests before you can view their information.
+                </Text>
+                <TouchableOpacity
+                  style={styles.changeButton}
+                  onPress={() => router.push('/(app)/students' as never)}
+                >
+                  <Text style={styles.changeButtonText}>Manage Students</Text>
+                  <Ionicons name="chevron-forward" size={16} color={ui.primary} />
+                </TouchableOpacity>
+              </>
             ) : profile?.activeStudentProfile ? (
               <Text style={styles.infoValue}>
                 Student relationships are managed by the student or their family.
@@ -703,12 +732,24 @@ export default function ProfileScreen() {
 
             {pendingInvites.length > 0 && (
               <View style={styles.pendingInviteList}>
-                <Text style={styles.inputLabel}>Pending invites for you</Text>
+                <Text style={styles.inputLabel}>
+                  {isStudent
+                    ? 'Connection requests awaiting your approval'
+                    : 'Pending invites for you'}
+                </Text>
+                {isStudent ? (
+                  <Text style={styles.toggleDesc}>
+                    Accept only a parent or guardian you know. They cannot access your profile
+                    unless you approve their request.
+                  </Text>
+                ) : null}
                 {pendingInvites.map((invite) => (
                   <View key={invite.id} style={styles.pendingInviteCard}>
-                    <Text style={styles.studentProfileName}>{invite.relationship_role} invite</Text>
+                    <Text style={styles.studentProfileName}>{relationshipInviteLabel(invite)}</Text>
                     <Text style={styles.studentProfileMeta}>
-                      {invite.invited_email || 'Sent to your account'}
+                      {isStudent && invite.invite_type === 'access_request'
+                        ? 'Awaiting your decision'
+                        : invite.invited_email || 'Sent to your account'}
                     </Text>
                     <View style={styles.editActions}>
                       <TouchableOpacity

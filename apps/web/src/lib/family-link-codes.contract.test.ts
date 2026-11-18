@@ -113,6 +113,7 @@ describe('family link code contract', () => {
 
   it('keeps parent controls parent-focused instead of exposing student-only invite tools', () => {
     const relationshipInvites = read('apps/web/src/app/profile/ui/RelationshipInvites.tsx')
+    const mobileProfile = read('apps/mobile/app/(app)/profile.tsx')
 
     expect(relationshipInvites).toContain("const isStudent = viewerRole === 'student'")
     expect(relationshipInvites).toContain(
@@ -120,5 +121,24 @@ describe('family link code contract', () => {
     )
     expect(relationshipInvites).toContain('Manage student profiles')
     expect(relationshipInvites).toContain('{isStudent ? <StudentFamilyLinkCodeCard /> : null}')
+    expect(mobileProfile).toContain('Manage Students')
+    expect(mobileProfile).toContain('const canInviteSupporters = isStudent')
+  })
+
+  it('labels student approval requests clearly and omits student ownership from supporters', () => {
+    const relationshipInvites = read('apps/web/src/app/profile/ui/RelationshipInvites.tsx')
+    const linkedSupporters = read('apps/web/src/app/profile/ui/LinkedSupporters.tsx')
+    const mobileProfile = read('apps/mobile/app/(app)/profile.tsx')
+
+    expect(relationshipInvites).toContain('Connection requests awaiting your approval')
+    expect(relationshipInvites).toContain('Accept only a parent or guardian you know')
+    expect(relationshipInvites).toContain('connection request')
+    expect(relationshipInvites).toContain('Awaiting your decision')
+    expect(linkedSupporters).toContain(
+      "const SUPPORTER_ROLES = new Set(['parent', 'guardian', 'counselor'])",
+    )
+    expect(linkedSupporters).toContain('const supporters = linked.filter')
+    expect(mobileProfile).toContain('Connection requests awaiting your approval')
+    expect(mobileProfile).toContain('Awaiting your decision')
   })
 })

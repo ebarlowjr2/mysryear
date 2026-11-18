@@ -33,7 +33,8 @@ type InviteRow = {
   invited_email: string | null
   invited_user_id: string | null
   relationship_role: 'parent' | 'guardian' | 'counselor' | 'student'
-  status: 'pending' | 'accepted' | 'declined' | 'expired'
+  invite_type: 'supporter_invite' | 'access_request' | 'student_claim' | null
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked'
   created_by_user_id: string
   created_at: string
 }
