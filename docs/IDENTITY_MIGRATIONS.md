@@ -39,6 +39,19 @@ These are the new/additional migrations introduced in this sprint:
   - Tightens `uploaded_files_insert_member` to require `uploaded_by_user_id = auth.uid()`
   - Allows delete by uploader OR student-profile admin
 
+## Current Family Connection Hardening
+
+The following later migration is required before deploying the current Family Link Code/email request UI:
+
+- `supabase/migrations/20261117120000_student_family_link_codes.sql`
+  - Creates `student_family_link_codes` with hash-only, expiring, one-time code storage.
+  - Adds narrow RPCs for student code issuance/revocation and parent/guardian code-or-email requests.
+  - Replaces the unsafe client-facing UUID access-request path with student-approved requests.
+  - Hardens invitation lifecycle updates so a creator cannot accept or rebind an invitation.
+  - Validates `profiles.active_student_profile_id` against an accepted relationship and clears stale active context after a relationship is removed.
+
+This migration depends on the invite lifecycle columns and claim support from `20260809120000_parent_connection_action_center.sql`. It changes policies and trigger functions but does not delete or rewrite existing relationship data.
+
 ## Prerequisite Migrations
 
 These earlier migrations must already be applied (they are already in the repo, but listing here for clarity):

@@ -1,6 +1,11 @@
 export type { UserRole } from './types/roles'
 export { USER_ROLES } from './types/roles'
-export { ROLE_LABELS, familyActionCenterLabel, familyRoleNoun, isFamilyRole } from './role-presentation'
+export {
+  ROLE_LABELS,
+  familyActionCenterLabel,
+  familyRoleNoun,
+  isFamilyRole,
+} from './role-presentation'
 
 export { computeAcademicHealth, normalizeGradeLevel, templatesForGrade } from './student-success'
 export {
@@ -67,5 +72,17 @@ export type {
   OfficialSource,
 } from './college-guides'
 
-export { canManageReportCards, emptyReportCard, parseReportCard, REPORT_CARD_JSON_SCHEMA } from './report-cards'
+export {
+  FAMILY_LINK_CODE_LENGTH,
+  formatFamilyLinkCode,
+  isValidFamilyLinkCode,
+  normalizeFamilyLinkCode,
+} from './family-links'
+
+export {
+  canManageReportCards,
+  emptyReportCard,
+  parseReportCard,
+  REPORT_CARD_JSON_SCHEMA,
+} from './report-cards'
 export type { ReportCardData, ReportCardCourse, ReportCardGrade } from './report-cards'

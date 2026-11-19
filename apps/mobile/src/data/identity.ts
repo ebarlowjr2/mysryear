@@ -1,11 +1,22 @@
 import { supabase } from '../lib/supabase'
+import {
+  formatFamilyLinkCode,
+  isValidFamilyLinkCode,
+  normalizeFamilyLinkCode,
+} from '@mysryear/shared'
 
 export type CanonicalRole = 'student' | 'parent' | 'guardian' | 'counselor' | 'business'
 export type RelationshipRole = Exclude<CanonicalRole, 'business'>
 export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked'
 export type InviteType = 'supporter_invite' | 'student_claim' | 'access_request'
 
-export const CANONICAL_ROLES: CanonicalRole[] = ['student', 'parent', 'guardian', 'counselor', 'business']
+export const CANONICAL_ROLES: CanonicalRole[] = [
+  'student',
+  'parent',
+  'guardian',
+  'counselor',
+  'business',
+]
 
 export type School = {
   id: string
@@ -88,11 +99,7 @@ function normalizeProfile(row: Record<string, unknown>): AccountProfile {
 }
 
 export async function getCurrentProfile(userId: string): Promise<AccountProfile | null> {
-  const byId = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle()
+  const byId = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
 
   if (byId.data) return normalizeProfile(byId.data as Record<string, unknown>)
 
@@ -128,12 +135,20 @@ export async function ensureCurrentProfile(
   // Legacy fallback only: some recovered mobile DBs required user_id instead of id.
   const legacyInserted = await supabase
     .from('profiles')
-    .insert({ user_id: userId, role, full_name: email?.split('@')[0] || null, onboarding_complete: false })
+    .insert({
+      user_id: userId,
+      role,
+      full_name: email?.split('@')[0] || null,
+      onboarding_complete: false,
+    })
     .select('*')
     .single()
 
   if (legacyInserted.data) return normalizeProfile(legacyInserted.data as Record<string, unknown>)
-  console.warn('Failed to ensure profile:', inserted.error?.message || legacyInserted.error?.message)
+  console.warn(
+    'Failed to ensure profile:',
+    inserted.error?.message || legacyInserted.error?.message,
+  )
   return null
 }
 
@@ -156,26 +171,35 @@ export async function updateAccountProfile(
 export async function getLinkedStudentProfiles(userId: string): Promise<StudentProfile[]> {
   const owned = await supabase
     .from('student_profiles')
-    .select('id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)')
+    .select(
+      'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)',
+    )
     .eq('student_user_id', userId)
 
   const linked = await supabase
     .from('family_relationships')
-    .select('student_profile_id,role,student_profiles(id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state))')
+    .select(
+      'student_profile_id,role,student_profiles(id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state))',
+    )
     .eq('user_id', userId)
 
   const map = new Map<string, StudentProfile>()
   for (const row of (owned.data || []) as unknown as StudentProfile[]) {
     if (row.id) map.set(row.id, row)
   }
-  for (const rel of (linked.data || []) as unknown as Array<{ student_profiles: StudentProfile | null }>) {
+  for (const rel of (linked.data || []) as unknown as Array<{
+    student_profiles: StudentProfile | null
+  }>) {
     if (rel.student_profiles?.id) map.set(rel.student_profiles.id, rel.student_profiles)
   }
   return Array.from(map.values())
 }
 
 export async function getActiveStudentProfile(userId: string): Promise<StudentProfile | null> {
-  const [profile, linked] = await Promise.all([getCurrentProfile(userId), getLinkedStudentProfiles(userId)])
+  const [profile, linked] = await Promise.all([
+    getCurrentProfile(userId),
+    getLinkedStudentProfiles(userId),
+  ])
   if (!linked.length) return null
   return linked.find((sp) => sp.id === profile?.active_student_profile_id) || linked[0]
 }
@@ -184,7 +208,9 @@ export async function setActiveStudentProfile(
   userId: string,
   studentProfileId: string | null,
 ): Promise<{ success: boolean; error: string | null }> {
-  return updateAccountProfile(userId, { active_student_profile_id: studentProfileId } as Partial<AccountProfile>)
+  return updateAccountProfile(userId, {
+    active_student_profile_id: studentProfileId,
+  } as Partial<AccountProfile>)
 }
 
 export async function createStudentProfileForUser(input: {
@@ -206,10 +232,16 @@ export async function createStudentProfileForUser(input: {
       graduation_year: input.graduationYear || null,
       school_id: input.schoolId || null,
     })
-    .select('id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)')
+    .select(
+      'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)',
+    )
     .single()
 
-  if (created.error || !created.data) return { studentProfile: null, error: created.error?.message || 'Failed to create student profile' }
+  if (created.error || !created.data)
+    return {
+      studentProfile: null,
+      error: created.error?.message || 'Failed to create student profile',
+    }
 
   const studentProfile = created.data as unknown as StudentProfile
   const rel = await supabase.from('family_relationships').insert({
@@ -224,7 +256,6 @@ export async function createStudentProfileForUser(input: {
   await setActiveStudentProfile(input.userId, studentProfile.id)
   return { studentProfile, error: null }
 }
-
 
 export async function createManagedStudentProfile(input: {
   firstName: string
@@ -242,7 +273,11 @@ export async function createManagedStudentProfile(input: {
     p_relationship_role: input.relationshipRole,
   })
   if (created.error || !created.data) {
-    return { studentProfileId: null, inviteId: null, error: created.error?.message || 'Failed to create student profile' }
+    return {
+      studentProfileId: null,
+      inviteId: null,
+      error: created.error?.message || 'Failed to create student profile',
+    }
   }
 
   const studentProfileId = String(created.data)
@@ -275,10 +310,16 @@ export async function createStudentClaimInvite(input: {
   return { success: !error, error: error?.message || null }
 }
 
-export async function revokeRelationshipInvite(inviteId: string): Promise<{ success: boolean; error: string | null }> {
+export async function revokeRelationshipInvite(
+  inviteId: string,
+): Promise<{ success: boolean; error: string | null }> {
   const { error } = await supabase
     .from('student_profile_relationship_invites')
-    .update({ status: 'revoked', revoked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({
+      status: 'revoked',
+      revoked_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', inviteId)
   return { success: !error, error: error?.message || null }
 }
@@ -305,7 +346,12 @@ export async function completeCanonicalOnboarding(input: {
   const profileUpdate = await updateAccountProfile(input.userId, profilePatch)
   if (!profileUpdate.success) return profileUpdate
 
-  if (input.role === 'counselor' || input.role === 'business' || input.role === 'parent' || input.role === 'guardian') {
+  if (
+    input.role === 'counselor' ||
+    input.role === 'business' ||
+    input.role === 'parent' ||
+    input.role === 'guardian'
+  ) {
     await setActiveStudentProfile(input.userId, null)
     return { success: true, error: null }
   }
@@ -325,7 +371,9 @@ export async function completeCanonicalOnboarding(input: {
 
 export async function updateStudentProfile(
   studentProfileId: string,
-  updates: Partial<Pick<StudentProfile, 'first_name' | 'last_name' | 'graduation_year' | 'school_id'>>,
+  updates: Partial<
+    Pick<StudentProfile, 'first_name' | 'last_name' | 'graduation_year' | 'school_id'>
+  >,
 ): Promise<{ success: boolean; error: string | null }> {
   const { error } = await supabase
     .from('student_profiles')
@@ -334,7 +382,9 @@ export async function updateStudentProfile(
   return { success: !error, error: error?.message || null }
 }
 
-export async function getFamilyRelationships(studentProfileId: string): Promise<FamilyRelationship[]> {
+export async function getFamilyRelationships(
+  studentProfileId: string,
+): Promise<FamilyRelationship[]> {
   const { data, error } = await supabase
     .from('family_relationships')
     .select('*')
@@ -357,13 +407,32 @@ export async function getPendingRelationshipInvites(userId: string): Promise<Rel
     .order('created_at', { ascending: false })
 
   // RLS should scope this, but filtering by invited_user_id avoids pulling created invites when possible.
-  if (profile?.id) query = query.or(`invited_user_id.eq.${userId}${email ? `,invited_email.eq.${email}` : ''}`)
+  if (profile?.id)
+    query = query.or(`invited_user_id.eq.${userId}${email ? `,invited_email.eq.${email}` : ''}`)
 
   const { data, error } = await query
   if (error) {
     console.warn('Failed to load pending invites:', error.message)
     return []
   }
+  return (data || []) as RelationshipInvite[]
+}
+
+/** Pending connection requests the signed-in parent or guardian created. */
+export async function getPendingFamilyLinkRequests(userId: string): Promise<RelationshipInvite[]> {
+  const { data, error } = await supabase
+    .from('student_profile_relationship_invites')
+    .select('*')
+    .eq('created_by_user_id', userId)
+    .eq('invite_type', 'access_request')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.warn('Failed to load pending family link requests:', error.message)
+    return []
+  }
+
   return (data || []) as RelationshipInvite[]
 }
 
@@ -394,14 +463,17 @@ export async function createRelationshipInvite(input: {
   return { success: false, error: error.message }
 }
 
-export async function acceptRelationshipInvite(inviteId: string): Promise<{ success: boolean; error: string | null }> {
+export async function acceptRelationshipInvite(
+  inviteId: string,
+): Promise<{ success: boolean; error: string | null }> {
   const { data: invite, error: inviteError } = await supabase
     .from('student_profile_relationship_invites')
     .select('*')
     .eq('id', inviteId)
     .single()
 
-  if (inviteError || !invite) return { success: false, error: inviteError?.message || 'Invite not found' }
+  if (inviteError || !invite)
+    return { success: false, error: inviteError?.message || 'Invite not found' }
 
   const row = invite as RelationshipInvite
   if (row.relationship_role === 'student') {
@@ -420,7 +492,11 @@ export async function acceptRelationshipInvite(inviteId: string): Promise<{ succ
 
   const update = await supabase
     .from('student_profile_relationship_invites')
-    .update({ status: 'accepted', invited_user_id: userId })
+    .update({
+      status: 'accepted',
+      invited_user_id: userId,
+      accepted_at: new Date().toISOString(),
+    })
     .eq('id', inviteId)
   if (update.error) return { success: false, error: update.error.message }
 
@@ -429,31 +505,90 @@ export async function acceptRelationshipInvite(inviteId: string): Promise<{ succ
     user_id: userId,
     role: row.relationship_role,
   })
-  if (rel.error && !/duplicate key/i.test(rel.error.message)) return { success: false, error: rel.error.message }
+  if (rel.error && !/duplicate key/i.test(rel.error.message))
+    return { success: false, error: rel.error.message }
 
   await setActiveStudentProfile(userId, row.student_profile_id)
   return { success: true, error: null }
 }
 
-export async function declineRelationshipInvite(inviteId: string): Promise<{ success: boolean; error: string | null }> {
+export async function declineRelationshipInvite(
+  inviteId: string,
+): Promise<{ success: boolean; error: string | null }> {
   const { error } = await supabase
     .from('student_profile_relationship_invites')
-    .update({ status: 'declined' })
+    .update({ status: 'declined', declined_at: new Date().toISOString() })
     .eq('id', inviteId)
   return { success: !error, error: error?.message || null }
 }
 
-export async function requestStudentAccessByProfileId(input: {
-  userId: string
-  studentProfileId: string
-  relationshipRole: 'parent' | 'guardian'
-  invitedEmail?: string | null
-}): Promise<{ success: boolean; error: string | null }> {
-  return createRelationshipInvite({
-    userId: input.userId,
-    studentProfileId: input.studentProfileId,
-    invitedEmail: input.invitedEmail?.trim().toLowerCase() || 'student-profile-owner@mysryear.local',
-    relationshipRole: input.relationshipRole,
-    inviteType: 'access_request',
+export type StudentFamilyLinkCode = {
+  code: string
+  formattedCode: string
+  expiresAt: string
+}
+
+export async function createStudentFamilyLinkCode(): Promise<{
+  code: StudentFamilyLinkCode | null
+  error: string | null
+}> {
+  const { data, error } = await supabase.rpc('create_student_family_link_code', {
+    p_expires_minutes: 15,
   })
+  const row = Array.isArray(data) ? data[0] : null
+  if (error || !row?.code || !row?.expires_at) {
+    return { code: null, error: error?.message || 'Failed to create a family link code' }
+  }
+
+  const code = normalizeFamilyLinkCode(String(row.code))
+  return {
+    code: {
+      code,
+      formattedCode: formatFamilyLinkCode(code),
+      expiresAt: String(row.expires_at),
+    },
+    error: null,
+  }
+}
+
+export async function revokeStudentFamilyLinkCodes(): Promise<{
+  success: boolean
+  error: string | null
+}> {
+  const { error } = await supabase.rpc('revoke_student_family_link_codes')
+  return { success: !error, error: error?.message || null }
+}
+
+export async function requestStudentFamilyLinkByCode(code: string): Promise<{
+  success: boolean
+  result: 'requested' | 'pending' | 'already_connected' | null
+  error: string | null
+}> {
+  const normalized = normalizeFamilyLinkCode(code)
+  if (!isValidFamilyLinkCode(normalized)) {
+    return { success: false, result: null, error: 'Enter the full 16-character family link code.' }
+  }
+
+  const { data, error } = await supabase.rpc('request_student_family_link_by_code', {
+    p_code: normalized,
+  })
+  if (error) return { success: false, result: null, error: error.message }
+
+  const result = data === 'pending' || data === 'already_connected' ? data : 'requested'
+  return { success: true, result, error: null }
+}
+
+export async function requestStudentFamilyLinkByEmail(studentEmail: string): Promise<{
+  success: boolean
+  error: string | null
+}> {
+  const email = studentEmail.trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, error: 'Enter a valid student email address.' }
+  }
+
+  const { error } = await supabase.rpc('request_student_family_link_by_email', {
+    p_student_email: email,
+  })
+  return { success: !error, error: error?.message || null }
 }

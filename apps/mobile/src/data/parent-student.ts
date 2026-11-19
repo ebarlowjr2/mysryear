@@ -8,7 +8,6 @@ import {
   createRelationshipInvite,
   declineRelationshipInvite,
   getLinkedStudentProfiles,
-  requestStudentAccessByProfileId,
   type StudentProfile,
 } from './identity'
 
@@ -53,15 +52,18 @@ export async function getPendingLinkRequests(_studentUserId: string): Promise<Pa
 }
 
 export async function sendLinkRequest(
-  parentUserId: string,
-  studentProfileId: string,
-  relationship?: string,
+  _parentUserId: string,
+  _studentProfileId: string,
+  _relationship?: string,
 ): Promise<{ success: boolean; error: string | null }> {
-  return requestStudentAccessByProfileId({
-    userId: parentUserId,
-    studentProfileId,
-    relationshipRole: relationship === 'guardian' ? 'guardian' : 'parent',
-  })
+  // A UUID alone is not proof of a family relationship. Keep this export so an
+  // older consumer fails safely, but route all new links through a Family Link
+  // Code or the approval-based email request instead.
+  return {
+    success: false,
+    error:
+      'Student Profile ID linking has been replaced by Family Link Codes and student-approved email requests.',
+  }
 }
 
 export async function respondToLinkRequest(
@@ -71,7 +73,9 @@ export async function respondToLinkRequest(
   return accept ? acceptRelationshipInvite(linkId) : declineRelationshipInvite(linkId)
 }
 
-export async function removeLinkRequest(linkId: string): Promise<{ success: boolean; error: string | null }> {
+export async function removeLinkRequest(
+  linkId: string,
+): Promise<{ success: boolean; error: string | null }> {
   return declineRelationshipInvite(linkId)
 }
 
@@ -86,7 +90,10 @@ export async function getStudentSavedScholarships(_studentUserId: string) {
 }
 
 export async function assignTaskToStudent(): Promise<{ success: boolean; error: string | null }> {
-  return { success: false, error: 'Parent-assigned tasks must be rebuilt on student_profiles before use.' }
+  return {
+    success: false,
+    error: 'Parent-assigned tasks must be rebuilt on student_profiles before use.',
+  }
 }
 
 export { createRelationshipInvite }
