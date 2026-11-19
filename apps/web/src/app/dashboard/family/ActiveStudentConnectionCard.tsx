@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import FamilyLinkRequestForm from '@/app/profile/ui/FamilyLinkRequestForm'
 
@@ -38,6 +38,7 @@ export default function ActiveStudentConnectionCard({
   pendingInvites,
   schools,
   viewerRole,
+  initialMode = null,
 }: {
   activeStudentProfileId: string | null
   activeStudentProfile: StudentProfile | null
@@ -46,11 +47,11 @@ export default function ActiveStudentConnectionCard({
   pendingInvites: PendingInvite[]
   schools: School[]
   viewerRole: 'parent' | 'guardian' | string | null
+  initialMode?: 'link' | 'create' | null
 }) {
   const router = useRouter()
-  const [mode, setMode] = useState<'link' | 'create' | null>(
-    linkedStudentProfiles.length === 0 ? 'link' : null,
-  )
+  const [mode, setMode] = useState<'link' | 'create' | null>(initialMode)
+  const handledInitialMode = useRef<'link' | 'create' | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +62,15 @@ export default function ActiveStudentConnectionCard({
   const [schoolId, setSchoolId] = useState<string | null>(null)
   const [addSchoolLater, setAddSchoolLater] = useState(true)
   const [claimEmail, setClaimEmail] = useState('')
+
+  useEffect(() => {
+    if (initialMode && handledInitialMode.current !== initialMode) {
+      setMode(initialMode)
+      handledInitialMode.current = initialMode
+      return
+    }
+    if (!initialMode) setMode(linkedStudentProfiles.length === 0 ? 'link' : null)
+  }, [initialMode, linkedStudentProfiles.length])
 
   const relationship = relationships.find(
     (rel) => rel.student_profile_id === activeStudentProfileId,

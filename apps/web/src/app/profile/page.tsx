@@ -7,15 +7,22 @@ import RelationshipInvites from './ui/RelationshipInvites'
 import StudentProfileDetailsForm from './ui/StudentProfileDetailsForm'
 import LinkedSupporters from './ui/LinkedSupporters'
 import DeleteAccountPanel from './ui/DeleteAccountPanel'
+import FamilyOverviewCard from './ui/FamilyOverviewCard'
 import { CalendarDays, Megaphone, Users } from 'lucide-react'
 
-type SchoolRow = { name: string | null } | null
+type SchoolRow = {
+  name: string | null
+  school_level: 'high_school' | 'college' | null
+} | null
 type StudentProfileRow = {
   id: string
+  student_user_id: string | null
   first_name: string | null
   last_name: string | null
   graduation_year: number | null
+  grade_level: string | null
   school_id: string | null
+  claim_status: 'managed' | 'claimed' | 'claim_conflict' | null
   schools: SchoolRow
 }
 
@@ -39,6 +46,10 @@ type InviteRow = {
   created_at: string
 }
 
+type FamilyStudentSummary = StudentProfileRow & {
+  relationship_role: 'parent' | 'guardian'
+}
+
 export default async function ProfilePage() {
   const sp = await requireSessionProfile('/profile')
   const supabase = await createNextServerSupabaseClient()
@@ -46,29 +57,40 @@ export default async function ProfilePage() {
   const { data: profileRow, error: profileError } = await supabase
     .from('profiles')
     .select(
-      'role,onboarding_complete,state,path,testing,early_action,deadline_lead_days,active_student_profile_id',
+      'role,first_name,last_name,full_name,onboarding_complete,state,path,testing,early_action,deadline_lead_days,active_student_profile_id',
     )
     .eq('id', sp.user.id)
     .maybeSingle()
 
   if (profileError) throw profileError
 
+  const role = (profileRow?.role || sp.role || null) as string | null
+  const isBusiness = role === 'business'
+  const isCounselor = role === 'counselor'
+  const isFamily = role === 'parent' || role === 'guardian'
+  const isGuardian = role === 'guardian'
+  const isStudent = role === 'student'
+
   const { data: ownedStudentProfile } = await supabase
     .from('student_profiles')
-    .select('id,first_name,last_name,graduation_year,school_id,schools(name)')
+    .select(
+      'id,student_user_id,first_name,last_name,graduation_year,grade_level,school_id,claim_status,schools(name,school_level)',
+    )
     .eq('student_user_id', sp.user.id)
     .maybeSingle()
 
   const { data: relRows } = await supabase
     .from('family_relationships')
     .select(
-      'role,user_id,student_profile_id,created_at,student_profiles(id,first_name,last_name,graduation_year,school_id,schools(name))',
+      'role,user_id,student_profile_id,created_at,student_profiles(id,student_user_id,first_name,last_name,graduation_year,grade_level,school_id,claim_status,schools(name,school_level))',
     )
     .eq('user_id', sp.user.id)
     .order('created_at', { ascending: true })
 
   const studentProfiles: StudentProfileRow[] = []
-  if (ownedStudentProfile?.id)
+  // A parent or guardian can have a legacy student profile from a prior account
+  // setup. Their family context must only use accepted family relationships.
+  if (isStudent && ownedStudentProfile?.id)
     studentProfiles.push(ownedStudentProfile as unknown as StudentProfileRow)
   for (const r of (relRows || []) as unknown as RelationshipRow[]) {
     const spRow = r.student_profiles
@@ -76,11 +98,15 @@ export default async function ProfilePage() {
     if (!studentProfiles.some((x) => x.id === spRow.id)) studentProfiles.push(spRow)
   }
 
+  const requestedActiveStudentProfileId = profileRow?.active_student_profile_id as
+    | string
+    | null
+    | undefined
   const activeStudentProfileId =
-    (profileRow?.active_student_profile_id as string | null | undefined) ||
-    (ownedStudentProfile?.id as string | undefined) ||
-    studentProfiles[0]?.id ||
-    null
+    requestedActiveStudentProfileId &&
+    studentProfiles.some((studentProfile) => studentProfile.id === requestedActiveStudentProfileId)
+      ? requestedActiveStudentProfileId
+      : studentProfiles[0]?.id || null
 
   const activeStudentProfile =
     studentProfiles.find((p) => p.id === activeStudentProfileId) || studentProfiles[0] || null
@@ -121,16 +147,43 @@ export default async function ProfilePage() {
     .order('name', { ascending: true })
     .limit(5000)
 
-  const role = (profileRow?.role || sp.role || null) as string | null
-  const isBusiness = role === 'business'
-  const isCounselor = role === 'counselor'
-  const isFamily = role === 'parent' || role === 'guardian'
-  const isGuardian = role === 'guardian'
-  const isStudent = role === 'student'
   const canEditActiveStudentProfile = isStudent || isFamily
   const showStudentProfileSections = !isBusiness
   const roleLabel =
     role && ROLE_LABELS[role as UserRole] ? ROLE_LABELS[role as UserRole] : role || '—'
+  const familyStudents: FamilyStudentSummary[] = isFamily
+    ? ((relRows || []) as unknown as RelationshipRow[]).flatMap((relationship) => {
+        if (
+          !relationship.student_profiles ||
+          (relationship.role !== 'parent' && relationship.role !== 'guardian')
+        ) {
+          return []
+        }
+
+        return [
+          {
+            ...relationship.student_profiles,
+            relationship_role: relationship.role,
+          },
+        ]
+      })
+    : []
+  const pendingFamilyConnectionCount = isFamily
+    ? (invitesCreated || []).filter(
+        (invite) =>
+          invite.status === 'pending' &&
+          (invite.invite_type === 'access_request' || invite.invite_type === 'student_claim'),
+      ).length
+    : 0
+  const parentName =
+    [profileRow?.first_name, profileRow?.last_name].filter(Boolean).join(' ') ||
+    profileRow?.full_name ||
+    sp.user.email?.split('@')[0] ||
+    (isGuardian ? 'Guardian' : 'Parent')
+  const activeStudentName = activeStudentProfile
+    ? [activeStudentProfile.first_name, activeStudentProfile.last_name].filter(Boolean).join(' ') ||
+      'Student'
+    : 'Student'
 
   const { data: businessProfile } = isBusiness
     ? await supabase
@@ -142,107 +195,144 @@ export default async function ProfilePage() {
 
   return (
     <section className="container-prose pt-10 pb-20 space-y-6">
-      <div className="card p-8">
-        <div className="badge">Account</div>
-        <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Profile</h1>
-        <p className="mt-3 text-slate-700 max-w-2xl">
-          Manage your account and the profile tools available for your role.
-        </p>
+      <div className="card p-6 sm:p-8">
+        {isFamily ? (
+          <FamilyOverviewCard
+            parentName={parentName}
+            parentEmail={sp.user.email || null}
+            parentRole={isGuardian ? 'guardian' : 'parent'}
+            activeStudentProfileId={activeStudentProfileId}
+            students={familyStudents}
+            pendingConnectionCount={pendingFamilyConnectionCount}
+          />
+        ) : (
+          <>
+            <div className="badge">Account</div>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Profile</h1>
+            <p className="mt-3 text-slate-700 max-w-2xl">
+              Manage your account and the profile tools available for your role.
+            </p>
 
-        <div className="mt-6 grid sm:grid-cols-2 gap-4">
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">Email</div>
-            <div className="mt-1 font-black break-all">{sp.user.email || '—'}</div>
-          </div>
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">Role</div>
-            <div className="mt-1 font-black">{roleLabel}</div>
-          </div>
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">Onboarding</div>
-            <div className="mt-1 font-black">
-              {Boolean(profileRow?.onboarding_complete ?? sp.onboardingComplete)
-                ? 'Complete'
-                : 'Not complete'}
+            <div className="mt-6 grid sm:grid-cols-2 gap-4">
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">Email</div>
+                <div className="mt-1 font-black break-all">{sp.user.email || '—'}</div>
+              </div>
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">Role</div>
+                <div className="mt-1 font-black">{roleLabel}</div>
+              </div>
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">Onboarding</div>
+                <div className="mt-1 font-black">
+                  {Boolean(profileRow?.onboarding_complete ?? sp.onboardingComplete)
+                    ? 'Complete'
+                    : 'Not complete'}
+                </div>
+              </div>
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">Planner Defaults</div>
+                <div className="mt-1 text-sm text-slate-700">
+                  <div>
+                    <span className="font-semibold">State:</span> {profileRow?.state || '—'}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Path:</span> {profileRow?.path || '—'}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Testing:</span> {profileRow?.testing || '—'}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="card p-4">
-            <div className="text-xs font-semibold text-slate-600">Planner Defaults</div>
-            <div className="mt-1 text-sm text-slate-700">
-              <div>
-                <span className="font-semibold">State:</span> {profileRow?.state || '—'}
-              </div>
-              <div>
-                <span className="font-semibold">Path:</span> {profileRow?.path || '—'}
-              </div>
-              <div>
-                <span className="font-semibold">Testing:</span> {profileRow?.testing || '—'}
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {showStudentProfileSections ? (
         <div className="card p-8">
-          <div className="badge">Student Profile</div>
-          <h2 className="mt-3 text-2xl font-black tracking-tight">Active Student Profile</h2>
+          <div className="badge">{isFamily ? 'Active Student' : 'Student Profile'}</div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight">
+            {isFamily
+              ? activeStudentProfile
+                ? `${activeStudentName}'s Profile Details`
+                : 'Student Profile Details'
+              : 'Active Student Profile'}
+          </h2>
           <p className="mt-2 text-slate-700">
-            LifePath, uploads, and planning tools should attach to your active student profile.
+            {isFamily
+              ? activeStudentProfile
+                ? 'Review the selected student’s school and graduation details. Changes here update their student profile.'
+                : 'Connect an existing student or create a managed profile before reviewing student details.'
+              : 'LifePath, uploads, and planning tools should attach to your active student profile.'}
           </p>
 
-          <div className="mt-6">
-            <ActiveStudentProfileSelector
-              activeStudentProfileId={activeStudentProfileId}
-              studentProfiles={studentProfiles}
-            />
-          </div>
+          {!isFamily ? (
+            <div className="mt-6">
+              <ActiveStudentProfileSelector
+                activeStudentProfileId={activeStudentProfileId}
+                studentProfiles={studentProfiles}
+              />
+            </div>
+          ) : null}
 
-          <div className="mt-6 grid sm:grid-cols-2 gap-4">
-            <div className="card p-4">
-              <div className="text-xs font-semibold text-slate-600">Student</div>
-              <div className="mt-1 font-black">
-                {activeStudentProfile
-                  ? [activeStudentProfile.first_name, activeStudentProfile.last_name]
-                      .filter(Boolean)
-                      .join(' ') || '—'
-                  : '—'}
-              </div>
-              <div className="mt-2 text-sm text-slate-700">
-                <div>
-                  <span className="font-semibold">Graduation year:</span>{' '}
-                  {activeStudentProfile?.graduation_year || '—'}
+          {activeStudentProfile ? (
+            <div className="mt-6 grid sm:grid-cols-2 gap-4">
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">Student</div>
+                <div className="mt-1 font-black">{activeStudentName}</div>
+                <div className="mt-2 text-sm text-slate-700">
+                  <div>
+                    <span className="font-semibold">Graduation year:</span>{' '}
+                    {activeStudentProfile.graduation_year || '—'}
+                  </div>
+                  <div>
+                    <span className="font-semibold">School:</span>{' '}
+                    {activeStudentProfile.schools?.name || '—'}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">School:</span>{' '}
-                  {activeStudentProfile?.schools?.name || '—'}
+              </div>
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-slate-600">What’s Next</div>
+                <div className="mt-2 text-sm text-slate-700 space-y-1">
+                  {isFamily ? (
+                    <>
+                      <div>1. Review this student’s school and graduation details.</div>
+                      <div>2. Check in on LifePath choices together.</div>
+                      <div>
+                        3. Manage {isGuardian ? 'guardian' : 'parent'}, counselor, and student
+                        connections below.
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>1. Invite a parent/guardian/counselor below.</div>
+                      <div>2. Build LifePath in A.U.R.A.</div>
+                      <div>3. Upload documents and track milestones.</div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="card p-4">
-              <div className="text-xs font-semibold text-slate-600">What’s Next</div>
-              <div className="mt-2 text-sm text-slate-700 space-y-1">
-                {isFamily ? (
-                  <>
-                    <div>1. Review this student’s school and graduation details.</div>
-                    <div>2. Check in on LifePath choices together.</div>
-                    <div>
-                      3. Manage {isGuardian ? 'guardian' : 'parent'}, counselor, and student
-                      connections below.
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>1. Invite a parent/guardian/counselor below.</div>
-                    <div>2. Build LifePath in A.U.R.A.</div>
-                    <div>3. Upload documents and track milestones.</div>
-                  </>
-                )}
+          ) : isFamily ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-brand-300 bg-brand-50 p-5">
+              <div className="font-black text-slate-950">Choose how you want to get started</div>
+              <p className="mt-1 text-sm text-slate-700">
+                Existing students approve a connection request. A managed profile can be claimed by
+                the student later without losing their information.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link href="/dashboard/family?studentAction=link" className="btn-secondary">
+                  Connect Existing Student
+                </Link>
+                <Link href="/dashboard/family?studentAction=create" className="btn-primary">
+                  Create Student Profile
+                </Link>
               </div>
             </div>
-          </div>
+          ) : null}
 
-          {canEditActiveStudentProfile ? (
+          {canEditActiveStudentProfile && activeStudentProfile ? (
             <div className="mt-6">
               <StudentProfileDetailsForm
                 studentProfileId={activeStudentProfileId}
@@ -257,6 +347,14 @@ export default async function ProfilePage() {
                     city: string | null
                     state: string | null
                   }[]
+                }
+                heading={
+                  isFamily ? `${activeStudentName}'s profile details` : 'Student profile details'
+                }
+                description={
+                  isFamily
+                    ? 'Update the selected student’s core details. Their student profile stays separate from your parent account.'
+                    : undefined
                 }
               />
             </div>

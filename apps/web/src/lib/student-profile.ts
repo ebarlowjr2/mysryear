@@ -29,9 +29,29 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
 
   const role = (profile?.role as UserRole | undefined) || 'student'
 
-  // Preferred: explicit user-selected active student profile.
+  // Preferred: explicit user-selected active student profile. A legacy account
+  // can retain an old student profile after its role becomes parent/guardian,
+  // so validate that the selected profile fits the account's current role.
   const explicitActive = (profile?.active_student_profile_id as string | undefined) || null
-  if (explicitActive) return explicitActive
+  if (explicitActive) {
+    if (role === 'student') {
+      const { data: ownedActive } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('id', explicitActive)
+        .eq('student_user_id', session.user.id)
+        .maybeSingle()
+      if (ownedActive?.id) return ownedActive.id
+    } else if (role !== 'business') {
+      const { data: linkedActive } = await supabase
+        .from('family_relationships')
+        .select('student_profile_id')
+        .eq('student_profile_id', explicitActive)
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+      if (linkedActive?.student_profile_id) return linkedActive.student_profile_id
+    }
+  }
 
   if (role === 'student') {
     const { data: existing, error: existingError } = await supabase
@@ -61,6 +81,8 @@ export async function getActiveStudentProfileId(): Promise<string | null> {
 
     return sp.id
   }
+
+  if (role === 'business') return null
 
   const { data: rel, error: relError } = await supabase
     .from('family_relationships')
