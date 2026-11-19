@@ -71,7 +71,13 @@ type DashboardSummary = {
   error?: string
 }
 
-export default function FamilyDashboardClient({ schools }: { schools: School[] }) {
+export default function FamilyDashboardClient({
+  schools,
+  initialStudentAction = null,
+}: {
+  schools: School[]
+  initialStudentAction?: 'link' | 'create' | null
+}) {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -140,6 +146,7 @@ export default function FamilyDashboardClient({ schools }: { schools: School[] }
         pendingInvites={summary?.pendingInvites || []}
         schools={schools}
         viewerRole={summary?.viewerRole || null}
+        initialMode={initialStudentAction}
       />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

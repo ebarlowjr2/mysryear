@@ -12,6 +12,8 @@ export default function StudentProfileDetailsForm({
   initialGraduationYear,
   initialSchoolId,
   schools,
+  heading = 'Student profile details',
+  description = 'Update the active student profile. (Students and linked parent/guardian/admin can edit core fields.)',
 }: {
   studentProfileId: string | null
   initialFirstName: string | null
@@ -19,6 +21,8 @@ export default function StudentProfileDetailsForm({
   initialGraduationYear: number | null
   initialSchoolId: string | null
   schools: School[]
+  heading?: string
+  description?: string
 }) {
   const router = useRouter()
   const [firstName, setFirstName] = useState(initialFirstName || '')
@@ -67,10 +71,8 @@ export default function StudentProfileDetailsForm({
 
   return (
     <div className="card p-4">
-      <div className="text-sm font-black">Student profile details</div>
-      <p className="mt-1 text-sm text-slate-700">
-        Update the active student profile. (Students and linked parent/guardian/admin can edit core fields.)
-      </p>
+      <div className="text-sm font-black">{heading}</div>
+      <p className="mt-1 text-sm text-slate-700">{description}</p>
 
       <div className="mt-4 grid sm:grid-cols-2 gap-4">
         <div>

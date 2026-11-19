@@ -27,11 +27,13 @@ import {
   createStudentFamilyLinkCode,
   createRelationshipInvite,
   declineRelationshipInvite,
+  getPendingFamilyLinkRequests,
   getPendingRelationshipInvites,
   revokeStudentFamilyLinkCodes,
   setActiveStudentProfile,
   type StudentFamilyLinkCode,
   type RelationshipInvite,
+  type StudentProfile,
 } from '../../src/data/identity'
 import { colors, ui, radius, shadow } from '../../src/theme'
 import { deleteMyAccount } from '../../src/data/account'
@@ -115,6 +117,23 @@ function relationshipInviteLabel(invite: RelationshipInvite) {
   return `${formatRelationshipRole(invite.relationship_role)} invitation`
 }
 
+function studentDisplayName(student: StudentProfile) {
+  return [student.first_name, student.last_name].filter(Boolean).join(' ') || 'Student'
+}
+
+function studentSchoolLevelLabel(student: StudentProfile) {
+  if (student.schools?.school_level === 'college') return 'College'
+  if (student.schools?.school_level === 'high_school') return 'High School'
+  return 'School level not set'
+}
+
+function studentConnectionLabel(student: StudentProfile) {
+  if (student.claim_status === 'claim_conflict') return 'Claim needs attention'
+  if (student.claim_status === 'managed' || student.student_user_id === null)
+    return 'Managed profile'
+  return 'Connected'
+}
+
 export default function ProfileScreen() {
   const { user, signOut } = useAuth()
   const router = useRouter()
@@ -137,6 +156,7 @@ export default function ProfileScreen() {
   const [showStatePicker, setShowStatePicker] = useState(false)
   const [showYearPicker, setShowYearPicker] = useState(false)
   const [pendingInvites, setPendingInvites] = useState<RelationshipInvite[]>([])
+  const [pendingFamilyRequests, setPendingFamilyRequests] = useState<RelationshipInvite[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'parent' | 'guardian' | 'counselor'>('parent')
   const [familyLinkCode, setFamilyLinkCode] = useState<StudentFamilyLinkCode | null>(null)
@@ -147,6 +167,14 @@ export default function ProfileScreen() {
   const isBusiness = profile?.role === 'business'
   const canManageActiveStudent = isStudent || isFamily
   const canInviteSupporters = isStudent && Boolean(profile?.activeStudentProfile?.id)
+  const familyStudents = profile?.linkedStudentProfiles || []
+  const studentAttentionCount = familyStudents.filter(
+    (student) =>
+      student.claim_status === 'managed' ||
+      student.claim_status === 'claim_conflict' ||
+      student.student_user_id === null,
+  ).length
+  const familyAttentionCount = studentAttentionCount + pendingFamilyRequests.length
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return
@@ -167,7 +195,14 @@ export default function ProfileScreen() {
         setCounty(data.county || '')
         setNotificationsTasks(data.notifications_tasks ?? true)
         setNotificationsDeadlines(data.notifications_deadlines ?? true)
-        setPendingInvites(await getPendingRelationshipInvites(user.id))
+        const [receivedInvites, familyRequests] = await Promise.all([
+          getPendingRelationshipInvites(user.id),
+          data.role === 'parent' || data.role === 'guardian'
+            ? getPendingFamilyLinkRequests(user.id)
+            : Promise.resolve([]),
+        ])
+        setPendingInvites(receivedInvites)
+        setPendingFamilyRequests(familyRequests)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile')
@@ -497,6 +532,129 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      {isFamily ? (
+        <View style={[styles.section, styles.familyOverviewSection]}>
+          <View style={styles.familyOverviewHeader}>
+            <View style={styles.familyOverviewHeading}>
+              <Text style={styles.familyEyebrow}>FAMILY ACCOUNT</Text>
+              <Text style={styles.familyOverviewTitle}>Family Overview</Text>
+              <Text style={styles.familyOverviewDescription}>
+                Keep your account and the student profiles you support in one place.
+              </Text>
+            </View>
+            <View style={styles.familyRolePill}>
+              <Text style={styles.familyRolePillText}>
+                {profile?.role === 'guardian' ? 'Guardian' : 'Parent'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.familyParentCard}>
+            <View style={styles.familyParentIcon}>
+              <Ionicons name="person-outline" size={20} color={ui.primary} />
+            </View>
+            <View style={styles.familyParentCopy}>
+              <Text style={styles.familyParentName}>{getDisplayName()}</Text>
+              <Text style={styles.familyParentEmail}>{user?.email || 'Email not set'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.familyStatRow}>
+            <View style={styles.familyStatCard}>
+              <Ionicons name="people-outline" size={18} color={ui.primary} />
+              <Text style={styles.familyStatValue}>{familyStudents.length}</Text>
+              <Text style={styles.familyStatLabel}>Connected students</Text>
+            </View>
+            <View style={styles.familyStatCard}>
+              <Ionicons name="time-outline" size={18} color={ui.primary} />
+              <Text style={styles.familyStatValue}>{familyAttentionCount}</Text>
+              <Text style={styles.familyStatLabel}>Needs attention</Text>
+            </View>
+          </View>
+
+          {familyStudents.length === 0 ? (
+            <View style={styles.familyEmptyState}>
+              <Ionicons name="people-outline" size={26} color={ui.primary} />
+              <View style={styles.familyEmptyCopy}>
+                <Text style={styles.familyEmptyTitle}>No student profile connected yet</Text>
+                <Text style={styles.familyEmptyDescription}>
+                  Connect an existing student or create a managed profile they can claim later.
+                </Text>
+                {pendingFamilyRequests.length > 0 ? (
+                  <Text style={styles.familyPendingText}>
+                    {pendingFamilyRequests.length} connection{' '}
+                    {pendingFamilyRequests.length === 1 ? 'request is' : 'requests are'} awaiting
+                    student approval.
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.familyStudentList}>
+              <Text style={styles.familyStudentListTitle}>Your Students</Text>
+              <Text style={styles.familyStudentListDescription}>
+                Select a student to make them active across family tools.
+              </Text>
+              {familyStudents.map((student) => {
+                const isActive = student.id === profile?.activeStudentProfile?.id
+                const connectionLabel = studentConnectionLabel(student)
+                return (
+                  <TouchableOpacity
+                    key={student.id}
+                    style={[styles.familyStudentCard, isActive && styles.familyStudentCardActive]}
+                    onPress={() => handleSelectStudentProfile(student.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={`${studentDisplayName(student)}${
+                      isActive ? ', active student' : ', make active student'
+                    }`}
+                  >
+                    <View style={styles.familyStudentCardCopy}>
+                      <View style={styles.familyStudentNameRow}>
+                        <Text style={styles.familyStudentName}>{studentDisplayName(student)}</Text>
+                        {isActive ? (
+                          <View style={styles.familyActivePill}>
+                            <Text style={styles.familyActivePillText}>Active</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.familyStudentMeta}>
+                        {studentSchoolLevelLabel(student)}
+                        {student.graduation_year ? ` • Class of ${student.graduation_year}` : ''}
+                      </Text>
+                      <Text style={styles.familyStudentSchool}>
+                        {student.schools?.name || 'School not set'}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.familyStudentStatus,
+                          connectionLabel === 'Connected'
+                            ? styles.familyStudentStatusConnected
+                            : styles.familyStudentStatusAttention,
+                        ]}
+                      >
+                        {connectionLabel}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={ui.textMuted} />
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.familyManageButton}
+            onPress={() => router.push('/(app)/students' as never)}
+          >
+            <Text style={styles.familyManageButtonText}>
+              {familyStudents.length === 0 ? 'Connect or Create a Student' : 'Manage Students'}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* A) Account Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
@@ -548,56 +706,62 @@ export default function ProfileScreen() {
 
       {!isBusiness && (
         <>
-          {/* Active Student Profile */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {isFamily ? 'Student You Are Supporting' : 'Active Student Profile'}
-            </Text>
-            {profile?.activeStudentProfile && canManageActiveStudent ? (
-              <View style={styles.studentProfileCard}>
-                <Text style={styles.studentProfileName}>
-                  {[profile.activeStudentProfile.first_name, profile.activeStudentProfile.last_name]
-                    .filter(Boolean)
-                    .join(' ') || 'Student'}
-                </Text>
-                <Text style={styles.studentProfileMeta}>
-                  {profile.activeStudentProfile.graduation_year
-                    ? `Class of ${profile.activeStudentProfile.graduation_year}`
-                    : 'Graduation year not set'}
-                  {profile.activeStudentProfile.schools?.name
-                    ? ` • ${profile.activeStudentProfile.schools.name}`
-                    : ''}
-                </Text>
-              </View>
-            ) : profile?.activeStudentProfile ? (
-              <Text style={styles.infoValue}>View-only student support access.</Text>
-            ) : (
-              <Text style={styles.infoValue}>No active student profile yet.</Text>
-            )}
+          {!isFamily ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {isFamily ? 'Student You Are Supporting' : 'Active Student Profile'}
+              </Text>
+              {profile?.activeStudentProfile && canManageActiveStudent ? (
+                <View style={styles.studentProfileCard}>
+                  <Text style={styles.studentProfileName}>
+                    {[
+                      profile.activeStudentProfile.first_name,
+                      profile.activeStudentProfile.last_name,
+                    ]
+                      .filter(Boolean)
+                      .join(' ') || 'Student'}
+                  </Text>
+                  <Text style={styles.studentProfileMeta}>
+                    {profile.activeStudentProfile.graduation_year
+                      ? `Class of ${profile.activeStudentProfile.graduation_year}`
+                      : 'Graduation year not set'}
+                    {profile.activeStudentProfile.schools?.name
+                      ? ` • ${profile.activeStudentProfile.schools.name}`
+                      : ''}
+                  </Text>
+                </View>
+              ) : profile?.activeStudentProfile ? (
+                <Text style={styles.infoValue}>View-only student support access.</Text>
+              ) : (
+                <Text style={styles.infoValue}>No active student profile yet.</Text>
+              )}
 
-            {(profile?.linkedStudentProfiles?.length || 0) > 1 && (
-              <View style={styles.profileSwitchList}>
-                {profile?.linkedStudentProfiles.map((studentProfile) => (
-                  <TouchableOpacity
-                    key={studentProfile.id}
-                    style={[
-                      styles.switchProfileButton,
-                      profile.activeStudentProfile?.id === studentProfile.id &&
-                        styles.switchProfileButtonActive,
-                    ]}
-                    onPress={() => handleSelectStudentProfile(studentProfile.id)}
-                  >
-                    <Text style={styles.switchProfileText}>
-                      {[studentProfile.first_name, studentProfile.last_name]
-                        .filter(Boolean)
-                        .join(' ') || 'Student'}
-                      {studentProfile.graduation_year ? ` • ${studentProfile.graduation_year}` : ''}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
+              {(profile?.linkedStudentProfiles?.length || 0) > 1 && (
+                <View style={styles.profileSwitchList}>
+                  {profile?.linkedStudentProfiles.map((studentProfile) => (
+                    <TouchableOpacity
+                      key={studentProfile.id}
+                      style={[
+                        styles.switchProfileButton,
+                        profile.activeStudentProfile?.id === studentProfile.id &&
+                          styles.switchProfileButtonActive,
+                      ]}
+                      onPress={() => handleSelectStudentProfile(studentProfile.id)}
+                    >
+                      <Text style={styles.switchProfileText}>
+                        {[studentProfile.first_name, studentProfile.last_name]
+                          .filter(Boolean)
+                          .join(' ') || 'Student'}
+                        {studentProfile.graduation_year
+                          ? ` • ${studentProfile.graduation_year}`
+                          : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          ) : null}
 
           {/* Relationship Invites */}
           {isStudent && profile?.activeStudentProfile ? (
@@ -1150,6 +1314,228 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: ui.cardBorder,
+  },
+  familyOverviewSection: {
+    backgroundColor: ui.card,
+  },
+  familyOverviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  familyOverviewHeading: {
+    flex: 1,
+  },
+  familyEyebrow: {
+    color: ui.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  familyOverviewTitle: {
+    color: ui.text,
+    fontSize: 23,
+    fontWeight: '800',
+    marginTop: 4,
+  },
+  familyOverviewDescription: {
+    color: ui.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  familyRolePill: {
+    backgroundColor: ui.primaryLight,
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  familyRolePillText: {
+    color: ui.primary,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  familyParentCard: {
+    alignItems: 'center',
+    backgroundColor: ui.backgroundSecondary,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 18,
+    padding: 14,
+  },
+  familyParentIcon: {
+    alignItems: 'center',
+    backgroundColor: ui.primaryLight,
+    borderRadius: radius.full,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  familyParentCopy: {
+    flex: 1,
+  },
+  familyParentName: {
+    color: ui.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  familyParentEmail: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    marginTop: 3,
+  },
+  familyStatRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  familyStatCard: {
+    backgroundColor: ui.card,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flex: 1,
+    padding: 14,
+  },
+  familyStatValue: {
+    color: ui.text,
+    fontSize: 24,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  familyStatLabel: {
+    color: ui.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  familyEmptyState: {
+    alignItems: 'flex-start',
+    backgroundColor: ui.primaryLight,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 18,
+    padding: 16,
+  },
+  familyEmptyCopy: {
+    flex: 1,
+  },
+  familyEmptyTitle: {
+    color: ui.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  familyEmptyDescription: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  familyPendingText: {
+    color: colors.warning,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 19,
+    marginTop: 10,
+  },
+  familyStudentList: {
+    marginTop: 18,
+  },
+  familyStudentListTitle: {
+    color: ui.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  familyStudentListDescription: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  familyStudentCard: {
+    alignItems: 'center',
+    backgroundColor: ui.card,
+    borderColor: ui.cardBorder,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    padding: 14,
+  },
+  familyStudentCardActive: {
+    backgroundColor: ui.primaryLight,
+    borderColor: ui.primary,
+  },
+  familyStudentCardCopy: {
+    flex: 1,
+    marginRight: 12,
+  },
+  familyStudentNameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  familyStudentName: {
+    color: ui.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  familyActivePill: {
+    backgroundColor: ui.primary,
+    borderRadius: radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  familyActivePillText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  familyStudentMeta: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    marginTop: 5,
+  },
+  familyStudentSchool: {
+    color: ui.textSecondary,
+    fontSize: 13,
+    marginTop: 3,
+  },
+  familyStudentStatus: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  familyStudentStatusConnected: {
+    color: colors.success,
+  },
+  familyStudentStatusAttention: {
+    color: colors.warning,
+  },
+  familyManageButton: {
+    alignItems: 'center',
+    backgroundColor: ui.primary,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  familyManageButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '700',
+    marginRight: 8,
   },
   sectionTitle: {
     fontSize: 16,
