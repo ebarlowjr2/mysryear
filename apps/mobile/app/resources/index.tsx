@@ -1,13 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import React, { useMemo, useState } from 'react'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import {
@@ -27,17 +19,10 @@ import { colors, radius, shadow, ui } from '../../src/theme'
 const AUDIENCES: GuideAudience[] = ['student', 'family']
 
 export default function ResourcesScreen() {
-  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [audience, setAudience] = useState<GuideAudience | ''>('')
   const [stage, setStage] = useState<GuideStage | ''>('')
   const [category, setCategory] = useState<GuideCategorySlug | ''>('')
-
-  useEffect(() => {
-    // Shared data is synchronous; settle a brief loading state on mount.
-    const id = setTimeout(() => setLoading(false), 0)
-    return () => clearTimeout(id)
-  }, [])
 
   const hasFilters = Boolean(query || audience || stage || category)
 
@@ -135,12 +120,7 @@ export default function ResourcesScreen() {
       )}
 
       {/* States */}
-      {loading ? (
-        <View style={styles.stateBox}>
-          <ActivityIndicator color={ui.primary} />
-          <Text style={styles.stateText}>Loading guides…</Text>
-        </View>
-      ) : dataError ? (
+      {dataError ? (
         <View style={styles.stateBox}>
           <Ionicons name="warning-outline" size={22} color={colors.accent[500]} />
           <Text style={styles.stateText}>Guides are unavailable right now. Please try again.</Text>

@@ -7,7 +7,9 @@ on:
 
 jobs:
   build-test:
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.58.x does not support the Ubuntu 26.04 runner, so keep
+    # this on 24.04 for reliable browser installation and E2E runs.
+    runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "example-anon-key"

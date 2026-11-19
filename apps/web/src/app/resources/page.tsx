@@ -53,7 +53,7 @@ const OFFICIAL_TOOLS: ResourceGroup[] = [
       { label: 'College Scorecard', href: 'https://collegescorecard.ed.gov/' },
       { label: 'NCES College Navigator', href: 'https://nces.ed.gov/collegenavigator/' },
       { label: 'Net Price Calculator Center', href: 'https://collegecost.ed.gov/net-price' },
-      { label: 'Loan Simulator', href: 'https://studentaid.gov/loan-simulator/' },
+      { label: 'Loan Simulator (Repayment Calculator)', href: 'https://studentaid.gov/repayment-calculator/' },
     ],
   },
   {
@@ -79,7 +79,7 @@ const OFFICIAL_TOOLS: ResourceGroup[] = [
       { label: 'CFPB — Paying for College', href: 'https://www.consumerfinance.gov/paying-for-college/' },
       {
         label: 'FTC — Avoiding scholarship & aid scams',
-        href: 'https://consumer.ftc.gov/articles/how-avoid-scholarship-financial-aid-scams',
+        href: 'https://consumer.ftc.gov/articles/how-avoid-scholarship-and-financial-aid-scams',
       },
     ],
   },

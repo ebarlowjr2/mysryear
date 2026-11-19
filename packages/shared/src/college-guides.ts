@@ -181,7 +181,10 @@ const SRC = {
     label: 'Parent PLUS loans',
     url: 'https://studentaid.gov/understand-aid/types/loans/plus/parent',
   },
-  loanSimulator: { label: 'Loan Simulator', url: 'https://studentaid.gov/loan-simulator/' },
+  loanSimulator: {
+    label: 'Loan Simulator (Repayment Calculator)',
+    url: 'https://studentaid.gov/repayment-calculator/',
+  },
   loanCounseling: {
     label: 'Entrance counseling and loan agreement',
     url: 'https://studentaid.gov/entrance-counseling/',
@@ -231,7 +234,7 @@ const SRC = {
   ferpa: { label: 'FERPA for parents and students', url: 'https://studentprivacy.ed.gov/' },
   ftcScams: {
     label: 'FTC — Avoiding scholarship and financial aid scams',
-    url: 'https://consumer.ftc.gov/articles/how-avoid-scholarship-financial-aid-scams',
+    url: 'https://consumer.ftc.gov/articles/how-avoid-scholarship-and-financial-aid-scams',
   },
   disability: {
     label: 'Students with disabilities — ED resources',
