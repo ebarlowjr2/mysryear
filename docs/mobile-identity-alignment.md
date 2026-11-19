@@ -83,9 +83,16 @@ Still present by design or as reference:
 - `apps/mobile/src/data/opportunities.ts` still uses `opportunities` for legacy business listings.
 - `apps/mobile/sql/*` contains legacy SQL reference files and should not be treated as canonical migrations.
 
-## Known Limitation
+## Family Connection Flow
 
-Parent request-by-email cannot be safely implemented purely from the mobile anon client without a backend lookup/invite service. The unsafe `supabase.auth.admin.listUsers()` usage was removed. Current mobile access request support requires a `student_profile_id`. A future API/RPC should support request-by-email safely from the server side.
+Parents and guardians no longer need a `student_profile_id` to request access on mobile. The canonical connection flow uses protected Supabase RPCs:
+
+- A student can create a short-lived, one-time **Family Link Code** from Profile and share it through the native share sheet.
+- A parent or guardian can enter that code from **My Students**. The code resolves the target internally and is stored only as a hash.
+- As a fallback, a parent or guardian can request access with the student's email. The result is intentionally generic so it does not reveal whether the email belongs to a MySRYear account.
+- The student must approve every access request. Only that approval creates `family_relationships` and selects the student as the parent's active profile.
+
+The mobile client does not use `supabase.auth.admin.listUsers()` and does not display or require a student profile UUID.
 
 ## Next Recommended Sprint
 

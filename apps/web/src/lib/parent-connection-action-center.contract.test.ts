@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { postSignupDestination, requiresGraduationYear, requiresSchoolFlow } from '../app/signup/signup-flow'
+import {
+  postSignupDestination,
+  requiresGraduationYear,
+  requiresSchoolFlow,
+} from '../app/signup/signup-flow'
 
 const root = join(__dirname, '../../../..')
 function read(path: string) {
@@ -40,9 +44,11 @@ describe('parent connection and action center contract', () => {
     const migration = read('supabase/migrations/20260809120000_parent_connection_action_center.sql')
     expect(migration).toContain('student_profiles_protect_ownership_fields')
     expect(migration).toContain("current_setting('app.allow_student_profile_claim', true)")
-    expect(migration).toContain("perform set_config('app.allow_student_profile_claim', 'true', true)")
+    expect(migration).toContain(
+      "perform set_config('app.allow_student_profile_claim', 'true', true)",
+    )
     expect(migration).toContain('student profile ownership fields are protected')
-    expect(migration).toContain("where student_user_id = auth.uid()")
+    expect(migration).toContain('where student_user_id = auth.uid()')
     expect(migration).toContain('Student already has a profile; conflict resolution is required')
   })
 
@@ -61,7 +67,7 @@ describe('parent connection and action center contract', () => {
     expect(route).toContain('duplicate: true')
     expect(route).toContain('Invite is not pending or has been revoked')
     expect(route).toContain('Invite has expired')
-    expect(route).toContain("status: nextStatus")
+    expect(route).toContain('status: nextStatus')
     expect(route).toContain("accepted_at: action === 'accept'")
     expect(route).toContain("declined_at: action === 'decline'")
     expect(route).toContain("supabase.from('family_relationships').insert")
@@ -85,7 +91,7 @@ describe('parent connection and action center contract', () => {
     expect(webDashboard).toContain('/api/parent-actions')
     expect(webDashboard).toContain('parentActions')
     expect(mobileDashboard).toContain('toggleParentAction')
-    expect(mobileDashboard).not.toContain("successSummary?.tasks || []).slice(0, 3)")
+    expect(mobileDashboard).not.toContain('successSummary?.tasks || []).slice(0, 3)')
   })
 
   it('implements mobile parent parity for account-first onboarding and managed profile creation', () => {
@@ -94,7 +100,7 @@ describe('parent connection and action center contract', () => {
     const mobileStudents = read('apps/mobile/app/(app)/students.tsx')
     expect(mobileOnboarding).toContain('Family Setup')
     expect(mobileOnboarding).toContain("role === 'student' &&")
-    expect(mobileIdentity).toContain("input.role === 'parent' || input.role === 'guardian'")
+    expect(mobileIdentity).toMatch(/input\.role === 'parent'\s*\|\|\s*input\.role === 'guardian'/)
     expect(mobileIdentity).toContain('createManagedStudentProfile')
     expect(mobileStudents).toContain('Create managed student profile')
     expect(mobileStudents).toContain('handleSelectStudent')
