@@ -1,530 +1,291 @@
-'use client'
-
-import React, { useMemo, useState } from 'react'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { TEN_THINGS_TOPICS } from '@mysryear/shared'
-import { ArrowRight, BookOpenCheck } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, ExternalLink, ShieldCheck } from 'lucide-react'
+import { GUIDE_CATEGORIES, GUIDE_STAGE_LABELS, GUIDE_STAGE_ORDER, getGuidesByCategory } from '@mysryear/shared'
+import GuideExplorer from './_components/GuideExplorer'
+import { buildHubJsonLd, resourcesUrl } from '@/lib/seo/guide-structured-data'
 
-type LinkItem = { label: string; href: string; note?: string }
+export const metadata: Metadata = {
+  title: 'College Readiness Hub',
+  description:
+    'Free, plain-language college planning for students and families — 100 guides on courses, applications, FAFSA, scholarships, cost, and the first year. No account required.',
+  keywords: [
+    'college planning',
+    'college readiness',
+    'FAFSA help',
+    'scholarships',
+    'financial aid',
+    'college applications',
+    'high school planning',
+  ],
+  alternates: { canonical: '/resources' },
+  openGraph: {
+    type: 'website',
+    url: resourcesUrl(),
+    title: 'College Readiness Hub | MySRYear',
+    description:
+      'Free, plain-language college planning for students and families. 100 guides, no account required.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'College Readiness Hub | MySRYear',
+    description: 'Free college planning guides for students and families. No account required.',
+  },
+}
 
-export default function ResourcesPage() {
-  const quickLinks: { title: string; items: LinkItem[] }[] = [
-    {
-      title: 'FAFSA & Financial Aid',
-      items: [
-        {
-          label: 'Apply for FAFSA®',
-          href: 'https://studentaid.gov/h/apply-for-aid/fafsa',
-          note: 'Official site',
-        },
-        { label: 'Create/Manage FSA ID', href: 'https://studentaid.gov/fsa-id/' },
-        { label: 'Aid Estimator (FSA)', href: 'https://studentaid.gov/aid-estimator/' },
-        {
-          label: 'FAFSA® Deadlines',
-          href: 'https://studentaid.gov/apply-for-aid/fafsa/fafsa-deadlines',
-        },
-        { label: 'College Scorecard', href: 'https://collegescorecard.ed.gov/' },
-        { label: 'College Navigator (NCES)', href: 'https://nces.ed.gov/collegenavigator/' },
-      ],
-    },
-    {
-      title: 'Loans & Paying for College',
-      items: [
-        {
-          label: 'Federal Loans Overview',
-          href: 'https://studentaid.gov/understand-aid/types/loans',
-        },
-        {
-          label: 'Direct Subsidized/Unsubsidized',
-          href: 'https://studentaid.gov/understand-aid/types/loans/subsidized-unsubsidized',
-        },
-        {
-          label: 'Parent PLUS Loans',
-          href: 'https://studentaid.gov/understand-aid/types/loans/plus/parent',
-        },
-        { label: 'Repayment Plans', href: 'https://studentaid.gov/loan-simulator/' },
-      ],
-    },
-    {
-      title: 'Scholarships & Money',
-      items: [
-        {
-          label: 'CareerOneStop Scholarship Finder',
-          href: 'https://www.careeronestop.org/toolkit/training/find-scholarships.aspx',
-        },
-        {
-          label: 'BigFuture Scholarships (College Board)',
-          href: 'https://bigfuture.collegeboard.org/scholarship-search',
-        },
-        {
-          label: 'Local Scholarships (Ask Counselor)',
-          href: '#faq-local-scholarships',
-          note: 'See FAQ below',
-        },
-      ],
-    },
-    {
-      title: 'Applications & Testing',
-      items: [
-        { label: 'Common App', href: 'https://www.commonapp.org/' },
-        { label: 'Coalition/Score App', href: 'https://www.coalitionforcollegeaccess.org/' },
-        { label: 'SAT (College Board)', href: 'https://satsuite.collegeboard.org/sat' },
-        { label: 'ACT', href: 'https://www.act.org/' },
-        { label: 'Net Price Calculators', href: 'https://collegecost.ed.gov/net-price' },
-      ],
-    },
-    {
-      title: 'Career, Jobs & Paths',
-      items: [
-        { label: 'Apprenticeship.gov', href: 'https://www.apprenticeship.gov/' },
-        { label: 'USAJobs (Federal)', href: 'https://www.usajobs.gov/' },
-        { label: 'Handshake (college job network)', href: 'https://joinhandshake.com/' },
-        { label: 'LinkedIn Jobs', href: 'https://www.linkedin.com/jobs/' },
-        { label: 'Indeed', href: 'https://www.indeed.com/' },
-      ],
-    },
-    {
-      title: 'Docs & Templates',
-      items: [
-        {
-          label: 'Academic Résumé (Google Docs template)',
-          href: 'https://docs.google.com/document/u/0/?ftv=1',
-          note: 'Pick a template',
-        },
-        { label: 'Resume/CV Templates (Canva)', href: 'https://www.canva.com/resumes/templates/' },
-        { label: 'Activity List Tips (Common App)', href: 'https://www.commonapp.org/blog' },
-      ],
-    },
-  ]
+type ExternalResource = { label: string; href: string; note?: string }
+type ResourceGroup = { title: string; items: ExternalResource[] }
 
-  const faqs = useMemo(
-    () => [
+// Preserved, verified authoritative links (low-authority and duplicate links removed).
+const OFFICIAL_TOOLS: ResourceGroup[] = [
+  {
+    title: 'FAFSA & financial aid',
+    items: [
+      { label: 'Apply for the FAFSA® form', href: 'https://studentaid.gov/h/apply-for-aid/fafsa', note: 'Federal Student Aid' },
+      { label: 'Create or manage your FSA ID', href: 'https://studentaid.gov/fsa-id/' },
+      { label: 'Federal Student Aid Estimator', href: 'https://studentaid.gov/aid-estimator/' },
+      { label: 'FAFSA® deadlines', href: 'https://studentaid.gov/apply-for-aid/fafsa/fafsa-deadlines' },
+    ],
+  },
+  {
+    title: 'Compare colleges & cost',
+    items: [
+      { label: 'College Scorecard', href: 'https://collegescorecard.ed.gov/' },
+      { label: 'NCES College Navigator', href: 'https://nces.ed.gov/collegenavigator/' },
+      { label: 'Net Price Calculator Center', href: 'https://collegecost.ed.gov/net-price' },
+      { label: 'Loan Simulator (Repayment Calculator)', href: 'https://studentaid.gov/repayment-calculator/' },
+    ],
+  },
+  {
+    title: 'Applications & testing',
+    items: [
+      { label: 'Common App', href: 'https://www.commonapp.org/' },
+      { label: 'College Board BigFuture', href: 'https://bigfuture.collegeboard.org/' },
+      { label: 'SAT (College Board)', href: 'https://satsuite.collegeboard.org/sat' },
+      { label: 'ACT', href: 'https://www.act.org/' },
+    ],
+  },
+  {
+    title: 'Careers & pathways',
+    items: [
+      { label: 'Apprenticeship.gov', href: 'https://www.apprenticeship.gov/' },
+      { label: 'CareerOneStop', href: 'https://www.careeronestop.org/' },
+      { label: 'Occupational Outlook Handbook (BLS)', href: 'https://www.bls.gov/ooh/' },
+    ],
+  },
+  {
+    title: 'Protect your money',
+    items: [
+      { label: 'CFPB — Paying for College', href: 'https://www.consumerfinance.gov/paying-for-college/' },
       {
-        id: 'fa-what-is-fafsa',
-        category: 'FAFSA',
-        q: 'What is the FAFSA® and why does it matter?',
-        a: (
-          <>
-            <p className="text-slate-700">
-              The FAFSA® (Free Application for Federal Student Aid) is how students become eligible
-              for federal grants, work-study, and loans. Many states and colleges also use it to
-              award their own aid.
-            </p>
-            <div className="mt-3 flex gap-2 flex-wrap">
-              <a
-                className="btn-primary"
-                href="https://studentaid.gov/h/apply-for-aid/fafsa"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Apply for FAFSA®
-              </a>
-              <a
-                className="btn"
-                href="https://studentaid.gov/fsa-id/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Create FSA ID
-              </a>
-              <a
-                className="btn"
-                href="https://studentaid.gov/aid-estimator/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Aid Estimator
-              </a>
-            </div>
-          </>
-        ),
-        tags: ['fafsa', 'financial-aid', 'grants', 'loans'],
-      },
-      {
-        id: 'fa-when-open-deadlines',
-        category: 'FAFSA',
-        q: 'When does the FAFSA® open and what deadlines should we track?',
-        a: (
-          <>
-            <p className="text-slate-700">
-              The FAFSA typically opens in the fall. There are three important deadlines: federal,
-              state, and school-specific. Submit as early as possible—some aid is first-come,
-              first-served.
-            </p>
-            <ul className="list-disc ml-5 mt-2 text-slate-700">
-              <li>
-                <a
-                  className="text-brand-700 underline"
-                  href="https://studentaid.gov/apply-for-aid/fafsa/fafsa-deadlines"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Check FAFSA® deadlines
-                </a>
-              </li>
-              <li>Also check each college&apos;s financial aid page for priority dates.</li>
-            </ul>
-          </>
-        ),
-        tags: ['fafsa', 'deadlines'],
-      },
-      {
-        id: 'fa-fsa-id',
-        category: 'FAFSA',
-        q: 'Do we need an FSA ID? (Parent and student)',
-        a: (
-          <>
-            <p className="text-slate-700">
-              Yes. The student needs an FSA ID; a contributing parent usually does too. Create them
-              before starting the FAFSA to avoid delays.
-            </p>
-            <a
-              className="text-brand-700 underline"
-              href="https://studentaid.gov/fsa-id/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Create/Manage FSA ID
-            </a>
-          </>
-        ),
-        tags: ['fafsa', 'fsa-id'],
-      },
-      {
-        id: 'fa-what-info-needed',
-        category: 'FAFSA',
-        q: 'What information and documents should we have ready?',
-        a: (
-          <ul className="list-disc ml-5 text-slate-700">
-            <li>Student and parent Social Security numbers (or Alien Registration numbers)</li>
-            <li>Tax info (student and parent), W-2s, untaxed income details</li>
-            <li>Household size and number in college</li>
-            <li>List of colleges/programs to receive the FAFSA (up to the current limit)</li>
-          </ul>
-        ),
-        tags: ['fafsa', 'documents'],
-      },
-      {
-        id: 'fa-submit-next',
-        category: 'FAFSA',
-        q: 'We submitted the FAFSA—what are the next steps?',
-        a: (
-          <ul className="list-disc ml-5 text-slate-700">
-            <li>Watch for your FAFSA Submission Summary and fix any errors.</li>
-            <li>Colleges may ask for verification—respond quickly.</li>
-            <li>Compare financial aid offers from each school and note deadlines.</li>
-            <li>If needed, update schools listed on the FAFSA.</li>
-          </ul>
-        ),
-        tags: ['fafsa', 'after-submission'],
-      },
-
-      {
-        id: 'loans-overview',
-        category: 'Student Loans',
-        q: 'Where can we learn the basics of federal student loans?',
-        a: (
-          <p className="text-slate-700">
-            Start with the official overview of federal loans (types, interest, limits) and use the
-            Loan Simulator to estimate future payments and compare plans.{' '}
-            <a
-              className="text-brand-700 underline"
-              href="https://studentaid.gov/understand-aid/types/loans"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Federal Loans Overview
-            </a>{' '}
-            ·{' '}
-            <a
-              className="text-brand-700 underline"
-              href="https://studentaid.gov/loan-simulator/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Loan Simulator
-            </a>
-          </p>
-        ),
-        tags: ['loans', 'repayment'],
-      },
-
-      {
-        id: 'faq-local-scholarships',
-        category: 'Scholarships',
-        q: 'How do we find local scholarships?',
-        a: (
-          <>
-            <p className="text-slate-700">
-              Check your high school counseling office site, local community foundations, employers,
-              and civic groups (Rotary, Elks, PTA, etc.). Many districts publish a PDF or page with
-              local awards and deadlines.
-            </p>
-            <p className="mt-2 text-slate-700">
-              For broader searches, try:{' '}
-              <a
-                className="text-brand-700 underline"
-                href="https://www.careeronestop.org/toolkit/training/find-scholarships.aspx"
-                target="_blank"
-                rel="noreferrer"
-              >
-                CareerOneStop
-              </a>{' '}
-              and{' '}
-              <a
-                className="text-brand-700 underline"
-                href="https://bigfuture.collegeboard.org/scholarship-search"
-                target="_blank"
-                rel="noreferrer"
-              >
-                BigFuture
-              </a>
-              .
-            </p>
-          </>
-        ),
-        tags: ['scholarships', 'local'],
-      },
-
-      {
-        id: 'apps-which-platform',
-        category: 'Applications & Testing',
-        q: 'Common App vs Coalition—do we need both?',
-        a: (
-          <p className="text-slate-700">
-            Most colleges use one or both; some use state or institutional apps. Start with each
-            college&apos;s admissions page. If both are accepted, choose the platform your son finds
-            simpler or that aligns with your school list.
-          </p>
-        ),
-        tags: ['applications', 'common-app', 'coalition'],
-      },
-      {
-        id: 'testing-optional',
-        category: 'Applications & Testing',
-        q: 'Test-optional—should he still take the SAT/ACT?',
-        a: (
-          <p className="text-slate-700">
-            It depends on target schools, merit scholarships, and his practice scores. Many merit
-            awards still consider test scores. Check each college&apos;s policy and scholarship
-            criteria.
-          </p>
-        ),
-        tags: ['testing', 'sat', 'act'],
-      },
-
-      {
-        id: 'career-first-steps',
-        category: 'Career & Jobs',
-        q: "What if he's exploring trades, apprenticeships, or direct-to-work?",
-        a: (
-          <p className="text-slate-700">
-            Look up registered apprenticeships on{' '}
-            <a
-              className="text-brand-700 underline"
-              href="https://www.apprenticeship.gov/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Apprenticeship.gov
-            </a>
-            , and check community colleges for certificate programs. Build a starter résumé and seek
-            part-time roles or internships via Handshake, LinkedIn, and Indeed.
-          </p>
-        ),
-        tags: ['careers', 'apprenticeships', 'jobs'],
-      },
-
-      {
-        id: 'resume-templates',
-        category: 'Docs & Templates',
-        q: 'Where can we grab a quick academic résumé template?',
-        a: (
-          <p className="text-slate-700">
-            In Google Docs, click <b>Template gallery</b> and choose a résumé to customize; add an
-            &quot;Activities &amp; Honors&quot; section. For polished layouts, see{' '}
-            <a
-              className="text-brand-700 underline"
-              href="https://www.canva.com/resumes/templates/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Canva templates
-            </a>
-            .
-          </p>
-        ),
-        tags: ['resume', 'templates'],
+        label: 'FTC — Avoiding scholarship & aid scams',
+        href: 'https://consumer.ftc.gov/articles/how-avoid-scholarship-and-financial-aid-scams',
       },
     ],
-    [],
-  )
+  },
+]
 
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<
-    | 'All'
-    | 'FAFSA'
-    | 'Student Loans'
-    | 'Scholarships'
-    | 'Applications & Testing'
-    | 'Career & Jobs'
-    | 'Docs & Templates'
-  >('All')
+// Former FAQ entries folded into the relevant guide topics. Anchor ids are
+// preserved so older deep links still resolve.
+const FAQ_LINKS: { id: string; question: string; slug: string }[] = [
+  { id: 'faq-what-is-fafsa', question: 'What is the FAFSA® and why does it matter?', slug: 'grants-work-study-loans' },
+  { id: 'faq-fafsa-deadlines', question: 'When does the FAFSA® open and what deadlines matter?', slug: 'fafsa-deadlines' },
+  { id: 'faq-fsa-id', question: 'Do the student and a parent each need an FSA ID?', slug: 'fafsa-accounts' },
+  { id: 'faq-local-scholarships', question: 'How do we find local scholarships?', slug: 'local-scholarships' },
+  { id: 'faq-test-optional', question: 'Test-optional — should the student still test?', slug: 'decide-testing' },
+  { id: 'faq-apprenticeships', question: 'What about trades, apprenticeships, or direct-to-work?', slug: 'compare-pathways' },
+]
 
-  const filteredFaqs = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    return faqs.filter((f) => {
-      const matchesCat = category === 'All' || f.category === category
-      const hay = (f.q + ' ' + (f.tags?.join(' ') ?? '')).toLowerCase()
-      const matchesQ = !needle || hay.includes(needle)
-      return matchesCat && matchesQ
-    })
-  }, [faqs, query, category])
+export default function ResourcesPage() {
+  const jsonLd = buildHubJsonLd()
 
   return (
-    <div className="container-prose py-10">
-      <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Resources & FAQ</h1>
-      <p className="mt-2 text-slate-700">
-        Start with FAFSA®, then explore loans, scholarships, testing, jobs, and templates.
-      </p>
+    <div className="bg-white">
+      <script
+        type="application/ld+json"
+        // Structured data for breadcrumbs and the collection page.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-      <section className="mt-8 border-y border-slate-200 py-8 sm:py-10">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
-              <BookOpenCheck className="h-6 w-6" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black tracking-tight text-slate-950">
-                10 Things to Check
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-700">
-                Start with the resources your school may already include before you spend money
-                elsewhere.
-              </p>
-            </div>
-          </div>
-          <Link href="/resources/ten-things-school" className="btn-primary shrink-0">
-            Open full guide
-            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-5 text-sm">
-          {TEN_THINGS_TOPICS.map((topic) =>
-            topic.status === 'open' ? (
-              <Link
-                key={topic.title}
-                href="/resources/ten-things-school"
-                className="font-semibold text-brand-700 hover:text-brand-800"
-              >
-                {topic.title}
-              </Link>
-            ) : (
-              <span key={topic.title} className="text-slate-500">
-                {topic.title}{' '}
-                <span className="text-xs font-semibold uppercase tracking-wide">Coming soon</span>
-              </span>
-            ),
-          )}
+      {/* Hero / opening viewport */}
+      <section className="border-b border-slate-200 bg-gradient-to-b from-brand-50/70 to-white">
+        <div className="container-prose py-12 sm:py-16">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-700 shadow-sm ring-1 ring-brand-100">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            Free · No account required
+          </span>
+          <h1 className="mt-5 max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+            College planning, explained clearly.
+          </h1>
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-700">
+            The College Readiness Hub is a free guide for students and families — 100 plain-language
+            answers covering high school, applications, FAFSA, scholarships, cost, and the first year
+            of college. Search, browse by grade, and work at your own pace. You never need to sign up
+            to use it.
+          </p>
         </div>
       </section>
 
-      {/* QUICK LINKS GRID */}
-      <div className="mt-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quickLinks.map((group) => (
-          <div key={group.title} className="card p-5">
-            <h3 className="text-lg font-bold">{group.title}</h3>
-            <ul className="mt-3 space-y-2">
-              {group.items.map((i) => (
-                <li key={i.href} className="flex items-start gap-2">
-                  <a
-                    className="text-brand-700 underline"
-                    href={i.href}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {i.label}
-                  </a>
-                  {i.note && <span className="text-xs text-slate-500">• {i.note}</span>}
-                </li>
-              ))}
-            </ul>
+      <div className="container-prose pb-16">
+        {/* Interactive search + filters + Start Here + index */}
+        <GuideExplorer />
+
+        {/* What should we focus on now? */}
+        <section aria-labelledby="focus-heading" className="mt-16">
+          <h2 id="focus-heading" className="text-2xl font-black tracking-tight text-slate-950">
+            What should we focus on now?
+          </h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Jump to the guides that matter most for a specific grade or stage.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            {GUIDE_STAGE_ORDER.map((stage) => (
+              <Link
+                key={stage}
+                href={`/resources?stage=${stage}#explorer-heading`}
+                className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+              >
+                {GUIDE_STAGE_LABELS[stage]}
+              </Link>
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
 
-      {/* FAQ CONTROLS */}
-      <div className="card p-4 mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <input
-          className="border rounded-2xl px-3 py-2"
-          placeholder="Search FAQ (e.g., FAFSA ID, deadlines, scholarships)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <select
-          className="border rounded-2xl px-3 py-2"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as typeof category)}
-        >
-          <option>All</option>
-          <option>FAFSA</option>
-          <option>Student Loans</option>
-          <option>Scholarships</option>
-          <option>Applications & Testing</option>
-          <option>Career & Jobs</option>
-          <option>Docs & Templates</option>
-        </select>
-        <div className="col-span-2 flex flex-wrap gap-2">
-          <a
-            className="btn-primary"
-            href="https://studentaid.gov/h/apply-for-aid/fafsa"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Start FAFSA®
-          </a>
-          <a className="btn" href="https://studentaid.gov/fsa-id/" target="_blank" rel="noreferrer">
-            Get FSA ID
-          </a>
-          <a
-            className="btn"
-            href="https://studentaid.gov/aid-estimator/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Estimate Aid
-          </a>
-        </div>
-      </div>
+        {/* Ten major guide collections */}
+        <section aria-labelledby="collections-heading" className="mt-16">
+          <h2 id="collections-heading" className="text-2xl font-black tracking-tight text-slate-950">
+            100 things students and families should know before college
+          </h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Ten collections, ten guides each — a complete path from building a foundation to thriving
+            in the first year.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {GUIDE_CATEGORIES.map((category) => {
+              const count = getGuidesByCategory(category.slug).length
+              return (
+                <Link
+                  key={category.slug}
+                  href={`/resources?category=${category.slug}#explorer-heading`}
+                  className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-soft transition hover:border-brand-300 hover:shadow-md"
+                >
+                  <span className="text-xs font-black uppercase tracking-wide text-brand-700">
+                    Collection {category.number}
+                  </span>
+                  <span className="mt-1 text-lg font-bold text-slate-950 group-hover:text-brand-700">
+                    {category.title}
+                  </span>
+                  <span className="mt-2 text-sm leading-6 text-slate-600">{category.summary}</span>
+                  <span className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {count} guides
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
 
-      {/* FAQ LIST (details/summary) */}
-      <div className="mt-6 space-y-3">
-        {filteredFaqs.map((f) => (
-          <details key={f.id} id={f.id} className="card p-5 group">
-            <summary className="cursor-pointer list-none">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-500">{f.category}</div>
-                  <h3 className="text-lg font-bold">{f.q}</h3>
-                </div>
-                <div className="text-slate-400 group-open:rotate-180 transition">⌄</div>
+        {/* Official tools and trusted external resources */}
+        <section aria-labelledby="tools-heading" className="mt-16">
+          <h2 id="tools-heading" className="text-2xl font-black tracking-tight text-slate-950">
+            Official tools and trusted resources
+          </h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Go straight to the authoritative sources. Links open in a new tab on official government
+            and nonprofit sites.
+          </p>
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {OFFICIAL_TOOLS.map((group) => (
+              <div key={group.title} className="card p-5">
+                <h3 className="text-base font-bold text-slate-950">{group.title}</h3>
+                <ul className="mt-3 space-y-2">
+                  {group.items.map((item) => (
+                    <li key={item.href}>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-start gap-1.5 text-sm font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
+                      >
+                        <span>{item.label}</span>
+                        <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <span className="sr-only">(opens in a new tab)</span>
+                      </a>
+                      {item.note && <span className="ml-1 text-xs text-slate-500">· {item.note}</span>}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </summary>
-            <div className="mt-3">{f.a}</div>
-          </details>
-        ))}
-        {filteredFaqs.length === 0 && (
-          <div className="text-slate-500 text-sm">
-            No results. Try a different keyword or category.
+            ))}
           </div>
-        )}
-      </div>
+        </section>
 
-      {/* Gentle disclaimer */}
-      <p className="mt-8 text-xs text-slate-500">
-        Links provided for convenience. Always verify deadlines, policies, and requirements on
-        official sites.
-      </p>
+        {/* Questions families ask (FAQs folded into guides) */}
+        <section aria-labelledby="faq-heading" className="mt-16">
+          <h2 id="faq-heading" className="text-2xl font-black tracking-tight text-slate-950">
+            Questions families ask
+          </h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Each question links to the full guide where it is answered in plain language.
+          </p>
+          <ul className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
+            {FAQ_LINKS.map((faq) => (
+              <li key={faq.id} id={faq.id}>
+                <Link
+                  href={`/resources/${faq.slug}`}
+                  className="flex items-center justify-between gap-4 py-4 transition hover:text-brand-700"
+                >
+                  <span className="font-semibold text-slate-800">{faq.question}</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* 10 Things to Check at Your School feature */}
+        <section className="mt-16 border-y border-slate-200 py-8 sm:py-10">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+                <BookOpenCheck className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black tracking-tight text-slate-950">
+                  Already enrolled? 10 Things to Check at Your School
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-700">
+                  Part of the Starting College collection: use the resources your school may already
+                  include before you spend money elsewhere.
+                </p>
+              </div>
+            </div>
+            <Link href="/resources/ten-things-school" className="btn-primary shrink-0">
+              Open full guide
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </section>
+
+        {/* Restrained optional CTA */}
+        <section className="mt-16 rounded-3xl border border-slate-200 bg-slate-50 p-7 sm:p-10">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-slate-950">
+                Want to track all of this in one place?
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700">
+                Everything here is free to use without an account. If it helps, a free MySRYear
+                account can save your plan, grades, scholarships, and tasks together — entirely
+                optional.
+              </p>
+            </div>
+            <Link href="/signup" className="btn-secondary shrink-0 justify-self-start md:justify-self-end">
+              Create a free account
+            </Link>
+          </div>
+        </section>
+      </div>
     </div>
   )
 }

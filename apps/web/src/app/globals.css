@@ -33,3 +33,34 @@ body {
 .badge {
   @apply inline-flex items-center gap-1 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold px-2 py-1;
 }
+
+/* Print-friendly checklists: hide chrome and interactive controls so a guide or
+   filtered list prints cleanly. */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  details {
+    display: block !important;
+  }
+  details > summary {
+    list-style: none;
+  }
+}
+
+/* Respect reduced-motion preferences across the app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
