@@ -25,13 +25,17 @@ export async function GET() {
     .eq('id', session.user.id)
     .maybeSingle()
 
-  const studentProfileId = await getActiveStudentProfileId()
   const viewerRole = (viewerProfile?.role as string | null) || null
+  const studentProfileId = await getActiveStudentProfileId()
 
-  const { data: ownedStudentProfiles } = await supabase
-    .from('student_profiles')
-    .select('id,first_name,last_name,graduation_year,grade_level,school_id,schools(name)')
-    .eq('student_user_id', session.user.id)
+  // Family accounts use accepted relationships only. This avoids surfacing a
+  // stale student profile if an older account was later corrected to parent or guardian.
+  const { data: ownedStudentProfiles } = viewerRole === 'student'
+    ? await supabase
+        .from('student_profiles')
+        .select('id,first_name,last_name,graduation_year,grade_level,school_id,schools(name)')
+        .eq('student_user_id', session.user.id)
+    : { data: [] as unknown[] }
 
   const { data: linkedRows } = await supabase
     .from('family_relationships')

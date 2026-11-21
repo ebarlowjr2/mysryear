@@ -23,6 +23,7 @@ export type School = {
   name: string
   city: string | null
   state: string | null
+  school_level?: 'high_school' | 'college' | null
   zip?: string | null
   nces_id?: string | null
 }
@@ -55,7 +56,13 @@ export type StudentProfile = {
   graduation_year: number | null
   grade_level?: string | null
   school_id: string | null
-  schools?: { name: string | null; city?: string | null; state?: string | null } | null
+  claim_status?: 'managed' | 'claimed' | 'claim_conflict' | null
+  schools?: {
+    name: string | null
+    city?: string | null
+    state?: string | null
+    school_level?: 'high_school' | 'college' | null
+  } | null
 }
 
 export type FamilyRelationship = {
@@ -168,18 +175,27 @@ export async function updateAccountProfile(
   return { success: false, error: byId.error.message || byLegacy.error.message }
 }
 
-export async function getLinkedStudentProfiles(userId: string): Promise<StudentProfile[]> {
-  const owned = await supabase
-    .from('student_profiles')
-    .select(
-      'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)',
-    )
-    .eq('student_user_id', userId)
+export async function getLinkedStudentProfiles(
+  userId: string,
+  role?: CanonicalRole | null,
+): Promise<StudentProfile[]> {
+  const resolvedRole = role === undefined ? (await getCurrentProfile(userId))?.role : role
+  // A parent/guardian account can retain a legacy student profile after a role
+  // correction. Only a current student account should treat an owned profile as
+  // its active student context; family accounts use accepted relationships.
+  const owned = resolvedRole === 'student'
+    ? await supabase
+        .from('student_profiles')
+        .select(
+          'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,claim_status,schools(name,city,state,school_level)',
+        )
+        .eq('student_user_id', userId)
+    : { data: [] as unknown[] }
 
   const linked = await supabase
     .from('family_relationships')
     .select(
-      'student_profile_id,role,student_profiles(id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state))',
+      'student_profile_id,role,student_profiles(id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,claim_status,schools(name,city,state,school_level))',
     )
     .eq('user_id', userId)
 
@@ -196,10 +212,8 @@ export async function getLinkedStudentProfiles(userId: string): Promise<StudentP
 }
 
 export async function getActiveStudentProfile(userId: string): Promise<StudentProfile | null> {
-  const [profile, linked] = await Promise.all([
-    getCurrentProfile(userId),
-    getLinkedStudentProfiles(userId),
-  ])
+  const profile = await getCurrentProfile(userId)
+  const linked = await getLinkedStudentProfiles(userId, profile?.role)
   if (!linked.length) return null
   return linked.find((sp) => sp.id === profile?.active_student_profile_id) || linked[0]
 }
@@ -233,7 +247,7 @@ export async function createStudentProfileForUser(input: {
       school_id: input.schoolId || null,
     })
     .select(
-      'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,schools(name,city,state)',
+      'id,student_user_id,created_by_user_id,first_name,last_name,graduation_year,grade_level,school_id,claim_status,schools(name,city,state,school_level)',
     )
     .single()
 

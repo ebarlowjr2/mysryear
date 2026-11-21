@@ -47,6 +47,42 @@ describe('role-safe family experience contract', () => {
     expect(mobileProfile).toContain('Family Connections')
   })
 
+  it('gives parents a family overview with safe student context and next actions', () => {
+    const webProfile = read('apps/web/src/app/profile/page.tsx')
+    const familyOverview = read('apps/web/src/app/profile/ui/FamilyOverviewCard.tsx')
+    const familyDashboard = read('apps/web/src/app/dashboard/family/page.tsx')
+    const familyConnectionCard = read('apps/web/src/app/dashboard/family/ActiveStudentConnectionCard.tsx')
+    const mobileProfile = read('apps/mobile/app/(app)/profile.tsx')
+
+    expect(webProfile).toContain('FamilyOverviewCard')
+    expect(webProfile).toContain('claim_status,schools(name,school_level)')
+    expect(familyOverview).toContain('Family Overview')
+    expect(familyOverview).toContain('Connect Existing Student')
+    expect(familyOverview).toContain('Create Student Profile')
+    expect(familyOverview).toContain('Managed profile')
+    expect(familyOverview).toContain('High School')
+    expect(familyOverview).toContain('College')
+    expect(familyOverview).not.toContain('Student ID')
+    expect(familyDashboard).toContain('studentAction')
+    expect(familyConnectionCard).toContain('initialMode')
+    expect(mobileProfile).toContain('Family Overview')
+    expect(mobileProfile).toContain('Connect or Create a Student')
+    expect(mobileProfile).toContain('studentConnectionLabel')
+  })
+
+  it('keeps corrected family accounts out of legacy student contexts', () => {
+    const activeStudentProfile = read('apps/web/src/lib/student-profile.ts')
+    const dashboardSummary = read('apps/web/src/app/api/dashboard/summary/route.ts')
+    const mobileIdentity = read('apps/mobile/src/data/identity.ts')
+    const webProfile = read('apps/web/src/app/profile/page.tsx')
+
+    expect(activeStudentProfile).toContain("if (role === 'student')")
+    expect(activeStudentProfile).toContain("else if (role !== 'business')")
+    expect(dashboardSummary).toContain("viewerRole === 'student'")
+    expect(mobileIdentity).toContain("resolvedRole === 'student'")
+    expect(webProfile).toContain('if (isStudent && ownedStudentProfile?.id)')
+  })
+
   it('blocks non-business accounts from the web business dashboard', () => {
     const businessDashboard = read('apps/web/src/app/business/dashboard/page.tsx')
     expect(businessDashboard).toContain("if (sp.role !== 'business') redirect(dashboardPathForRole(sp.role))")
