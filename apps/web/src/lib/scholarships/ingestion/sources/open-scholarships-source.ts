@@ -45,6 +45,7 @@ export type OpenScholarshipsRecord = {
   links?: { info_url?: string | null; apply_url?: string | null }
   provenance?: { source_url?: string | null; last_verified?: string | null; verification_method?: string | null }
   status?: string
+  summary?: string
 }
 
 export type SponsorCheck = {
@@ -79,6 +80,21 @@ function mapGrades(levels: string[]): string[] {
   return Array.from(new Set(levels.flatMap((l) => LEVEL_TO_GRADES[l] ?? [])))
 }
 
+/**
+ * Accepts every shape the directory publishes: the live feed
+ * (`{ meta, results: [...] }`, served by scholarships.grudged.io), the
+ * committed repo snapshot (`{ records: [...] }`) and a bare array.
+ */
+export function extractRecords(payload: unknown): unknown[] | null {
+  if (Array.isArray(payload)) return payload
+  if (!payload || typeof payload !== 'object') return null
+  for (const key of ['results', 'records', 'scholarships'] as const) {
+    const value = (payload as Record<string, unknown>)[key]
+    if (Array.isArray(value)) return value
+  }
+  return null
+}
+
 export class OpenScholarshipsSourceAdapter implements ScholarshipSourceAdapter {
   readonly sourceName = OPEN_SCHOLARSHIPS_SOURCE
   constructor(
@@ -87,14 +103,7 @@ export class OpenScholarshipsSourceAdapter implements ScholarshipSourceAdapter {
   ) {}
 
   async fetchRecords(options?: { limit?: number }): Promise<unknown[]> {
-    const payload = await this.loadFeed()
-    const records = Array.isArray(payload)
-      ? payload
-      : payload && typeof payload === 'object' && Array.isArray((payload as { records?: unknown[] }).records)
-        ? (payload as { records: unknown[] }).records
-        : payload && typeof payload === 'object' && Array.isArray((payload as { scholarships?: unknown[] }).scholarships)
-          ? (payload as { scholarships: unknown[] }).scholarships
-          : null
+    const records = extractRecords(await this.loadFeed())
     if (!records) throw new Error('Open Scholarships feed returned an unexpected shape')
     return typeof options?.limit === 'number' ? records.slice(0, options.limit) : records
   }
@@ -119,7 +128,7 @@ export class OpenScholarshipsSourceAdapter implements ScholarshipSourceAdapter {
       sourceUrl: check?.checkedUrl || infoUrl,
       title: r.name,
       organization: r.sponsor,
-      description: other.length ? other.join(' ') : undefined,
+      description: r.summary || (other.length ? other.join(' ') : undefined),
       amountMin: check?.amountMin ?? r.award?.amount_min ?? undefined,
       amountMax: check?.amountMax ?? r.award?.amount_max ?? undefined,
       applicationUrl: check?.applyUrl || r.links?.apply_url || infoUrl,

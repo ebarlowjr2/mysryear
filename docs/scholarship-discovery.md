@@ -44,11 +44,11 @@ SELECT only; no writes):
    Vercel **Root Directory to `apps/web`** — but `vercel.json` (the only cron
    registration) was at the repository root, which Vercel does not read for a
    project rooted at `apps/web`. That is consistent with zero scheduled runs.
-   *Not verified directly:* this session has no Vercel access, so the deployed
-   Root Directory, the Cron Jobs tab and execution logs, and whether
-   `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` and
-   `SCRAPINGBEE_API_KEY` are set must be confirmed in the Vercel dashboard (see
-   §7, step 1).
+   **Confirmed:** the Vercel deployment metadata on PR #72 reports
+   `"rootDirectory": "apps/web"`, so the repo-root `vercel.json` was never read.
+   *Still to confirm in the Vercel dashboard* (no Vercel access from this
+   session): the Cron Jobs tab and execution logs, and that `CRON_SECRET`,
+   `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL` are set (see §7, step 1).
 3. **The bridge corrupted what little data existed.**
    - The scraper stored `"September 30"` (year stripped by `parseDeadline`);
      `normalizeDeadline` passed it to `new Date()`, which resolves a yearless
@@ -78,7 +78,7 @@ GET of the public sponsor page.
 | Source (`scholarships.source`) | What it is | Permission / attribution | Coverage today | Refresh |
 | --- | --- | --- | --- | --- |
 | `mysryear-sponsor-verified` | Original factual entries MySRYear wrote from each sponsor/administrator page (`apps/web/src/lib/scholarships/ingestion/data/sponsor-verified.json`). Each record stores the page checked, the check date and short evidence quotes. | Facts (dates, amounts, criteria) with MySRYear-written summaries; direct links to the official page. | 5 awards: Burger King Scholars, GE-Reagan, Amazon Future Engineer, Penguin Random House Creative Writing, Central AlabamaWorks (AL). | Edit the JSON each cycle after rechecking the sponsor page; daily cron rechecks pages and refreshes only on fresh evidence. |
-| `open-scholarships` | [Open Scholarships](https://github.com/Grudged/open-scholarships) directory — feed `https://scholarships.grudged.io/scholarships.json` (override: `OPEN_SCHOLARSHIPS_FEED_URL`), plus MySRYear sponsor-level checks (`data/open-scholarships-sponsor-checks.json`). | **CC BY 4.0** — "Open Scholarships by Grudged LLC — https://github.com/Grudged/open-scholarships (CC BY 4.0). Fields mapped by MySRYear." stored on every row (`attribution`) and shown on detail pages. Snapshot of upstream commit `956be5c` committed for offline/local import. | 112 listings (106 national, 6 Nevada). Annual listings without a current-cycle date are stored **unconfirmed (hidden)**. Sponsor-checked: APIA Scholars (open), Nevada Women's Fund (open; sponsor date Jan 3 overrides directory's Jan 5), NSA (opens Jan 15), MPOWER (closed early — funding cap), AWS (conflicting dates → review), Bryan Cameron (sponsor site blocked automated check), AFE (duplicate of source 1). | Daily cron pulls the feed; add a sponsor check entry to publish a listing. |
+| `open-scholarships` | [Open Scholarships](https://github.com/Grudged/open-scholarships) directory — feed `https://scholarships.grudged.io/scholarships.json` (override: `OPEN_SCHOLARSHIPS_FEED_URL`), plus MySRYear sponsor-level checks (`data/open-scholarships-sponsor-checks.json`). | **CC BY 4.0** — "Open Scholarships by Grudged LLC — https://github.com/Grudged/open-scholarships (CC BY 4.0). Fields mapped by MySRYear." stored on every row (`attribution`) and shown on detail pages. Live feed shape is `{ meta, results }` (104 `active` records on 2026-11-22; `needs-review` records are not served). Snapshot of upstream commit `956be5c` committed for offline/local import. | 112 listings (106 national, 6 Nevada). Annual listings without a current-cycle date are stored **unconfirmed (hidden)**. Sponsor-checked: APIA Scholars (open), Nevada Women's Fund (open; sponsor date Jan 3 overrides directory's Jan 5), NSA (opens Jan 15), MPOWER (closed early — funding cap), AWS (conflicting dates → review), Bryan Cameron (sponsor site blocked automated check), AFE (duplicate of source 1). | Daily cron pulls the feed; add a sponsor check entry to publish a listing. |
 | `legacy-scraped` (retired) | Old aggregator scrape rows | Aggregator listings; scraping their compiled lists is not an approved source | 0 new rows since 2025-09-20 | Not scheduled. Can still be imported manually, always as unverified/hidden. |
 
 Sponsor pages checked on 2026-11-22 (all reachable except Cameron, HTTP 403):
@@ -177,6 +177,29 @@ provider `failed`, sponsor-verified still imported 5 → 5 visible;
 
 Regenerate with `npx tsx scripts/scholarships/catalog-report.ts --label=<env>`.
 
+### Live-source run (LOCAL isolated database, live internet sources), 2026-11-22 22:49 UTC
+
+Fresh production-shaped database + migration, then
+`npm run scholarships:ingest -- --refresh --reverify=20 --reverify-all` with the
+**live** Open Scholarships feed and live sponsor pages:
+
+| Source | Status | Fetched | Created | Visible: open now | Visible: opening soon |
+| --- | --- | --- | --- | --- | --- |
+| mysryear-sponsor-verified | success | 5 | 5 | 4 | 1 (Central AlabamaWorks, opens Dec 1) |
+| open-scholarships (live feed) | success | 104 | 103 (1 in-batch duplicate) | 2 | 1 (NSA, opens Jan 15) |
+| **Total** | | | | **6** | **2** |
+
+Archive sweep: 5 stale seed rows. Live sponsor-page recheck: 8 checked,
+7 confirmed (page still prints the closing date), 1 kept its stored evidence
+(Central AlabamaWorks prints no year). Signed-in API and the 4 Playwright
+scenarios passed on this data: a sparse 10th grader sees all 8 awards and the
+LifePath picker; a 12th grader with Software Engineer + Digital Marketer plans
+gets Amazon Future Engineer and Penguin Random House with reasons and
+conditions to check; saved/submitted awards were unchanged.
+
+This run caught a real production bug: the live feed is `{ meta, results }`,
+which the first adapter version rejected as "unexpected shape" (fixed, tested).
+
 ---
 
 ## 6. Commands
@@ -185,7 +208,8 @@ Regenerate with `npx tsx scripts/scholarships/catalog-report.ts --label=<env>`.
 npm run scholarships:ingest -- --refresh --dry-run            # all providers, no writes
 npm run scholarships:ingest -- --refresh                       # live feed (production/staging)
 npm run scholarships:ingest -- --refresh --feed=snapshot       # committed snapshot (local)
-npm run scholarships:ingest -- --refresh --reverify=20         # also recheck 20 sponsor pages
+npm run scholarships:ingest -- --refresh --reverify=20         # also recheck 20 due sponsor pages
+npm run scholarships:ingest -- --refresh --reverify=20 --reverify-all  # recheck even if not due (first refresh)
 npx tsx scripts/scholarships/catalog-report.ts --label=staging # read-only counts
 npx tsx scripts/scholarships/build-catalog-fixture.ts          # regenerate shared test fixture
 ```
@@ -208,9 +232,10 @@ npx tsx scripts/scholarships/build-catalog-fixture.ts          # regenerate shar
    `/api/cron/scholarship-refresh` at `17 7 * * *` is listed and
    `/api/cron/scrape-scholarships` is gone.
 4. **First refresh** — Cron Jobs → *Run*, or from a trusted shell:
-   `curl -H "Authorization: Bearer $CRON_SECRET" "https://<prod-host>/api/cron/scholarship-refresh?reverify=10"`.
+   `curl -H "Authorization: Bearer $CRON_SECRET" "https://<prod-host>/api/cron/scholarship-refresh?reverify=10&reverifyAll=1"`.
    Expect `"status":"success"` and
-   `visibleBySource ≈ { "mysryear-sponsor-verified": 5, "open-scholarships": 3 }`.
+   `visibleBySource ≈ { "mysryear-sponsor-verified": 5, "open-scholarships": 3 }`
+   (6 open now + 2 opening soon as of Nov 22; counts drop as deadlines pass).
    If the live feed is unreachable, open-scholarships reports `failed` and
    sponsor-verified still shows 5 — investigate the feed, do not use the snapshot
    in production.

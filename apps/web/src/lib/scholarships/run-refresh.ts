@@ -54,6 +54,8 @@ export type RunRefreshOptions = {
   createdBy?: string | null
   /** Reverify up to N visible records against sponsor pages (0 disables). */
   reverifyLimit?: number
+  /** Recheck visible records even if their next_verification_at is not due yet (first refresh / audits). */
+  reverifyAll?: boolean
   now?: Date
   /** Injection points for tests / offline runs. */
   fetchJson?: (url: string) => Promise<unknown>
@@ -131,13 +133,15 @@ async function countVisibleBySource(supabase: SupabaseClient): Promise<Record<st
   return counts
 }
 
-async function loadReverifyCandidates(supabase: SupabaseClient, sources: string[], limit: number, nowIso: string): Promise<ReverifyCandidate[]> {
-  const { data, error } = await supabase
+async function loadReverifyCandidates(supabase: SupabaseClient, sources: string[], limit: number, nowIso: string, all = false): Promise<ReverifyCandidate[]> {
+  let query = supabase
     .from('student_visible_scholarships')
     .select('id,source,title,source_url,application_url,deadline,deadline_type,last_verified_at,next_verification_at')
     .in('source', sources)
-    .or(`next_verification_at.is.null,next_verification_at.lte.${nowIso}`)
+  if (!all) query = query.or(`next_verification_at.is.null,next_verification_at.lte.${nowIso}`)
+  const { data, error } = await query
     .order('last_verified_at', { ascending: true })
+    .order('id', { ascending: true })
     .limit(limit)
   if (error) throw new Error(error.message)
   return (data || []) as ReverifyCandidate[]
@@ -189,7 +193,7 @@ export async function runScholarshipRefresh(supabase: SupabaseClient, options: R
   const reverifyLimit = options.reverifyLimit ?? 0
   if (!dryRun && reverifyLimit > 0) {
     try {
-      const candidates = await loadReverifyCandidates(supabase, sources, reverifyLimit, now.toISOString())
+      const candidates = await loadReverifyCandidates(supabase, sources, reverifyLimit, now.toISOString(), options.reverifyAll)
       const decisions = await reverifyCandidates(candidates, options.fetchPage ?? createPageFetcher(), { now })
       for (const decision of decisions) {
         if (decision.patch) await supabase.from('scholarships').update(decision.patch).eq('id', decision.id)

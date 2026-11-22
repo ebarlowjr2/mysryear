@@ -86,6 +86,23 @@ describe('source 2: Open Scholarships (CC BY 4.0) with sponsor checks', () => {
   })
 })
 
+describe('Open Scholarships live feed shape', () => {
+  it('reads the live `{ meta, results }` payload the same as the snapshot', async () => {
+    const records = (snapshot as { records: Array<Record<string, unknown>> }).records.filter((r) => r.status === 'active')
+    const live = { meta: { name: 'Open Scholarships', license: 'CC-BY-4.0', count: records.length }, results: records }
+    const repo = new InMemoryScholarshipRepository()
+    const result = await ingestSource(openScholarships(async () => live), repo, { now: NOW })
+    expect(result.fetched).toBe(records.length)
+    expect(result.errors).toEqual([])
+    expect(repo.peek('open-scholarships', 'us-apia-scholars-scholarship')?.verification_status).toBe('verified')
+  })
+
+  it('reports an unknown payload as a provider failure instead of importing nothing', async () => {
+    const result = await ingestSource(openScholarships(async () => ({ meta: {}, rows: [] })), new InMemoryScholarshipRepository(), { now: NOW })
+    expect(result.errors[0].message).toMatch(/unexpected shape/)
+  })
+})
+
 describe('provider isolation', () => {
   it('a failed provider leaves the other provider’s listings intact, even with deactivateMissing', async () => {
     const repo = new InMemoryScholarshipRepository()

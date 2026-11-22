@@ -16,7 +16,8 @@ export const dynamic = 'force-dynamic'
  * fetched / created / updated / revalidated / archived / visible counts.
  *
  * Query params (manual use): dryRun=1, sources=a,b, deactivateMissing=1,
- * reverify=<n> (default 20; 0 disables).
+ * reverify=<n> (default 20; 0 disables), reverifyAll=1 (recheck even if not yet due,
+ * e.g. the first production refresh).
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
       dryRun,
       deactivateMissing: url.searchParams.get('deactivateMissing') === '1',
       reverifyLimit: Number.isFinite(reverifyParam) ? Math.max(0, Math.min(50, reverifyParam)) : 20,
+      reverifyAll: url.searchParams.get('reverifyAll') === '1',
     })
     return NextResponse.json({ ok: result.status !== 'failed', result }, { status: result.status === 'failed' ? 502 : 200 })
   } catch (error) {

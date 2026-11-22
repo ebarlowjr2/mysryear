@@ -23,6 +23,7 @@
  *   --feed=snapshot       Use the committed Open Scholarships snapshot instead of
  *                         the live feed (offline/local first import).
  *   --reverify=<n>        Recheck up to n sponsor pages (default 0 for the CLI).
+ *   --reverify-all        Recheck even records whose next check is not due yet.
  *
  * Dry-run works without any Supabase configuration (it uses an in-memory store)
  * so the pipeline can be demonstrated offline. A real (non dry-run) import
@@ -53,6 +54,7 @@ type CliOptions = {
   sources?: string[]
   feed?: 'live' | 'snapshot'
   reverify: number
+  reverifyAll: boolean
   dryRun: boolean
   source: string
   limit?: number
@@ -60,10 +62,11 @@ type CliOptions = {
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = { refresh: false, reverify: 0, dryRun: false, source: 'fixture', deactivateMissing: false }
+  const options: CliOptions = { refresh: false, reverify: 0, reverifyAll: false, dryRun: false, source: 'fixture', deactivateMissing: false }
   for (const arg of argv) {
     if (arg === '--dry-run') options.dryRun = true
     else if (arg === '--refresh') options.refresh = true
+    else if (arg === '--reverify-all') options.reverifyAll = true
     else if (arg.startsWith('--sources=')) options.sources = arg.slice(10).split(',').filter(Boolean)
     else if (arg === '--feed=snapshot') options.feed = 'snapshot'
     else if (arg.startsWith('--reverify=')) options.reverify = Math.max(0, Number(arg.slice(11)) || 0)
@@ -134,6 +137,7 @@ async function main() {
       limit: options.limit,
       deactivateMissing: options.deactivateMissing,
       reverifyLimit: options.reverify,
+      reverifyAll: options.reverifyAll,
       openScholarshipsFeed: options.feed,
     })
     console.log(JSON.stringify({ ...result, reverify: { ...result.reverify, decisions: result.reverify.decisions.map(({ id, outcome, detail }) => ({ id, outcome, detail })) } }, null, 2))
