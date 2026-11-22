@@ -8,10 +8,10 @@ function row(overrides: Partial<ScholarshipImportRecord> = {}): NormalizedSchola
   return normalizeImportRecord({
     source: 'fixture-dataset',
     externalId: 'ext-1',
-    sourceUrl: 'https://example.org/s/1',
+    sourceUrl: 'https://sponsor.test/s/1',
     title: 'Example Scholarship',
     organization: 'Example Foundation',
-    applicationUrl: 'https://example.org/s/1/apply',
+    applicationUrl: 'https://sponsor.test/s/1/apply',
     active: true,
     lastVerifiedAt: '2026-07-21T00:00:00.000Z',
     ...overrides,

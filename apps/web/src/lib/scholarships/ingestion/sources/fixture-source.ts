@@ -102,7 +102,8 @@ export class FixtureSourceAdapter implements ScholarshipSourceAdapter {
       transcriptRequired: r.transcriptRequired,
       volunteerRequired: r.volunteerRequired,
       active: r.active !== false,
-      lastVerifiedAt: r.lastVerifiedAt ?? new Date().toISOString(),
+      // The dataset's own evidence date; absent means unconfirmed.
+      lastVerifiedAt: r.lastVerifiedAt ?? null,
       rawSourceMetadata: { fixtureExternalId: r.externalId },
     }
   }

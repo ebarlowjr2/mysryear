@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createNextServerSupabaseClient } from '@mysryear/shared'
 import { createServiceRoleClient, hasServiceRoleConfig } from '@/lib/scholarships/service-role'
-import { runScholarshipRefresh } from '@/lib/scholarships/run-refresh'
+import { DEFAULT_SOURCES, runScholarshipRefresh } from '@/lib/scholarships/run-refresh'
+
+export const maxDuration = 60
 
 /**
  * Administrative manual refresh + ingestion-run log.
@@ -45,11 +47,18 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     dryRun?: unknown
     source?: unknown
+    sources?: unknown
     limit?: unknown
     deactivateMissing?: unknown
+    reverify?: unknown
   }
   const dryRun = body?.dryRun === true
-  const source = typeof body?.source === 'string' ? body.source : 'legacy'
+  const sources = Array.isArray(body?.sources)
+    ? body.sources.filter((s): s is string => typeof s === 'string')
+    : typeof body?.source === 'string' && body.source !== 'all'
+      ? [body.source]
+      : [...DEFAULT_SOURCES]
+  const reverifyLimit = typeof body?.reverify === 'number' ? Math.max(0, Math.min(50, body.reverify)) : 20
   const limit = typeof body?.limit === 'number' && body.limit > 0 ? body.limit : undefined
   const deactivateMissing = body?.deactivateMissing === true
 
@@ -57,9 +66,10 @@ export async function POST(req: Request) {
     const admin = createServiceRoleClient()
     const result = await runScholarshipRefresh(admin, {
       trigger: dryRun ? 'dry_run' : 'manual',
-      source,
+      sources,
       dryRun,
       limit,
+      reverifyLimit,
       deactivateMissing,
       createdBy: gate.userId,
     })

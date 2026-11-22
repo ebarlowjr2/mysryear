@@ -34,8 +34,18 @@ export function validateRow(row: NormalizedScholarshipRow): ValidationIssue[] {
   if (typeof row.active !== 'boolean')
     issues.push({ externalId, field: 'active', message: 'Missing active status' })
 
-  if (!row.last_verified_at || Number.isNaN(new Date(row.last_verified_at).getTime()))
-    issues.push({ externalId, field: 'last_verified_at', message: 'Missing/invalid lastVerifiedAt' })
+  // lastVerifiedAt may be null (unconfirmed, hidden from students) but must
+  // parse when present.
+  if (row.last_verified_at != null && Number.isNaN(new Date(row.last_verified_at).getTime()))
+    issues.push({ externalId, field: 'last_verified_at', message: 'Invalid lastVerifiedAt' })
+  if (row.verification_status === 'verified' && !row.last_verified_at)
+    issues.push({ externalId, field: 'last_verified_at', message: 'Verified record needs an evidence date' })
+
+  if (row.is_demo)
+    issues.push({ externalId, field: 'application_url', message: 'Placeholder/demo URL (example.com) is not a real award' })
+
+  if (row.opens_at && row.deadline_at && new Date(row.opens_at).getTime() > new Date(row.deadline_at).getTime())
+    issues.push({ externalId, field: 'opens_at', message: 'Application opens after it closes' })
 
   // Monetary sanity.
   for (const [field, value] of [

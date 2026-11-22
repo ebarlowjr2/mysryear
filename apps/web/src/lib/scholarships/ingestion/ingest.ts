@@ -45,10 +45,22 @@ function todayIso(now: Date): string {
   return now.toISOString().slice(0, 10)
 }
 
-/** A row is expired when it carries a known deadline strictly before today. */
+/**
+ * A row is expired when its sponsor deadline has passed. Uses the exact
+ * sponsor instant (deadline_at, time-zone aware) when known, otherwise the
+ * whole deadline day.
+ */
 export function isExpired(row: NormalizedScholarshipRow, now: Date): boolean {
+  if (row.deadline_type === 'rolling') return false
+  if (row.deadline_at) return new Date(row.deadline_at).getTime() <= now.getTime()
   if (!row.deadline) return false
   return row.deadline < todayIso(now)
+}
+
+function isNewer(candidate: string | null | undefined, current: string | null | undefined): boolean {
+  if (!candidate) return false
+  if (!current) return true
+  return new Date(candidate).getTime() > new Date(current).getTime()
 }
 
 function applyLifecycle(row: NormalizedScholarshipRow, now: Date): NormalizedScholarshipRow {
@@ -151,7 +163,8 @@ export async function ingestSource(
   const existing = await repository.loadExistingBySource(adapter.sourceName)
   const toInsert: NormalizedScholarshipRow[] = []
   const toUpdate: NormalizedScholarshipRow[] = []
-  const toTouch: string[] = []
+  // Unchanged rows with NEWER source evidence, grouped by evidence timestamp.
+  const toTouch = new Map<string, string[]>()
   let plannedUpdated = 0
   let plannedReactivated = 0
 
@@ -162,10 +175,19 @@ export async function ingestSource(
       toInsert.push(row)
     } else if (sameState(prior, row)) {
       result.unchanged += 1
-      // Re-observed at the source with no content change: still counts as a
-      // re-verification so the record's freshness window is refreshed.
-      if (row.active) toTouch.push(row.external_id)
+      // Re-reading an unchanged record is NOT evidence that applications are
+      // open. Advance verification only when the source itself carries a newer
+      // evidence date (e.g. a sponsor-page check made after the stored one).
+      if (row.active && row.last_verified_at && isNewer(row.last_verified_at, prior.last_verified_at)) {
+        const group = toTouch.get(row.last_verified_at) || []
+        group.push(row.external_id)
+        toTouch.set(row.last_verified_at, group)
+      }
     } else {
+      // Never move a stored evidence date backwards on a content update.
+      if (prior.last_verified_at && !isNewer(row.last_verified_at, prior.last_verified_at)) {
+        row.last_verified_at = prior.last_verified_at
+      }
       toUpdate.push(row)
       // A row that was inactive/expired/archived and is now active again counts
       // as a reactivation; otherwise it is a normal content update.
@@ -201,17 +223,19 @@ export async function ingestSource(
         errors.push({ message: `Deactivate-missing failed: ${errorMessage(err)}` })
       }
     }
-    if (toTouch.length > 0 && repository.touchVerification) {
-      try {
-        const nextIso = addDaysIso(now.toISOString(), DEFAULT_VERIFICATION_INTERVAL_DAYS)
-        result.revalidated = await repository.touchVerification(
-          adapter.sourceName,
-          toTouch,
-          now.toISOString(),
-          nextIso,
-        )
-      } catch (err) {
-        errors.push({ message: `Re-verify touch failed: ${errorMessage(err)}` })
+    if (toTouch.size > 0 && repository.touchVerification) {
+      for (const [evidenceIso, ids] of toTouch) {
+        try {
+          const nextIso = addDaysIso(now.toISOString(), DEFAULT_VERIFICATION_INTERVAL_DAYS)
+          result.revalidated += await repository.touchVerification(
+            adapter.sourceName,
+            ids,
+            evidenceIso,
+            nextIso,
+          )
+        } catch (err) {
+          errors.push({ message: `Re-verify touch failed: ${errorMessage(err)}` })
+        }
       }
     }
   } else {
@@ -219,7 +243,7 @@ export async function ingestSource(
     result.inserted = toInsert.length
     result.updated = plannedUpdated
     result.reactivated = plannedReactivated
-    result.revalidated = toTouch.length
+    result.revalidated = Array.from(toTouch.values()).reduce((sum, ids) => sum + ids.length, 0)
     if (options.deactivateMissing) {
       retired = countMissing(existing, seenExternalIds)
     }

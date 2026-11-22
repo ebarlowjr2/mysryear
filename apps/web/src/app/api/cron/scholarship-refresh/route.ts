@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient, hasServiceRoleConfig } from '@/lib/scholarships/service-role'
-import { runScholarshipRefresh } from '@/lib/scholarships/run-refresh'
+import { DEFAULT_SOURCES, runScholarshipRefresh } from '@/lib/scholarships/run-refresh'
+
+// Each provider plus a bounded sponsor-page recheck; keep well under the limit.
+export const maxDuration = 60
+export const dynamic = 'force-dynamic'
 
 /**
- * Scheduled scholarship freshness refresh.
+ * Scheduled scholarship catalog refresh (Vercel Cron: see apps/web/vercel.json).
  *
- * Protect with the server-side CRON_SECRET (never expose publicly). Performs the
- * full refresh: import new, update existing, recheck deadlines, archive expired,
- * and record the run in scholarship_ingestion_runs. Uses a service-role client
- * (server-side only).
+ * Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically when the
+ * CRON_SECRET environment variable is set on the project. Runs every catalog
+ * provider in isolation, archives past-deadline awards, rechecks a bounded
+ * batch of sponsor pages, and writes one run-log row per provider with
+ * fetched / created / updated / revalidated / archived / visible counts.
  *
- * Configure a scheduler (e.g. Vercel Cron) to GET this route with:
- *   Authorization: Bearer <CRON_SECRET>
+ * Query params (manual use): dryRun=1, sources=a,b, deactivateMissing=1,
+ * reverify=<n> (default 20; 0 disables).
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -19,26 +24,26 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Unauthorized', { status: 401 })
   }
   if (!hasServiceRoleConfig()) {
-    return NextResponse.json(
-      { ok: false, error: 'Missing SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL' },
-      { status: 500 },
-    )
+    return NextResponse.json({ ok: false, error: 'Missing SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL' }, { status: 500 })
   }
 
   const url = new URL(request.url)
   const dryRun = url.searchParams.get('dryRun') === '1'
-  const source = url.searchParams.get('source') || 'legacy'
-  const deactivateMissing = url.searchParams.get('deactivateMissing') === '1'
+  const sources = (url.searchParams.get('sources') || url.searchParams.get('source') || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s && s !== 'all')
+  const reverifyParam = Number(url.searchParams.get('reverify') ?? process.env.SCHOLARSHIP_REVERIFY_LIMIT ?? 20)
 
   try {
-    const supabase = createServiceRoleClient()
-    const result = await runScholarshipRefresh(supabase, {
+    const result = await runScholarshipRefresh(createServiceRoleClient(), {
       trigger: dryRun ? 'dry_run' : 'scheduled',
-      source,
+      sources: sources.length ? sources : [...DEFAULT_SOURCES],
       dryRun,
-      deactivateMissing,
+      deactivateMissing: url.searchParams.get('deactivateMissing') === '1',
+      reverifyLimit: Number.isFinite(reverifyParam) ? Math.max(0, Math.min(50, reverifyParam)) : 20,
     })
-    return NextResponse.json({ ok: true, result })
+    return NextResponse.json({ ok: result.status !== 'failed', result }, { status: result.status === 'failed' ? 502 : 200 })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json({ ok: false, error: message }, { status: 500 })

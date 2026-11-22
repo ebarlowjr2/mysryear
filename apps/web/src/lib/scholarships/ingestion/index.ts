@@ -52,3 +52,15 @@ export { FixtureSourceAdapter } from './sources/fixture-source'
 export type { FixtureScholarship } from './sources/fixture-source'
 export { LegacyScrapedSourceAdapter } from './sources/legacy-scraped-source'
 export type { LegacyScrapedRow, LegacyScrapedLoader } from './sources/legacy-scraped-source'
+export { SponsorVerifiedSourceAdapter, SPONSOR_VERIFIED_SOURCE } from './sources/sponsor-verified-source'
+export type { SponsorVerifiedRecord, SponsorVerifiedDataset } from './sources/sponsor-verified-source'
+export {
+  OpenScholarshipsSourceAdapter,
+  OPEN_SCHOLARSHIPS_SOURCE,
+  OPEN_SCHOLARSHIPS_ATTRIBUTION,
+  OPEN_SCHOLARSHIPS_FEED_URL,
+} from './sources/open-scholarships-source'
+export type { OpenScholarshipsRecord, SponsorCheck, SponsorChecks } from './sources/open-scholarships-source'
+export { decideFromPage, reverifyCandidates, dateVariants, pageText, createPageFetcher } from './reverify'
+export type { PageFetcher, ReverifyCandidate, ReverifyDecision, ReverifyOutcome } from './reverify'
+export { isDemoUrl, zonedLocalToUtcIso, resolveOpensAt, normalizeClockTime } from './normalize'

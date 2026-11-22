@@ -31,6 +31,8 @@ export type RefreshOptions = {
   trigger?: 'scheduled' | 'manual' | 'dry_run'
   createdBy?: string | null
   now?: Date
+  /** Set false when the caller writes an enriched run-log row itself. */
+  recordRun?: boolean
 }
 
 export async function refreshScholarships(
@@ -97,7 +99,7 @@ export async function refreshScholarships(
   }
 
   // Step 6: record the run (skip on dry-run to make no DB changes).
-  if (!dryRun && repository.recordRun) {
+  if (!dryRun && options.recordRun !== false && repository.recordRun) {
     try {
       await repository.recordRun(toRunLog(result, options.createdBy ?? null))
     } catch {
@@ -124,6 +126,7 @@ export function toRunLog(
     updated_count: result.updated,
     reactivated_count: result.reactivated,
     unchanged_count: result.unchanged,
+    revalidated_count: result.revalidated,
     archived_count: result.archived,
     duplicate_count: result.duplicates,
     flagged_count: result.flagged,

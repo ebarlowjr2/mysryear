@@ -64,6 +64,10 @@ export function normalizeDeadline(value: unknown): string | null {
     if (isValidYmd(Number(y), Number(m), Number(d))) return `${y}-${m}-${d}`
     return null
   }
+  // A non-ISO deadline MUST carry an explicit 4-digit year. Without one,
+  // `new Date('September 30')` silently resolves to 2001 in V8 — the root cause
+  // of the 2001 legacy rows. A yearless date is "unknown", never guessed.
+  if (!/\b(19|20)\d{2}\b/.test(raw)) return null
   const parsed = new Date(raw)
   if (Number.isNaN(parsed.getTime())) return null
   const y = parsed.getUTCFullYear()
@@ -149,7 +153,6 @@ export function parseGpa(value: unknown): number | null {
 }
 
 /**
-/**
  * Deterministic IDENTITY fingerprint. Covers only the stable identity fields
  * (`source + title + organization + deadline + application_url`). It is used to
  * generate a fallback `external_id` for sources without a stable id, so that a
@@ -231,6 +234,18 @@ export function computeContentFingerprint(
     deadline_at: row.deadline_at,
     deadline_type: row.deadline_type,
     canonical_url: row.canonical_url,
+    opens_at: row.opens_at,
+    deadline_timezone: row.deadline_timezone,
+    early_closure_note: row.early_closure_note,
+    closed_at: row.closed_at,
+    closure_reason: row.closure_reason,
+    eligibility_summary: row.eligibility_summary,
+    audience_levels: row.audience_levels,
+    field_tags: row.field_tags,
+    award_scope: row.award_scope,
+    attribution: row.attribution,
+    verification_status: row.verification_status,
+    availability_evidence: row.availability_evidence,
     raw_source_metadata: row.raw_source_metadata,
   }
   return createHash('sha256').update(JSON.stringify(content)).digest('hex').slice(0, 40)
@@ -279,9 +294,95 @@ export function resolveDeadlineType(
  * concrete instant, so they are null (and the display layer gates them on
  * verification freshness instead).
  */
-export function resolveDeadlineAt(deadlineType: DeadlineType, deadline: string | null): string | null {
-  if (deadlineType === 'fixed' && deadline) return `${deadline}T23:59:59.000Z`
-  return null
+export function resolveDeadlineAt(
+  deadlineType: DeadlineType,
+  deadline: string | null,
+  time?: string | null,
+  timeZone?: string | null,
+): string | null {
+  if (deadlineType !== 'fixed' || !deadline) return null
+  const localTime = normalizeClockTime(time) ?? '23:59:59'
+  if (timeZone && isValidTimeZone(timeZone)) return zonedLocalToUtcIso(deadline, localTime, timeZone)
+  return `${deadline}T${localTime}.000Z`
+}
+
+/** `HH:MM` or `HH:MM:SS` (24h) -> `HH:MM:SS`, else null. */
+export function normalizeClockTime(value: unknown): string | null {
+  const raw = cleanString(value)
+  if (!raw) return null
+  const m = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+  if (!m) return null
+  const h = Number(m[1])
+  const min = Number(m[2])
+  const sec = m[3] ? Number(m[3]) : h === 23 && min === 59 ? 59 : 0
+  if (h > 23 || min > 59 || sec > 59) return null
+  return `${pad(h)}:${pad(min)}:${pad(sec)}`
+}
+
+export function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Offset (ms) of `timeZone` from UTC at the given instant. */
+function timeZoneOffsetMs(instantMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(new Date(instantMs))
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value)
+  const asUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'))
+  return asUtc - Math.floor(instantMs / 1000) * 1000
+}
+
+/**
+ * Convert a sponsor's local wall-clock time (e.g. "2026-12-15", "23:59:59",
+ * "America/Chicago") into a UTC ISO instant, honoring daylight saving time.
+ */
+export function zonedLocalToUtcIso(date: string, time: string, timeZone: string): string {
+  const [y, mo, d] = date.split('-').map(Number)
+  const [h, mi, se] = time.split(':').map(Number)
+  const wallAsUtc = Date.UTC(y, mo - 1, d, h, mi, se || 0)
+  let guess = wallAsUtc - timeZoneOffsetMs(wallAsUtc, timeZone)
+  // Second pass settles DST transitions.
+  guess = wallAsUtc - timeZoneOffsetMs(guess, timeZone)
+  return new Date(guess).toISOString()
+}
+
+/** Normalize an opening date/timestamp to an ISO instant (start of day in tz when date-only). */
+export function resolveOpensAt(value: unknown, timeZone?: string | null): string | null {
+  const raw = cleanString(value)
+  if (!raw) return null
+  const dateOnly = raw.match(/^(\d{4}-\d{2}-\d{2})$/)
+  if (dateOnly) {
+    if (timeZone && isValidTimeZone(timeZone)) return zonedLocalToUtcIso(dateOnly[1], '00:00:00', timeZone)
+    return `${dateOnly[1]}T00:00:00.000Z`
+  }
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
+}
+
+const DEMO_HOST = /(^|\.)example\.(com|org|net)$|^localhost$/i
+
+/** True for placeholder/demo URLs (example.com etc.) that must never reach students. */
+export function isDemoUrl(value: unknown): boolean {
+  const normalized = normalizeUrl(value)
+  if (!normalized) return false
+  try {
+    return DEMO_HOST.test(new URL(normalized).hostname)
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -306,9 +407,19 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
   const { min: minGrade, max: maxGrade } = gradeLevelRange(record.gradeLevels)
 
   const deadlineType = resolveDeadlineType(record.deadlineType, deadline)
-  const deadlineAt = resolveDeadlineAt(deadlineType, deadline)
-  const lastVerifiedAt = cleanString(record.lastVerifiedAt) ?? new Date().toISOString()
-  const nextVerificationAt = addDaysIso(lastVerifiedAt, DEFAULT_VERIFICATION_INTERVAL_DAYS)
+  const deadlineTimezone = cleanString(record.deadlineTimezone)
+  const deadlineAt = resolveDeadlineAt(deadlineType, deadline, record.deadlineTime, deadlineTimezone)
+  // Evidence timestamp only. A missing value stays null (unconfirmed) instead
+  // of being stamped "verified now".
+  const lastVerifiedAt = cleanString(record.lastVerifiedAt ?? undefined)
+  const nextVerificationAt = addDaysIso(
+    lastVerifiedAt ?? new Date().toISOString(),
+    DEFAULT_VERIFICATION_INTERVAL_DAYS,
+  )
+  const verificationStatus: NormalizedScholarshipRow['verification_status'] =
+    record.verificationStatus ??
+    (record.active === false || !lastVerifiedAt ? 'unverified' : 'verified')
+  const isDemo = isDemoUrl(record.applicationUrl) || isDemoUrl(record.sourceUrl)
 
   const stateEligibility = cleanTags(record.stateEligibility)
   const countryEligibility = cleanTags(record.countryEligibility)
@@ -355,13 +466,31 @@ export function normalizeImportRecord(record: ScholarshipImportRecord): Normaliz
     transcript_required: Boolean(record.transcriptRequired),
     volunteer_required: Boolean(record.volunteerRequired),
 
+    opens_at: resolveOpensAt(record.opensAt, deadlineTimezone),
+    deadline_timezone: deadlineTimezone,
+    early_closure_note: cleanString(record.earlyClosureNote),
+    closed_at: cleanString(record.closedAt),
+    closure_reason: cleanString(record.closureReason),
+    eligibility_summary: cleanString(record.eligibilitySummary),
+    audience_levels: cleanTags(record.audienceLevels),
+    field_tags: cleanTags(record.fieldTags).map((tag) => tag.toLowerCase()),
+    award_scope: record.awardScope ?? null,
+    attribution: cleanString(record.attribution),
+    availability_evidence:
+      record.availabilityEvidence && typeof record.availabilityEvidence === 'object'
+        ? { ...record.availabilityEvidence, deadlineTimePublished: Boolean(normalizeClockTime(record.deadlineTime)) }
+        : deadline
+          ? { deadlineTimePublished: Boolean(normalizeClockTime(record.deadlineTime)) }
+          : null,
+    is_demo: isDemo,
+
     active: record.active !== false,
     lifecycle_status: record.active === false ? 'inactive' : 'active',
     last_verified_at: lastVerifiedAt,
     source_updated_at: cleanString(record.sourceUpdatedAt),
-    // Present in the source at import time == verified now. Expiry/staleness are
-    // applied downstream (see ingest.applyLifecycle / freshness.deriveVerification).
-    verification_status: record.active === false ? 'unverified' : 'verified',
+    // Verified only with an evidence timestamp from the source. Expiry/staleness
+    // are applied downstream (see ingest.applyLifecycle / freshness.deriveVerification).
+    verification_status: verificationStatus,
     next_verification_at: nextVerificationAt,
     archived_at: null,
 

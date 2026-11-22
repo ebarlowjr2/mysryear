@@ -15,10 +15,10 @@ function baseRecord(overrides: Partial<ScholarshipImportRecord> = {}): Scholarsh
   return {
     source: 'fixture-dataset',
     externalId: 'ext-1',
-    sourceUrl: 'https://example.org/s/1',
+    sourceUrl: 'https://sponsor.test/s/1',
     title: 'Example Scholarship',
     organization: 'Example Foundation',
-    applicationUrl: 'https://example.org/s/1/apply',
+    applicationUrl: 'https://sponsor.test/s/1/apply',
     active: true,
     lastVerifiedAt: '2026-07-21T00:00:00.000Z',
     ...overrides,
@@ -52,9 +52,9 @@ describe('normalizeDeadline', () => {
 
 describe('normalizeUrl', () => {
   it('validates http(s) URLs', () => {
-    expect(normalizeUrl('https://example.org/x')).toBe('https://example.org/x')
+    expect(normalizeUrl('https://sponsor.test/x')).toBe('https://sponsor.test/x')
     expect(normalizeUrl('not a url')).toBeNull()
-    expect(normalizeUrl('ftp://example.org')).toBeNull()
+    expect(normalizeUrl('ftp://sponsor.test')).toBeNull()
     expect(normalizeUrl(undefined)).toBeNull()
   })
 })
@@ -82,7 +82,7 @@ describe('computeFingerprint / deterministicExternalId', () => {
       title: 'Example Scholarship',
       organization: 'Example Foundation',
       deadline: '2026-10-31',
-      applicationUrl: 'https://example.org/apply',
+      applicationUrl: 'https://sponsor.test/apply',
     }
     const a = computeFingerprint(input)
     const b = computeFingerprint({ ...input })
@@ -97,7 +97,7 @@ describe('computeFingerprint / deterministicExternalId', () => {
       title: 'Example Scholarship',
       organization: 'Example Foundation',
       deadline: '2026-10-31',
-      applicationUrl: 'https://example.org/apply',
+      applicationUrl: 'https://sponsor.test/apply',
     }
     expect(computeFingerprint(base)).toBe(
       computeFingerprint({ ...base, title: '  example SCHOLARSHIP ' }),
@@ -144,7 +144,7 @@ describe('normalizeImportRecord', () => {
         title: 'Example Scholarship',
         organization: 'Example Foundation',
         deadline: null,
-        applicationUrl: 'https://example.org/s/1/apply',
+        applicationUrl: 'https://sponsor.test/s/1/apply',
       }),
     )
     // Re-normalizing the same record yields the same generated id (idempotent).
