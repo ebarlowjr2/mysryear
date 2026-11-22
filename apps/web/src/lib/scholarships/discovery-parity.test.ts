@@ -58,8 +58,21 @@ async function web(filters = '') {
   return { server: json.discovery, browser: rebuilt }
 }
 
+/**
+ * The REAL Expo data module, loaded at runtime by Vitest only. The specifier is
+ * a variable on purpose: a literal dynamic import of the mobile path makes the
+ * web TypeScript program (and therefore `next build` type-checking) compile
+ * native-only sources such as @react-native-async-storage, which the web app
+ * does not install. The module's own types are checked by `mobile:verify`.
+ */
+const MOBILE_SCHOLARSHIPS_MODULE = '../../../../mobile/src/data/scholarships'
+type NativeScholarshipsModule = {
+  setScholarshipClock: (next: (() => Date) | null) => void
+  loadScholarshipDiscovery: (studentProfileId: string | null) => Promise<{ discovery: import('@mysryear/shared').ScholarshipDiscovery }>
+}
+
 async function native() {
-  const mobile = await import('../../../../mobile/src/data/scholarships')
+  const mobile = (await import(/* @vite-ignore */ MOBILE_SCHOLARSHIPS_MODULE)) as NativeScholarshipsModule
   mobile.setScholarshipClock(() => new Date(NOW))
   return (await mobile.loadScholarshipDiscovery('sp-1')).discovery
 }
