@@ -45,7 +45,13 @@ export async function GET(request: NextRequest) {
       reverifyLimit: Number.isFinite(reverifyParam) ? Math.max(0, Math.min(50, reverifyParam)) : 20,
       reverifyAll: url.searchParams.get('reverifyAll') === '1',
     })
-    return NextResponse.json({ ok: result.status !== 'failed', result }, { status: result.status === 'failed' ? 502 : 200 })
+    // ok is true only for a fully successful run. A partial run keeps every
+    // successful source's listings and reports what failed (source + operation);
+    // it answers 200 so the scheduler does not hammer a half-healthy database.
+    return NextResponse.json(
+      { ok: result.status === 'success', status: result.status, operationErrors: result.operationErrors, result },
+      { status: result.status === 'failed' ? 502 : 200 },
+    )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json({ ok: false, error: message }, { status: 500 })

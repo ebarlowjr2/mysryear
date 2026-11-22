@@ -64,19 +64,61 @@ export type RunRefreshOptions = {
   openScholarshipsFeed?: 'live' | 'snapshot'
 }
 
+/**
+ * `visible` is null when the student-visible count could not be read — never
+ * reported as 0, which would mean "students see nothing".
+ */
 export type SourceRunSummary = ScholarshipRefreshResult & { visible: number | null }
+
+export type RefreshOperation = 'ingest' | 'archive_sweep' | 'reverify_candidates' | 'reverify_write' | 'visible_count' | 'run_log'
+
+/** A database/provider operation that did not complete. `source` null = affects every source. */
+export type RefreshOperationError = {
+  source: string | null
+  operation: RefreshOperation
+  message: string
+  scholarshipId?: string
+}
 
 export type MultiSourceRefreshResult = {
   trigger: RunRefreshOptions['trigger']
   dryRun: boolean
+  /** success = every source and every follow-up operation succeeded; failed = every source failed. */
   status: 'success' | 'partial' | 'failed'
   startedAt: string
   finishedAt: string
   sources: SourceRunSummary[]
-  archivedSweep: number
-  reverify: { checked: number; confirmed: number; flagged: number; broken: number; unchanged: number; decisions: ReverifyDecision[] }
+  /** Rows archived by the cross-source sweep; null if the sweep failed. */
+  archivedSweep: number | null
+  /** Counts include only decisions whose database write succeeded. */
+  reverify: {
+    checked: number
+    confirmed: number
+    flagged: number
+    broken: number
+    unchanged: number
+    writeFailed: number
+    decisions: ReverifyDecision[]
+  }
+  /** null when the student-visible catalog could not be counted. */
   visibleTotal: number | null
-  visibleBySource: Record<string, number>
+  visibleBySource: Record<string, number> | null
+  /** Run-log rows: how many were saved, and which sources could not be logged. */
+  auditLog: { written: number; failed: Array<{ source: string; message: string }> }
+  operationErrors: RefreshOperationError[]
+}
+
+function dbMessage(error: { message?: string; code?: string } | null | undefined): string {
+  if (!error) return 'Unknown database error'
+  return error.code ? `${error.message ?? 'Database error'} (${error.code})` : error.message ?? 'Database error'
+}
+
+/** Server diagnostics for operations that could not complete (Vercel function logs). */
+function logOperationError(err: RefreshOperationError) {
+  console.error(
+    `[scholarship-refresh] ${err.operation} failed` +
+      `${err.source ? ` for source=${err.source}` : ''}${err.scholarshipId ? ` scholarship=${err.scholarshipId}` : ''}: ${err.message}`,
+  )
 }
 
 async function defaultFetchJson(url: string): Promise<unknown> {
@@ -119,18 +161,20 @@ export function buildAdapter(supabase: SupabaseClient, source: string, options: 
   throw new Error(`Unsupported refresh source "${source}". Supported: ${DEFAULT_SOURCES.join(', ')}, legacy.`)
 }
 
-async function countVisibleBySource(supabase: SupabaseClient): Promise<Record<string, number> | null> {
+async function countVisibleBySource(
+  supabase: SupabaseClient,
+): Promise<{ counts: Record<string, number> } | { error: string }> {
   const counts: Record<string, number> = {}
   for (let from = 0; from < 50_000; from += 1000) {
     const { data, error } = await supabase.from('student_visible_scholarships').select('id,source').order('id').range(from, from + 999)
-    if (error) return null
+    if (error) return { error: dbMessage(error) }
     for (const row of data || []) {
       const key = String((row as { source?: string | null }).source ?? 'unsourced')
       counts[key] = (counts[key] ?? 0) + 1
     }
     if (!data || data.length < 1000) break
   }
-  return counts
+  return { counts }
 }
 
 async function loadReverifyCandidates(supabase: SupabaseClient, sources: string[], limit: number, nowIso: string, all = false): Promise<ReverifyCandidate[]> {
@@ -143,7 +187,7 @@ async function loadReverifyCandidates(supabase: SupabaseClient, sources: string[
     .order('last_verified_at', { ascending: true })
     .order('id', { ascending: true })
     .limit(limit)
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(dbMessage(error))
   return (data || []) as ReverifyCandidate[]
 }
 
@@ -179,68 +223,122 @@ export async function runScholarshipRefresh(supabase: SupabaseClient, options: R
     }
   }
 
+  const operationErrors: RefreshOperationError[] = []
+  const fail = (err: RefreshOperationError) => {
+    operationErrors.push(err)
+    logOperationError(err)
+  }
+  for (const r of results) {
+    if (r.status === 'failed') fail({ source: r.source, operation: 'ingest', message: r.errors.map((e) => e.message).join('; ') || 'Source failed' })
+  }
+
   // Archive everything past its sponsor deadline, including unsourced legacy seeds.
-  let archivedSweep = 0
+  let archivedSweep: number | null = 0
   if (!dryRun) {
     try {
       archivedSweep = await repository.archiveExpired(now.toISOString())
-    } catch {
-      archivedSweep = 0
+    } catch (err) {
+      archivedSweep = null
+      fail({ source: null, operation: 'archive_sweep', message: err instanceof Error ? err.message : String(err) })
     }
   }
 
-  const reverify: MultiSourceRefreshResult['reverify'] = { checked: 0, confirmed: 0, flagged: 0, broken: 0, unchanged: 0, decisions: [] }
+  const reverify: MultiSourceRefreshResult['reverify'] = { checked: 0, confirmed: 0, flagged: 0, broken: 0, unchanged: 0, writeFailed: 0, decisions: [] }
   const reverifyLimit = options.reverifyLimit ?? 0
   if (!dryRun && reverifyLimit > 0) {
+    let candidates: ReverifyCandidate[] | null = null
     try {
-      const candidates = await loadReverifyCandidates(supabase, sources, reverifyLimit, now.toISOString(), options.reverifyAll)
+      candidates = await loadReverifyCandidates(supabase, sources, reverifyLimit, now.toISOString(), options.reverifyAll)
+    } catch (err) {
+      fail({ source: null, operation: 'reverify_candidates', message: err instanceof Error ? err.message : String(err) })
+    }
+    if (candidates) {
       const decisions = await reverifyCandidates(candidates, options.fetchPage ?? createPageFetcher(), { now })
       for (const decision of decisions) {
-        if (decision.patch) await supabase.from('scholarships').update(decision.patch).eq('id', decision.id)
+        if (!decision.patch) continue
+        // A closure/verification counts only once the database confirms the
+        // write touched the row; a rejected or no-op write is reported.
+        const { data, error } = await supabase.from('scholarships').update(decision.patch).eq('id', decision.id).select('id')
+        if (error || !data || data.length === 0) {
+          decision.applied = false
+          decision.writeError = error ? dbMessage(error) : 'Update matched no row'
+          fail({ source: decision.source, operation: 'reverify_write', scholarshipId: decision.id, message: `${decision.outcome}: ${decision.writeError}` })
+        } else {
+          decision.applied = true
+        }
       }
       reverify.decisions = decisions
       reverify.checked = decisions.length
-      reverify.confirmed = decisions.filter((d) => d.outcome === 'confirmed').length
-      reverify.flagged = decisions.filter((d) => d.outcome === 'closure_reported').length
-      reverify.broken = decisions.filter((d) => d.outcome === 'broken').length
+      reverify.confirmed = decisions.filter((d) => d.outcome === 'confirmed' && d.applied).length
+      reverify.flagged = decisions.filter((d) => d.outcome === 'closure_reported' && d.applied).length
+      reverify.broken = decisions.filter((d) => d.outcome === 'broken' && d.applied).length
       reverify.unchanged = decisions.filter((d) => !d.patch).length
-    } catch {
-      // Reverification is best-effort; stored evidence stays as it was.
+      reverify.writeFailed = decisions.filter((d) => d.applied === false).length
     }
   }
 
-  const visibleBySource = (await countVisibleBySource(supabase)) ?? {}
-  const visibleTotal = Object.values(visibleBySource).reduce((s, n) => s + n, 0)
+  const visible = await countVisibleBySource(supabase)
+  const visibleBySource = 'counts' in visible ? visible.counts : null
+  if ('error' in visible) fail({ source: null, operation: 'visible_count', message: visible.error })
+  const visibleTotal = visibleBySource ? Object.values(visibleBySource).reduce((s, n) => s + n, 0) : null
 
-  const summaries: SourceRunSummary[] = results.map((r) => ({
-    ...r,
-    flagged: r.flagged + reverify.decisions.filter((d) => d.source === r.source && d.patch && d.outcome !== 'confirmed').length,
-    visible: visibleBySource[r.source] ?? 0,
-  }))
+  const summaries: SourceRunSummary[] = results.map((r) => {
+    const ownErrors = operationErrors.filter((e) => e.operation !== 'ingest' && (e.source === r.source || e.source === null))
+    const status: SourceRunSummary['status'] = r.status === 'failed' ? 'failed' : ownErrors.length > 0 ? 'partial' : r.status
+    return {
+      ...r,
+      status,
+      errors: [...r.errors, ...ownErrors.map((e) => ({ externalId: e.scholarshipId, message: `${e.operation}: ${e.message}` }))],
+      failed: r.failed + ownErrors.length,
+      flagged: r.flagged + reverify.decisions.filter((d) => d.source === r.source && d.applied && d.outcome !== 'confirmed').length,
+      visible: visibleBySource ? (visibleBySource[r.source] ?? 0) : null,
+    }
+  })
 
+  const auditLog: MultiSourceRefreshResult['auditLog'] = { written: 0, failed: [] }
   if (!dryRun) {
     for (const summary of summaries) {
       const log = toRunLog(summary, options.createdBy ?? null)
+      let message: string | null = null
       try {
-        await supabase.from('scholarship_ingestion_runs').insert({
+        const { error } = await supabase.from('scholarship_ingestion_runs').insert({
           ...log,
           revalidated_count: summary.revalidated,
           visible_count: summary.visible,
           details: {
             archivedSweep,
-            reverify: reverify.decisions.filter((d) => d.source === summary.source).map(({ id, outcome, detail }) => ({ id, outcome, detail })),
+            reverify: reverify.decisions
+              .filter((d) => d.source === summary.source)
+              .map(({ id, outcome, detail, applied, writeError }) => ({ id, outcome, detail, applied, writeError })),
             visibleBySource,
+            operationErrors: operationErrors.filter((e) => e.source === summary.source || e.source === null),
           },
         })
-      } catch {
-        // Logging is best-effort.
+        if (error) message = dbMessage(error)
+      } catch (err) {
+        message = err instanceof Error ? err.message : String(err)
+      }
+      if (message) {
+        // The audit table itself is unavailable, so the failure goes to the
+        // returned result and the server log instead.
+        auditLog.failed.push({ source: summary.source, message })
+        fail({ source: summary.source, operation: 'run_log', message })
+        if (summary.status === 'success') summary.status = 'partial'
+        summary.failed += 1
+        summary.errors = [...summary.errors, { message: `run_log: ${message}` }]
+      } else {
+        auditLog.written += 1
       }
     }
   }
 
   const failedCount = summaries.filter((s) => s.status === 'failed').length
   const status: MultiSourceRefreshResult['status'] =
-    failedCount === summaries.length ? 'failed' : failedCount > 0 || summaries.some((s) => s.status === 'partial') ? 'partial' : 'success'
+    summaries.length > 0 && failedCount === summaries.length
+      ? 'failed'
+      : failedCount > 0 || operationErrors.length > 0 || summaries.some((s) => s.status === 'partial')
+        ? 'partial'
+        : 'success'
 
   return {
     trigger: options.trigger,
@@ -253,5 +351,7 @@ export async function runScholarshipRefresh(supabase: SupabaseClient, options: R
     reverify,
     visibleTotal,
     visibleBySource,
+    auditLog,
+    operationErrors,
   }
 }

@@ -119,6 +119,27 @@ with the two sources above.
   updated / unchanged / revalidated / archived / rejected / failed /
   **visible** counts and reverify details.
 
+### Failure reporting (no silent success)
+
+Supabase returns `{ data, error }` rather than throwing, so every database step
+of a refresh checks the returned error:
+
+| Step | On a database error |
+| --- | --- |
+| ingest (per source) | that source is `failed`; other sources continue |
+| archive sweep | `archivedSweep: null` (not 0) |
+| sponsor recheck candidates | nothing is checked; reported |
+| sponsor recheck write | counted only after the update succeeds *and* matches the row; otherwise `applied: false`, `writeError`, `writeFailed` |
+| student-visible count | `visibleTotal` / per-source `visible` are `null` ("unavailable"), never 0 |
+| run-log insert | `auditLog.failed` lists the source and error |
+
+Each failure is added to `operationErrors` as `{ source, operation, message,
+scholarshipId? }`, written to the server log as
+`[scholarship-refresh] <operation> failed for source=<source> …`, and makes the
+run `partial` (or `failed` when every source failed). The cron route answers
+`ok: true` only for a fully successful run; the CLI exits 2 on `partial` and 1
+on `failed`. Successfully imported listings stay visible either way.
+
 ### Student-visible rule (`student_visible_scholarships`)
 
 Active, not archived, not closed, not demo, `verification_status = 'verified'`,
@@ -233,7 +254,7 @@ npx tsx scripts/scholarships/build-catalog-fixture.ts          # regenerate shar
    `/api/cron/scrape-scholarships` is gone.
 4. **First refresh** — Cron Jobs → *Run*, or from a trusted shell:
    `curl -H "Authorization: Bearer $CRON_SECRET" "https://<prod-host>/api/cron/scholarship-refresh?reverify=10&reverifyAll=1"`.
-   Expect `"status":"success"` and
+   Expect `"ok":true,"status":"success"` with empty `operationErrors`, and
    `visibleBySource ≈ { "mysryear-sponsor-verified": 5, "open-scholarships": 3 }`
    (6 open now + 2 opening soon as of Nov 22; counts drop as deadlines pass).
    If the live feed is unreachable, open-scholarships reports `failed` and

@@ -37,6 +37,14 @@ export type ReverifyDecision = {
   outcome: ReverifyOutcome
   detail: string
   patch: Record<string, unknown> | null
+  /**
+   * Set by the caller that persists `patch`: true only after the database
+   * confirmed the write; false when the write was rejected or matched no row.
+   * Undefined when there was nothing to write (or not yet persisted).
+   */
+  applied?: boolean
+  /** Database error when `applied` is false. */
+  writeError?: string
 }
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']

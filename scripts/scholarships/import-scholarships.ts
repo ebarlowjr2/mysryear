@@ -140,8 +140,11 @@ async function main() {
       reverifyAll: options.reverifyAll,
       openScholarshipsFeed: options.feed,
     })
-    console.log(JSON.stringify({ ...result, reverify: { ...result.reverify, decisions: result.reverify.decisions.map(({ id, outcome, detail }) => ({ id, outcome, detail })) } }, null, 2))
-    if (result.status === 'failed') process.exitCode = 1
+    console.log(JSON.stringify({ ...result, reverify: { ...result.reverify, decisions: result.reverify.decisions.map(({ id, outcome, detail, applied, writeError }) => ({ id, outcome, detail, applied, writeError })) } }, null, 2))
+    if (result.status !== 'success') {
+      console.error(`Refresh ${result.status}: ${result.operationErrors.map((e) => `${e.source ?? 'all sources'}/${e.operation}: ${e.message}`).join(' | ')}`)
+      process.exitCode = result.status === 'failed' ? 1 : 2
+    }
     return
   }
   const adapter = await buildAdapter(options.source, supabase)
