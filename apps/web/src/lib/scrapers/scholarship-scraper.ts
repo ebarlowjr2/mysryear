@@ -50,9 +50,16 @@ export class ScholarshipScraper {
   }
 
   private parseDeadline(deadlineText: string): string {
+    // Keep the year when the listing publishes one ("October 15, 2026"). The
+    // previous version returned only "October 15", which later parsed as 2001.
+    const withYear = deadlineText.match(/([A-Za-z]+\.?\s+\d{1,2},?\s+(?:19|20)\d{2})/)
+    if (withYear) return withYear[1].replace(/\s+/g, ' ')
+    const numeric = deadlineText.match(/(\d{1,2}\/\d{1,2}\/(?:19|20)\d{2})/)
+    if (numeric) return numeric[1]
     const dateMatch = deadlineText.match(/(\w+)\s+(\d{1,2})/)
     if (dateMatch) {
       const [, month, day] = dateMatch
+      // Yearless: stored as-is and treated as an unknown deadline downstream.
       return `${month} ${day}`
     }
     return deadlineText.trim()

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/scholarship-refresh",
+      "schedule": "17 7 * * *"
+    }
+  ]
+}

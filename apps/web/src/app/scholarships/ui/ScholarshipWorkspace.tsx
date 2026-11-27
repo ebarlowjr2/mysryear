@@ -1,367 +1,388 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  SCHOLARSHIP_FIELDS,
+  SCHOLARSHIP_FIELD_TAGS,
+  TRACKED_STATUSES,
+  TRACKED_STATUS_LABELS,
+  buildScholarshipDiscovery,
+  formatAwardAmount,
+  type CatalogCard,
+  type ScholarshipCatalogFilters,
+  type ScholarshipDiscoveryInput,
+  type ScholarshipFieldTag,
+  type TrackedAward,
+  type TrackedStatus,
+} from '@mysryear/shared'
 
-type Scholarship = {
-  id: string
-  title: string
-  organization?: string | null
-  description?: string | null
-  amount?: number | null
-  deadline?: string | null
-  deadline_at?: string | null
-  deadline_type?: string | null
-  application_url?: string | null
-  source_url?: string | null
-  last_verified_at?: string | null
-  verification_status?: string | null
-  state?: string | null
-  minimum_gpa?: number | null
-  career_tags?: string[] | null
-  skill_tags?: string[] | null
-}
-
-type ApplicationTask = {
-  id: string
-  title: string
-  description?: string | null
-  category: string
-  status: 'not_started' | 'in_progress' | 'done'
-  due_date?: string | null
-  upload_required?: boolean | null
-  uploaded_file_id?: string | null
-}
-
-type ApplicationProgress = {
-  total: number
-  completed: number
-  percentage: number
-  nextTask: string | null
-  overdue: number
-  documentsNeeded: number
-}
-
-type Match = {
-  scholarshipId: string
-  matchScore: number
-  readinessPercentage: number
-  matchReason: string[]
-  missingRequirements: string[]
-  status: 'suggested' | 'saved' | 'applying' | 'submitted' | 'awarded' | 'rejected'
-  scholarship: Scholarship
-  applicationTasks?: ApplicationTask[]
-  applicationProgress?: ApplicationProgress
-}
-
-type ResponseShape = {
+type ApiResponse = {
   ok: boolean
-  readiness?: {
-    percentage: number
-    label: string
-    strengths: string[]
-    missingRequirements: string[]
-    topMissingRequirement: string | null
-  }
-  matches?: Match[]
-  counts?: Record<string, number>
-  estimatedValue?: number
-  upcomingDeadlines?: Array<{ id: string; title: string; deadline: string | null }>
   error?: string
+  hasActiveStudent?: boolean
+  now?: string
+  clockFixed?: boolean
+  input?: ScholarshipDiscoveryInput
 }
 
-const tabs = ['suggested', 'saved', 'applying', 'submitted', 'awarded'] as const
-const labels: Record<(typeof tabs)[number], string> = {
-  suggested: 'Top Matches',
-  saved: 'Saved',
-  applying: 'Applying',
-  submitted: 'Submitted',
-  awarded: 'Awarded',
+const US_STATES = 'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' ')
+
+const READINESS_LINKS: Record<string, string> = {
+  gpa: '/grades',
+  transcript: '/grades',
+  resume: '/portfolio',
+  service: '/portfolio',
+  activity: '/portfolio',
+  achievement: '/portfolio',
+  certification: '/portfolio',
+  careers: '/aura/lifepath/select',
 }
 
-function money(value: number | null | undefined) {
-  if (!value) return 'Amount varies'
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
-}
-
-function date(value: string | null | undefined) {
-  if (!value) return 'Rolling / TBD'
-  return new Date(value).toLocaleDateString()
-}
-
-function deadlineLabel(scholarship: Scholarship) {
-  if (scholarship.deadline_type === 'rolling') return 'Deadline Rolling (accepts applications continuously)'
-  if (!scholarship.deadline && !scholarship.deadline_at) return 'Deadline TBD'
-  return `Deadline ${date(scholarship.deadline || scholarship.deadline_at)}`
+const NEXT_STEP: Partial<Record<TrackedStatus, { status: TrackedStatus; label: string }>> = {
+  saved: { status: 'applying', label: 'Start checklist' },
+  applying: { status: 'submitted', label: 'I submitted this' },
+  submitted: { status: 'awarded', label: 'Mark awarded' },
 }
 
 export default function ScholarshipWorkspace() {
-  const [data, setData] = useState<ResponseShape | null>(null)
+  const [response, setResponse] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('suggested')
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [state, setState] = useState('')
+  const [field, setField] = useState<ScholarshipFieldTag | ''>('')
+  const [within, setWithin] = useState<string>('')
+  const [level, setLevel] = useState<'any' | 'high-school' | 'college'>('any')
+  const [page, setPage] = useState(1)
+  const [trackerTab, setTrackerTab] = useState<TrackedStatus>('saved')
 
-  async function load() {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async () => {
+    setLoadError(null)
     const res = await fetch('/api/scholarships/matches', { credentials: 'include', cache: 'no-store' })
-    const json = (await res.json().catch(() => null)) as ResponseShape | null
+    const json = (await res.json().catch(() => null)) as ApiResponse | null
     setLoading(false)
-    if (!res.ok || !json?.ok) {
-      setError(json?.error || 'Could not load scholarship matches')
+    if (!res.ok || !json?.ok || !json.input) {
+      setLoadError(json?.error || 'Scholarships could not be loaded.')
       return
     }
-    setData(json)
-  }
+    setResponse(json)
+  }, [])
 
   useEffect(() => {
     void load()
-  }, [])
+    // Recompute when the student returns from the LifePath picker or switches
+    // the active student in another tab.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void load()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [load])
 
-  async function updateStatus(match: Match, status: Match['status']) {
-    setBusyId(match.scholarshipId)
+  const filters: ScholarshipCatalogFilters = useMemo(
+    () => ({ query, state, field, deadlineWithinDays: within ? Number(within) : null, level }),
+    [query, state, field, within, level],
+  )
+
+  const discovery = useMemo(() => {
+    if (!response?.input) return null
+    const now = response.clockFixed && response.now ? new Date(response.now) : new Date()
+    return buildScholarshipDiscovery(response.input, { now, filters, page })
+  }, [response, filters, page])
+
+  function update<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v)
+      setPage(1)
+    }
+  }
+
+  async function setStatus(scholarshipId: string, status: TrackedStatus, title: string) {
+    setBusyId(scholarshipId)
     setNotice(null)
     const res = await fetch('/api/scholarships/matches', {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ scholarshipId: match.scholarshipId, status }),
+      body: JSON.stringify({ scholarshipId, status }),
     })
     const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
     setBusyId(null)
     if (!res.ok || !json?.ok) {
-      setError(json?.error || 'Could not update scholarship status')
+      setNotice(json?.error || 'Could not update this scholarship.')
       return
     }
+    setNotice(`${title}: ${TRACKED_STATUS_LABELS[status]}.`)
     await load()
-    if (tabs.includes(status as (typeof tabs)[number])) setActiveTab(status as (typeof tabs)[number])
-    if (status === 'applying') {
-      setNotice('Application workspace opened. MySRYear will help you track the checklist here; use the official application link when you are ready to complete the provider form.')
-    }
   }
 
-
-  async function updateTask(task: ApplicationTask, status: ApplicationTask['status']) {
-    setBusyId(task.id)
-    const res = await fetch('/api/scholarships/application-tasks', {
+  async function toggleTask(taskId: string, done: boolean) {
+    setBusyId(taskId)
+    await fetch('/api/scholarships/application-tasks', {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ taskId: task.id, status }),
+      body: JSON.stringify({ taskId, status: done ? 'done' : 'not_started' }),
     })
-    const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
     setBusyId(null)
-    if (!res.ok || !json?.ok) {
-      setError(json?.error || 'Could not update application task')
-      return
-    }
     await load()
   }
 
-  const visibleMatches = useMemo(() => {
-    const matches = data?.matches || []
-    if (activeTab === 'suggested') return matches.filter((match) => match.status === 'suggested').slice(0, 20)
-    return matches.filter((match) => match.status === activeTab)
-  }, [activeTab, data?.matches])
-
   if (loading) {
-    return <div className="card p-8 text-center text-slate-700">Building scholarship matches from the active student profile...</div>
+    return <div className="card p-8 text-center text-slate-700" role="status">Loading open scholarships…</div>
+  }
+  if (loadError || !discovery || !response?.input) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900" role="alert">
+        {loadError || 'Scholarships could not be loaded.'}{' '}
+        <button className="underline font-semibold" onClick={() => void load()}>Try again</button>
+      </div>
+    )
   }
 
-  if (error) {
-    return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
-  }
-
-  const readiness = data?.readiness
+  const canTrack = Boolean(response.hasActiveStudent)
+  const { catalog, forYou, tracker, readiness } = discovery
+  const trackerItems = tracker.items.filter((i) => i.status === trackerTab)
 
   return (
-    <div className="space-y-8">
-      <section className="grid lg:grid-cols-[1fr_320px] gap-6">
-        <div className="card p-6">
-          <div className="badge">Scholarship Readiness</div>
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-8 min-w-0">
+        {notice ? <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900" role="status">{notice}</div> : null}
+
+        <section aria-labelledby="open-heading" className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <div className="text-5xl font-black tracking-tight">{readiness?.percentage ?? 0}%</div>
-              <div className="mt-2 text-lg font-bold text-slate-800">{readiness?.label || 'Needs Foundation'}</div>
-              <p className="mt-2 text-sm text-slate-600 max-w-2xl">
-                A.U.R.A is using academics, portfolio, documents, LifePath career interests, and location to estimate scholarship readiness.
+              <h2 id="open-heading" className="text-2xl font-black tracking-tight">Open scholarships</h2>
+              <p className="text-sm text-slate-600">
+                {catalog.state === 'unavailable'
+                  ? 'Listings are temporarily unavailable.'
+                  : `${catalog.openCount} open now${catalog.upcomingCount ? ` · ${catalog.upcomingCount} opening soon` : ''} · each checked on the sponsor's official page`}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 p-4 min-w-56">
-              <div className="text-sm text-slate-600">Estimated available value</div>
-              <div className="mt-1 text-2xl font-black">{money(data?.estimatedValue)}</div>
-              <div className="mt-1 text-xs text-slate-500">Across current active matches</div>
-            </div>
           </div>
-          <div className="mt-6 grid md:grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-              <div className="text-sm font-bold text-emerald-900">What is helping</div>
-              <ul className="mt-3 space-y-2 text-sm text-emerald-900 list-disc pl-5">
-                {(readiness?.strengths || []).slice(0, 5).map((item) => <li key={item}>{item}</li>)}
-                {(readiness?.strengths || []).length === 0 ? <li>Start by adding GPA, transcript, resume, activities, and LifePath interests.</li> : null}
-              </ul>
-            </div>
-            <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4">
-              <div className="text-sm font-bold text-amber-900">Next missing requirement</div>
-              <div className="mt-3 text-sm text-amber-900">{readiness?.topMissingRequirement || 'You have the core foundation in place.'}</div>
-              <Link href="/portfolio" className="mt-4 inline-flex text-sm font-semibold text-amber-900 underline">Improve portfolio readiness</Link>
-            </div>
-          </div>
-        </div>
 
-        <div className="card p-6">
-          <div className="text-sm font-semibold text-slate-600">Application Pipeline</div>
-          <div className="mt-4 space-y-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left ${activeTab === tab ? 'border-brand-400 bg-brand-50' : 'border-slate-200 hover:bg-slate-50'}`}
-              >
-                <span className="font-semibold">{labels[tab]}</span>
-                <span className="badge">{data?.counts?.[tab] ?? 0}</span>
+          <form className="card p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5" role="search" onSubmit={(e) => e.preventDefault()}>
+            <label className="text-sm font-semibold sm:col-span-2 xl:col-span-2">
+              Search
+              <input className="input mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" value={query} onChange={(e) => update(setQuery)(e.target.value)} placeholder="Award, sponsor, major…" />
+            </label>
+            <label className="text-sm font-semibold">
+              Location
+              <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" value={state} onChange={(e) => update(setState)(e.target.value)}>
+                <option value="">Anywhere</option>
+                <option value="national">National awards only</option>
+                {US_STATES.map((s) => <option key={s} value={s}>National + {s}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-semibold">
+              Field
+              <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" value={field} onChange={(e) => update(setField)(e.target.value as ScholarshipFieldTag | '')}>
+                <option value="">All fields</option>
+                {SCHOLARSHIP_FIELD_TAGS.map((t) => <option key={t} value={t}>{SCHOLARSHIP_FIELDS[t].label}</option>)}
+              </select>
+            </label>
+            <label className="text-sm font-semibold">
+              Deadline
+              <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" value={within} onChange={(e) => update(setWithin)(e.target.value)}>
+                <option value="">Any deadline</option>
+                <option value="14">Closing in 2 weeks</option>
+                <option value="30">Closing in 30 days</option>
+                <option value="60">Closing in 60 days</option>
+              </select>
+            </label>
+            <fieldset className="text-sm sm:col-span-2 xl:col-span-5 flex flex-wrap gap-4 items-center">
+              <legend className="sr-only">Who can apply</legend>
+              {(['any', 'high-school', 'college'] as const).map((l) => (
+                <label key={l} className="inline-flex items-center gap-2">
+                  <input type="radio" name="level" checked={level === l} onChange={() => update(setLevel)(l)} />
+                  {l === 'any' ? 'Everyone' : l === 'high-school' ? 'Open to high school students' : 'College students'}
+                </label>
+              ))}
+            </fieldset>
+          </form>
+
+          {catalog.state !== 'ok' ? (
+            <div className={`rounded-xl border p-4 text-sm ${catalog.state === 'unavailable' ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-slate-200 bg-slate-50 text-slate-700'}`} role="status" data-testid={`catalog-${catalog.state}`}>
+              {catalog.message}
+            </div>
+          ) : null}
+
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="open-scholarships" aria-label="Open scholarships">
+            {catalog.page.items.map((card) => (
+              <li key={card.scholarshipId} className="min-w-0">
+                <AwardCard card={card} canTrack={canTrack} busy={busyId === card.scholarshipId} onSave={() => setStatus(card.scholarshipId, 'saved', card.entry.title)} />
+              </li>
+            ))}
+          </ul>
+
+          {catalog.page.pageCount > 1 ? (
+            <nav className="flex items-center justify-between gap-3" aria-label="Scholarship pages">
+              <button className="btn-secondary" disabled={!catalog.page.hasPrevious} onClick={() => setPage(catalog.page.page - 1)}>Previous</button>
+              <span className="text-sm text-slate-600" aria-live="polite">Page {catalog.page.page} of {catalog.page.pageCount} · {catalog.page.total} awards</span>
+              <button className="btn-secondary" disabled={!catalog.page.hasNext} onClick={() => setPage(catalog.page.page + 1)}>Next</button>
+            </nav>
+          ) : null}
+        </section>
+
+        <section aria-labelledby="foryou-heading" className="card p-5 bg-indigo-50/60 border-indigo-100 space-y-3" data-testid="for-you">
+          <h2 id="foryou-heading" className="text-xl font-black tracking-tight">For your A.U.R.A. career plans</h2>
+          {forYou.careers.length ? (
+            <p className="text-sm text-slate-700">Based on {forYou.careers.map((c) => `#${c.rank} ${c.title}`).join(' · ')}. <Link className="underline" href="/aura/lifepath/select">Change plans</Link></p>
+          ) : null}
+          {forYou.state !== 'ok' ? (
+            <div className="text-sm text-slate-700 space-y-3">
+              <p>{forYou.message}</p>
+              {forYou.state === 'needs-interests' ? <Link className="btn-primary inline-flex" href="/aura/lifepath/select">Choose career interests</Link> : null}
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {forYou.items.map((m) => (
+                <li key={m.scholarshipId} className="min-w-0 break-words rounded-xl bg-white border border-slate-200 p-4">
+                  <Link href={`/scholarships/${m.scholarshipId}`} className="font-black text-slate-900 hover:underline">{m.entry.title}</Link>
+                  <p className="text-xs text-slate-600 mt-1">{m.availability.label} · {formatAwardAmount(m.entry)}</p>
+                  <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">Why it appears</p>
+                  <ul className="text-sm text-slate-800 list-disc pl-5">{m.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+                  {m.toCheck.length ? (
+                    <>
+                      <p className="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">Still to check</p>
+                      <ul className="text-sm text-slate-600 list-disc pl-5">{m.toCheck.map((c) => <li key={c}>{c}</li>)}</ul>
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+          {forYou.state === 'ok' ? <p className="text-xs italic text-slate-600">{forYou.disclaimer}</p> : null}
+        </section>
+
+        <section aria-labelledby="tracker-heading" className="card p-5 space-y-4" data-testid="tracker">
+          <h2 id="tracker-heading" className="text-xl font-black tracking-tight">My scholarship tracker</h2>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Tracker status">
+            {TRACKED_STATUSES.map((s) => (
+              <button key={s} role="tab" aria-selected={trackerTab === s} className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${trackerTab === s ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-slate-200'}`} onClick={() => setTrackerTab(s)}>
+                {TRACKED_STATUS_LABELS[s]} ({tracker.counts[s]})
               </button>
             ))}
           </div>
-        </div>
-      </section>
+          {trackerItems.length === 0 ? (
+            <p className="text-sm text-slate-600">Nothing marked {TRACKED_STATUS_LABELS[trackerTab].toLowerCase()} yet{trackerTab === 'saved' ? ' — save an open scholarship to start tracking it.' : '.'}</p>
+          ) : (
+            <ul className="space-y-3">
+              {trackerItems.map((item) => (
+                <TrackerItem key={item.scholarshipId} item={item} busyId={busyId} onStatus={setStatus} onTask={toggleTask} />
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
-      <section className="card p-6">
-        {notice ? <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">{notice}</div> : null}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-black tracking-tight">{labels[activeTab]}</h2>
-            <p className="mt-1 text-sm text-slate-600">Matches are generated from the active student profile, not keyword search.</p>
-          </div>
-          <Link href="/dashboard" className="btn-secondary">Back to Dashboard</Link>
-        </div>
-
-        <div className="mt-6 space-y-4">
-          {visibleMatches.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600">
-              No scholarships in this status yet. Add profile signals or save a top match to begin tracking.
-            </div>
-          ) : visibleMatches.map((match) => (
-            <article key={match.scholarshipId} className="rounded-2xl border border-slate-200 p-5">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <span className="badge">{match.matchScore}% match</span>
-                    <span className="badge">{match.readinessPercentage}% ready</span>
-                    {match.scholarship.state ? <span className="badge">{match.scholarship.state}</span> : null}
-                  </div>
-                  <h3 className="text-xl font-black tracking-tight">{match.scholarship.title}</h3>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">{match.scholarship.organization || 'Scholarship Provider'} • {money(match.scholarship.amount)} • {deadlineLabel(match.scholarship)}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {match.scholarship.last_verified_at
-                      ? <>Last verified {date(match.scholarship.last_verified_at)}</>
-                      : <>Not yet verified</>}
-                    {(match.scholarship.application_url || match.scholarship.source_url) ? (
-                      <>
-                        {' • '}
-                        <a
-                          className="underline hover:text-brand-700"
-                          href={(match.scholarship.application_url || match.scholarship.source_url) as string}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          View at provider
-                        </a>
-                      </>
-                    ) : null}
-                  </p>
-                  {match.scholarship.description ? <p className="mt-3 text-sm text-slate-600 line-clamp-2">{match.scholarship.description}</p> : null}
-
-                  <div className="mt-4 grid md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs font-bold text-slate-600 uppercase tracking-wide">Why this matches</div>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-700 list-disc pl-5">
-                        {match.matchReason.slice(0, 4).map((reason) => <li key={reason}>{reason}</li>)}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-600 uppercase tracking-wide">Missing requirements</div>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-700 list-disc pl-5">
-                        {match.missingRequirements.length ? match.missingRequirements.slice(0, 4).map((item) => <li key={item}>{item}</li>) : <li>No major missing requirements detected.</li>}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {(match.applicationTasks || []).length > 0 ? (
-                    <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-black text-slate-900">MySRYear application workspace</div>
-                          <div className="text-xs text-slate-600">This checklist does not submit the scholarship for you. It keeps tasks, documents, and reminders organized before you apply on the provider site.</div>
-                          <div className="mt-1 text-xs text-slate-600">Next: {match.applicationProgress?.nextTask || 'All checklist items complete'}</div>
-                        </div>
-                        <div className="text-sm font-bold text-slate-800">{match.applicationProgress?.completed || 0}/{match.applicationProgress?.total || 0} done</div>
-                      </div>
-                      <div className="mt-3 h-2 rounded-full bg-white overflow-hidden">
-                        <div className="h-full rounded-full bg-brand-500" style={{ width: `${match.applicationProgress?.percentage || 0}%` }} />
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        {(match.applicationTasks || []).map((task) => (
-                          <label key={task.id} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
-                            <input
-                              type="checkbox"
-                              className="mt-1 h-4 w-4"
-                              checked={task.status === 'done'}
-                              disabled={busyId === task.id}
-                              onChange={(event) => updateTask(task, event.target.checked ? 'done' : 'not_started')}
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className={task.status === 'done' ? 'font-bold text-slate-500 line-through' : 'font-bold text-slate-900'}>{task.title}</span>
-                              {task.description ? <span className="mt-1 block text-xs text-slate-600">{task.description}</span> : null}
-                              <span className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
-                                <span className="badge">{task.category.replace('_', ' ')}</span>
-                                {task.due_date ? <span className="badge">Due {date(task.due_date)}</span> : null}
-                                {task.upload_required ? <span className="badge">Document needed</span> : null}
-                              </span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="flex flex-col gap-2 lg:min-w-48">
-                  {match.status === 'suggested' ? <button className="btn-secondary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'saved')}>Save to MySRYear</button> : null}
-                  {match.status === 'saved' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'applying')}>Open Application Workspace</button> : null}
-                  {match.status === 'applying' ? <button className="btn-primary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'submitted')}>I Submitted This</button> : null}
-                  {match.status === 'submitted' ? <button className="btn-secondary" disabled={busyId === match.scholarshipId} onClick={() => updateStatus(match, 'awarded')}>Mark Awarded</button> : null}
-                  {match.scholarship.application_url ? (
-                    <a className="btn-secondary text-center" href={match.scholarship.application_url} target="_blank" rel="noreferrer">
-                      Open Official Application
-                    </a>
-                  ) : (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                      Official application link not added yet. Use the checklist here while you confirm the provider link.
-                    </div>
-                  )}
-                  <div className="text-xs text-slate-500">MySRYear tracks your process. The scholarship provider receives your application only when you submit on their official site.</div>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card p-6">
-        <h2 className="text-xl font-black tracking-tight">Deadline Timeline</h2>
-        <div className="mt-4 space-y-3">
-          {(data?.upcomingDeadlines || []).length === 0 ? <div className="text-sm text-slate-600">No upcoming deadlines yet.</div> : data?.upcomingDeadlines?.map((item) => (
-            <div key={item.id} className="flex justify-between gap-4 rounded-xl border border-slate-200 p-3 text-sm">
-              <span className="font-semibold">{item.title}</span>
-              <span className="text-slate-600">{date(item.deadline)}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <aside className="space-y-4 lg:sticky lg:top-6 self-start">
+        <section className="card p-5" aria-labelledby="deadlines-heading">
+          <h2 id="deadlines-heading" className="font-black">Upcoming deadlines</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {discovery.upcomingDeadlines.length === 0 ? <li className="text-slate-600">No upcoming deadlines.</li> : null}
+            {discovery.upcomingDeadlines.map((d) => (
+              <li key={d.scholarshipId}>
+                <Link className="font-semibold hover:underline" href={`/scholarships/${d.scholarshipId}`}>{d.title}</Link>
+                <div className="text-slate-600">{d.label}{d.tracked ? ' · tracked' : ''}</div>
+              </li>
+            ))}
+          </ul>
+        </section>
+        {canTrack ? (
+          <section className="card p-5" aria-labelledby="readiness-heading">
+            <h2 id="readiness-heading" className="font-black">Strengthen your applications</h2>
+            <p className="text-sm text-slate-600 mt-1">Profile {readiness.percentage}% complete. Not required to browse or apply.</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {readiness.actions.slice(0, 4).map((a) => (
+                <li key={a.key}><Link className="text-brand-700 font-semibold hover:underline" href={READINESS_LINKS[a.key] ?? '/portfolio'}>{a.label} →</Link></li>
+              ))}
+              {readiness.actions.length === 0 ? <li className="text-slate-700">Your scholarship profile basics are in place.</li> : null}
+            </ul>
+          </section>
+        ) : null}
+      </aside>
     </div>
+  )
+}
+
+function AwardCard({ card, canTrack, busy, onSave }: { card: CatalogCard; canTrack: boolean; busy: boolean; onSave: () => void }) {
+  const { entry, availability } = card
+  return (
+    <article className="card h-full min-w-0 break-words p-5 flex flex-col gap-2" data-scholarship-id={card.scholarshipId}>
+      <h3 className="text-lg font-black leading-snug">
+        <Link href={`/scholarships/${card.scholarshipId}`} className="hover:underline">{entry.title}</Link>
+      </h3>
+      <p className="text-sm text-slate-600">{entry.organization}</p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 text-sm">
+        <dt className="text-slate-500">Award</dt>
+        <dd className="font-bold">{formatAwardAmount(entry)}</dd>
+        <dt className="text-slate-500">{availability.state === 'upcoming' ? 'Window' : 'Deadline'}</dt>
+        <dd className={`font-semibold ${availability.closingSoon ? 'text-amber-700' : ''}`}>{availability.label}</dd>
+      </dl>
+      {entry.eligibilitySummary ? <p className="text-sm text-slate-700 line-clamp-3">{entry.eligibilitySummary}</p> : null}
+      {entry.earlyClosureNote ? <p className="text-xs text-amber-800 bg-amber-50 rounded-lg p-2">⚠ {entry.earlyClosureNote}</p> : null}
+      <div className="mt-auto flex flex-wrap gap-2 pt-2">
+        {availability.canApply && entry.applicationUrl ? (
+          <a className="btn-primary" href={entry.applicationUrl} target="_blank" rel="noreferrer" aria-label={`Apply to ${entry.title} on the official site (opens in a new tab)`}>Apply ↗</a>
+        ) : (
+          <span className="btn-secondary opacity-60 cursor-not-allowed" aria-disabled="true">Not open yet</span>
+        )}
+        {card.trackedStatus ? (
+          <span className="badge self-center">{TRACKED_STATUS_LABELS[card.trackedStatus]}</span>
+        ) : canTrack ? (
+          <button className="btn-secondary" disabled={busy} onClick={onSave} aria-label={`Save ${entry.title}`}>{busy ? 'Saving…' : 'Save'}</button>
+        ) : null}
+        <Link className="text-sm font-semibold text-brand-700 self-center hover:underline" href={`/scholarships/${card.scholarshipId}`}>Details</Link>
+      </div>
+    </article>
+  )
+}
+
+function TrackerItem({
+  item,
+  busyId,
+  onStatus,
+  onTask,
+}: {
+  item: TrackedAward
+  busyId: string | null
+  onStatus: (id: string, status: TrackedStatus, title: string) => void
+  onTask: (taskId: string, done: boolean) => void
+}) {
+  const next = NEXT_STEP[item.status]
+  const title = item.entry?.title ?? 'Scholarship'
+  return (
+    <li className="rounded-xl border border-slate-200 p-4">
+      <div className="flex flex-wrap justify-between gap-3">
+        <div>
+          <Link href={`/scholarships/${item.scholarshipId}`} className="font-black hover:underline">{title}</Link>
+          <p className="text-sm text-slate-600">{item.availability?.label ?? 'Details unavailable'}</p>
+          {item.progress.total ? <p className="text-xs text-slate-500 mt-1">{item.progress.completed}/{item.progress.total} tasks done · Next: {item.progress.nextTask ?? 'all done'}</p> : null}
+        </div>
+        <div className="flex flex-wrap gap-2 items-start">
+          {next ? <button className="btn-secondary" disabled={busyId === item.scholarshipId} onClick={() => onStatus(item.scholarshipId, next.status, title)}>{next.label}</button> : null}
+          {item.status === 'submitted' ? <button className="btn-secondary" disabled={busyId === item.scholarshipId} onClick={() => onStatus(item.scholarshipId, 'rejected', title)}>Not awarded</button> : null}
+          {item.availability?.canApply && item.entry?.applicationUrl ? <a className="btn-primary" href={item.entry.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a> : null}
+        </div>
+      </div>
+      {item.tasks.length ? (
+        <ul className="mt-3 space-y-1">
+          {item.tasks.map((task) => (
+            <li key={task.id}>
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-1" checked={task.status === 'done'} disabled={busyId === task.id} onChange={(e) => onTask(task.id, e.target.checked)} />
+                <span className={task.status === 'done' ? 'line-through text-slate-500' : ''}>
+                  {task.title}{task.due_date ? <span className="text-slate-500"> · due {task.due_date}</span> : null}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </li>
   )
 }

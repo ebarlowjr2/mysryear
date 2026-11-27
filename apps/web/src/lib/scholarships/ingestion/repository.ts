@@ -53,9 +53,20 @@ export function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, inclu
     recommendation_required: row.recommendation_required,
     transcript_required: row.transcript_required,
     volunteer_required: row.volunteer_required,
+    opens_at: row.opens_at,
+    deadline_timezone: row.deadline_timezone,
+    early_closure_note: row.early_closure_note,
+    closed_at: row.closed_at,
+    closure_reason: row.closure_reason,
+    eligibility_summary: row.eligibility_summary,
+    audience_levels: row.audience_levels,
+    field_tags: row.field_tags,
+    award_scope: row.award_scope,
+    attribution: row.attribution,
+    availability_evidence: row.availability_evidence,
+    is_demo: row.is_demo,
     active: row.active,
     lifecycle_status: row.lifecycle_status,
-    last_verified_at: row.last_verified_at,
     source_updated_at: row.source_updated_at,
     verification_status: row.verification_status,
     next_verification_at: row.next_verification_at,
@@ -67,6 +78,9 @@ export function toDbPayload(row: NormalizedScholarshipRow, nowIso: string, inclu
     raw_source_metadata: row.raw_source_metadata,
   }
   if (includeFirstImported) payload.first_imported_at = nowIso
+  // Only write an evidence timestamp we actually have; never null-out (or
+  // fake) a stored verification date because a cached row was re-read.
+  if (row.last_verified_at) payload.last_verified_at = row.last_verified_at
 
   // Backward compatibility: mirror a usable provider URL into the legacy `link`
   // column for older code that still reads it. The canonical `application_url` /
@@ -99,6 +113,7 @@ export class InMemoryScholarshipRepository implements ScholarshipRepository {
       active: value.active,
       lifecycle_status: value.lifecycle_status,
       canonical_url: value.canonical_url ?? value.row?.canonical_url ?? null,
+      last_verified_at: value.row?.last_verified_at ?? value.last_verified_at ?? null,
     }
   }
 
@@ -229,7 +244,7 @@ export class SupabaseScholarshipRepository implements ScholarshipRepository {
   async loadExistingBySource(source: string): Promise<Map<string, ExistingScholarshipRow>> {
     const { data, error } = await this.supabase
       .from('scholarships')
-      .select('id,external_id,import_fingerprint,active,lifecycle_status,canonical_url')
+      .select('id,external_id,import_fingerprint,active,lifecycle_status,canonical_url,last_verified_at')
       .eq('source', source)
       .not('external_id', 'is', null)
 
@@ -245,6 +260,7 @@ export class SupabaseScholarshipRepository implements ScholarshipRepository {
         active: Boolean(row.active),
         lifecycle_status: row.lifecycle_status ? String(row.lifecycle_status) : null,
         canonical_url: row.canonical_url ? String(row.canonical_url) : null,
+        last_verified_at: row.last_verified_at ? String(row.last_verified_at) : null,
       })
     }
     return out
@@ -295,10 +311,12 @@ export class SupabaseScholarshipRepository implements ScholarshipRepository {
       .update({ active: false, lifecycle_status: 'expired', archived_at: nowIso })
       .eq('active', true)
       .neq('deadline_type', 'rolling')
-      .not('deadline', 'is', null)
-      .lt('deadline', nowIso.slice(0, 10))
+      .or(`deadline_at.lte.${nowIso},and(deadline_at.is.null,deadline.lt.${nowIso.slice(0, 10)})`)
     if (source) query = query.eq('source', source)
-    const { data, error } = await query.select('id')
+    // PostgREST re-applies an `or=` filter to the returned representation, so
+    // the filtered columns must be in the RETURNING list (selecting only `id`
+    // fails with "column scholarships.deadline_at does not exist").
+    const { data, error } = await query.select('id,deadline,deadline_at')
     if (error) throw new Error(error.message)
     return (data || []).length
   }

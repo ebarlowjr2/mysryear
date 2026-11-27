@@ -53,9 +53,40 @@ export type ScholarshipImportRecord = {
   transcriptRequired?: boolean
   volunteerRequired?: boolean
 
+  // Availability (sponsor-published facts) ----------------------------------
+  /** ISO date or timestamp the application window opens, when published. */
+  opensAt?: string
+  /** Local closing time on the deadline day, 24h `HH:MM`, when published. */
+  deadlineTime?: string
+  /** IANA time zone the sponsor publishes the deadline in (e.g. America/Chicago). */
+  deadlineTimezone?: string
+  /** Sponsor-published early-closure condition, e.g. "Closes once 1,000 applications are received." */
+  earlyClosureNote?: string
+  /** Set only when the sponsor has actually closed applications before the deadline. */
+  closedAt?: string
+  closureReason?: string
+  /** Short, original summary of the published eligibility criteria. */
+  eligibilitySummary?: string
+  /** Who may apply, e.g. ['high-school-senior', 'undergraduate']. */
+  audienceLevels?: string[]
+  /** Normalized field-of-study tags from sponsor criteria (see shared FIELD_TAGS). */
+  fieldTags?: string[]
+  /** 'general' (open to most students), 'field' (field/career specific), 'local' (geography). */
+  awardScope?: 'general' | 'field' | 'local'
+  attribution?: string
+  /** Evidence backing availability (URL checked, quotes, check date). */
+  availabilityEvidence?: Record<string, unknown>
+  /** Explicit verification state. Defaults to 'verified' only when lastVerifiedAt is set. */
+  verificationStatus?: VerificationStatus
+
   // Lifecycle --------------------------------------------------------------
   active: boolean
-  lastVerifiedAt: string
+  /**
+   * When the record was last confirmed AT THE SOURCE (fresh evidence of open
+   * applications). Never "now" merely because a cached row was re-read. Null
+   * means unconfirmed: the record is stored but not shown to students.
+   */
+  lastVerifiedAt?: string | null
 
   rawSourceMetadata?: Record<string, unknown>
 }
@@ -130,9 +161,22 @@ export type NormalizedScholarshipRow = {
   transcript_required: boolean
   volunteer_required: boolean
 
+  opens_at: string | null
+  deadline_timezone: string | null
+  early_closure_note: string | null
+  closed_at: string | null
+  closure_reason: string | null
+  eligibility_summary: string | null
+  audience_levels: string[]
+  field_tags: string[]
+  award_scope: string | null
+  attribution: string | null
+  availability_evidence: Record<string, unknown> | null
+  is_demo: boolean
+
   active: boolean
   lifecycle_status: ScholarshipLifecycleStatus
-  last_verified_at: string
+  last_verified_at: string | null
   source_updated_at: string | null
   verification_status: VerificationStatus
   next_verification_at: string | null
@@ -236,12 +280,11 @@ export interface ScholarshipRepository {
    */
   archiveExpired?(nowIso: string, source?: string): Promise<number>
   /**
-   * Refresh verification for records that were re-observed at the source but
-   * whose content did not change. Being seen again in the source IS a
-   * re-verification, so `last_verified_at` / `next_verification_at` advance and
-   * `verification_status` is set to 'verified'. Without this, rolling/unknown-
-   * deadline records would age out of the 30-day visibility window even though
-   * the scheduled refresh keeps confirming them. Returns the number touched.
+   * Record NEWER source evidence for unchanged records. Called only when the
+   * source carries an evidence date later than the stored one (a cached
+   * re-read is not evidence). Sets `last_verified_at` to that evidence time
+   * (the third argument), advances `next_verification_at` and marks the row
+   * 'verified'. Returns the number touched.
    */
   touchVerification?(
     source: string,
@@ -261,6 +304,8 @@ export type ExistingScholarshipRow = {
   active: boolean
   lifecycle_status: string | null
   canonical_url?: string | null
+  /** Stored evidence timestamp, so re-reads never move verification backwards or forwards without evidence. */
+  last_verified_at?: string | null
 }
 
 /** A row written to public.scholarship_ingestion_runs. */
@@ -276,6 +321,9 @@ export type ScholarshipRunLogRecord = {
   updated_count: number
   reactivated_count: number
   unchanged_count: number
+  revalidated_count?: number
+  visible_count?: number | null
+  details?: Record<string, unknown> | null
   archived_count: number
   duplicate_count: number
   flagged_count: number

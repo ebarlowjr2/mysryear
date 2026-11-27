@@ -7,10 +7,10 @@ function record(externalId: string, title = 'Example'): ScholarshipImportRecord 
   return {
     source: 'fixture-dataset',
     externalId,
-    sourceUrl: `https://example.org/s/${externalId}`,
+    sourceUrl: `https://sponsor.test/s/${externalId}`,
     title,
     organization: 'Example Foundation',
-    applicationUrl: `https://example.org/s/${externalId}/apply`,
+    applicationUrl: `https://sponsor.test/s/${externalId}/apply`,
     active: true,
     lastVerifiedAt: '2026-07-21T00:00:00.000Z',
   }

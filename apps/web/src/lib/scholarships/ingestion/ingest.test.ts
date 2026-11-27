@@ -14,8 +14,8 @@ function fixture(overrides: Partial<FixtureScholarship> = {}): FixtureScholarshi
     organization: 'Example Foundation',
     // Distinct per record so genuinely-different records are not collapsed by the
     // canonical-URL dedup pass (which is exercised separately).
-    sourceUrl: `https://example.org/s/${externalId}`,
-    applicationUrl: `https://example.org/s/${externalId}/apply`,
+    sourceUrl: `https://sponsor.test/s/${externalId}`,
+    applicationUrl: `https://sponsor.test/s/${externalId}/apply`,
     amountMin: 1000,
     amountMax: 5000,
     deadline: '2026-12-31',
@@ -174,10 +174,10 @@ describe('ingestSource — dry-run and failures', () => {
           return {
             source: 'partial-source',
             externalId: 'ok-1',
-            sourceUrl: 'https://example.org/s',
+            sourceUrl: 'https://sponsor.test/s',
             title: 'Fine',
             organization: 'Org',
-            applicationUrl: 'https://example.org/s/apply',
+            applicationUrl: 'https://sponsor.test/s/apply',
             active: true,
             lastVerifiedAt: '2026-07-21T00:00:00.000Z',
           }

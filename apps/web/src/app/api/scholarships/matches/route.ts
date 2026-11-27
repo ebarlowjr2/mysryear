@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server'
 import {
-  CAREERS,
+  DEFAULT_CATALOG_FILTERS,
+  SCHOLARSHIP_FIELD_TAGS,
+  TRACKED_STATUSES,
   buildScholarshipApplicationTaskSeeds,
-  computeAcademicHealth,
-  computePortfolioSummary,
-  computeScholarshipApplicationProgress,
-  computeScholarshipMatch,
-  computeScholarshipReadiness,
+  buildScholarshipDiscovery,
   createNextServerSupabaseClient,
-  scoreCareerHealth,
-  type ScholarshipApplicationTaskStatus,
+  loadScholarshipDiscoveryInput,
+  type ScholarshipCatalogFilters,
+  type ScholarshipFieldTag,
   type ScholarshipForMatching,
   type ScholarshipRequirement,
   type ScholarshipStatus,
-  type StudentScholarshipProfile,
 } from '@mysryear/shared'
 import { getActiveStudentProfileId } from '@/lib/student-profile'
-import { templatesForGrade, type GradeLevel } from '@/lib/student-success'
-import { isVisibleToStudents } from '@/lib/scholarships/ingestion/freshness'
+
+export const dynamic = 'force-dynamic'
 
 const STATUSES = new Set<ScholarshipStatus>(['suggested', 'saved', 'applying', 'submitted', 'awarded', 'rejected'])
 
@@ -25,279 +23,117 @@ function error(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status })
 }
 
-function gradeLevelFrom(value: unknown): GradeLevel {
-  return value === 10 || value === '10' ? '10' : value === 11 || value === '11' ? '11' : '9'
+function parseFilters(url: URL): ScholarshipCatalogFilters {
+  const field = url.searchParams.get('field') || ''
+  const within = Number(url.searchParams.get('within'))
+  const level = url.searchParams.get('level')
+  return {
+    query: url.searchParams.get('q') || '',
+    state: (url.searchParams.get('state') || '').slice(0, 12),
+    field: (SCHOLARSHIP_FIELD_TAGS as string[]).includes(field) ? (field as ScholarshipFieldTag) : '',
+    deadlineWithinDays: Number.isFinite(within) && within > 0 ? within : null,
+    level: level === 'high-school' || level === 'college' ? level : 'any',
+    includeUpcoming: url.searchParams.get('upcoming') !== '0',
+  }
 }
 
-function docContexts(rows: Array<{ upload_context: string | null; file_name: string | null }>) {
-  return rows.flatMap((row) => [row.upload_context || '', row.file_name || '']).map((item) => item.toLowerCase()).filter(Boolean)
-}
-
-function hasAny(contexts: string[], needles: string[]) {
-  return contexts.some((context) => needles.some((needle) => context.includes(needle)))
-}
-
-function normalizeScholarship(row: Record<string, unknown>): ScholarshipForMatching {
+function toMatching(row: Record<string, unknown>): ScholarshipForMatching {
+  const n = (v: unknown) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null)
+  const arr = (v: unknown) => (Array.isArray(v) ? (v as string[]) : [])
   return {
     id: String(row.id),
     title: String(row.title || 'Untitled Scholarship'),
     organization: typeof row.organization === 'string' ? row.organization : null,
     description: typeof row.description === 'string' ? row.description : null,
-    amount: typeof row.amount === 'number' ? row.amount : row.amount ? Number(row.amount) : null,
+    amount: n(row.amount),
     deadline: typeof row.deadline === 'string' ? row.deadline : null,
     application_url: typeof row.application_url === 'string' ? row.application_url : null,
     state: typeof row.state === 'string' ? row.state : null,
     country: typeof row.country === 'string' ? row.country : null,
-    minimum_gpa: typeof row.minimum_gpa === 'number' ? row.minimum_gpa : row.minimum_gpa ? Number(row.minimum_gpa) : null,
-    minimum_grade_level: typeof row.minimum_grade_level === 'number' ? row.minimum_grade_level : null,
-    maximum_grade_level: typeof row.maximum_grade_level === 'number' ? row.maximum_grade_level : null,
+    minimum_gpa: n(row.minimum_gpa),
+    minimum_grade_level: n(row.minimum_grade_level),
+    maximum_grade_level: n(row.maximum_grade_level),
     financial_need_required: Boolean(row.financial_need_required),
     essay_required: Boolean(row.essay_required),
     recommendation_required: Boolean(row.recommendation_required),
     volunteer_required: Boolean(row.volunteer_required),
-    certification_tags: Array.isArray(row.certification_tags) ? row.certification_tags as string[] : [],
-    career_tags: Array.isArray(row.career_tags) ? row.career_tags as string[] : [],
-    major_tags: Array.isArray(row.major_tags) ? row.major_tags as string[] : [],
-    skill_tags: Array.isArray(row.skill_tags) ? row.skill_tags as string[] : [],
+    certification_tags: arr(row.certification_tags),
+    career_tags: arr(row.career_tags),
+    major_tags: arr(row.major_tags),
+    skill_tags: arr(row.skill_tags),
   }
 }
 
-async function buildStudentScholarshipProfile(studentProfileId: string): Promise<{
-  student: StudentScholarshipProfile
-  portfolio: ReturnType<typeof computePortfolioSummary>
-  academicHealth: ReturnType<typeof computeAcademicHealth>
-}> {
+/**
+ * Scholarship Discovery for the authorized active student.
+ *
+ * Returns `input` (the exact data the shared contract consumes — the browser
+ * re-runs `buildScholarshipDiscovery` on it for instant search/paging, exactly
+ * as the Expo app does) plus `discovery` for the requested filters/page.
+ * All private reads run under the user's session (RLS) and the active student
+ * resolved server-side. The catalog itself does not depend on the student.
+ */
+export async function GET(req: Request) {
   const supabase = await createNextServerSupabaseClient()
-
-  const { data: studentProfile } = await supabase
-    .from('student_profiles')
-    .select('id,graduation_year,grade_level,schools(state)')
-    .eq('id', studentProfileId)
-    .maybeSingle()
-
-  const gradeLevel = gradeLevelFrom(studentProfile?.grade_level)
-
-  const [records, tasks, interests, activities, serviceHours, achievements, certifications, uploads] = await Promise.all([
-    supabase.from('academic_records').select('id,gpa,created_at').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }).limit(25),
-    supabase.from('student_success_tasks').select('id,status').eq('student_profile_id', studentProfileId).limit(200),
-    supabase.from('student_career_interests').select('career_id').eq('student_profile_id', studentProfileId).limit(10),
-    supabase.from('student_activities').select('id,title,category,uploaded_file_id').eq('student_profile_id', studentProfileId),
-    supabase.from('student_service_hours').select('id,hours,uploaded_file_id').eq('student_profile_id', studentProfileId),
-    supabase.from('student_achievements').select('id,title,category,uploaded_file_id').eq('student_profile_id', studentProfileId),
-    supabase.from('student_certifications').select('id,name,status,uploaded_file_id').eq('student_profile_id', studentProfileId),
-    supabase.from('uploaded_files').select('id,file_name,upload_context').eq('student_profile_id', studentProfileId).order('created_at', { ascending: false }).limit(100),
-  ])
-
-  const latestGpa = (records.data || []).find((record) => typeof record.gpa === 'number')?.gpa ?? null
-  const checklistDone = (tasks.data || []).filter((task) => task.status === 'done').length
-  const checklistTotal = Math.max((tasks.data || []).length, templatesForGrade(gradeLevel).length)
-  const academicHealth = computeAcademicHealth({
-    gpa: latestGpa,
-    hasRecentRecord: (records.data || []).length > 0,
-    checklistDone,
-    checklistTotal,
-  })
-
-  const completedCertifications = (certifications.data || []).filter((row) => row.status === 'completed')
-  const proofDocumentsCount = [activities.data, serviceHours.data, achievements.data, certifications.data]
-    .reduce((sum, rows) => sum + (rows || []).filter((row: { uploaded_file_id?: string | null }) => Boolean(row.uploaded_file_id)).length, 0)
-
-  const portfolio = computePortfolioSummary({
-    activitiesCount: activities.data?.length || 0,
-    serviceHoursTotal: (serviceHours.data || []).reduce((sum, row) => sum + Number(row.hours || 0), 0),
-    achievementsCount: achievements.data?.length || 0,
-    certificationsCompleted: completedCertifications.length,
-    proofDocumentsCount,
-  })
-
-  const careerIds = (interests.data || []).map((row) => String(row.career_id)).filter(Boolean)
-  const selectedCareers = CAREERS.filter((career) => careerIds.includes(career.id))
-  const careerCategories = selectedCareers.map((career) => career.category)
-  const careerHealthAverage = selectedCareers.length
-    ? Math.round(selectedCareers.reduce((sum, career) => sum + scoreCareerHealth(career, 'baseline').score, 0) / selectedCareers.length)
-    : null
-
-  const contexts = docContexts((uploads.data || []) as Array<{ upload_context: string | null; file_name: string | null }>)
-  const schoolState = Array.isArray(studentProfile?.schools)
-    ? studentProfile?.schools[0]?.state
-    : (studentProfile?.schools as { state?: string | null } | null | undefined)?.state
-
-  return {
-    academicHealth,
-    portfolio,
-    student: {
-      academicHealthScore: academicHealth.score,
-      portfolioReadinessScore: portfolio.scholarshipReadinessScore,
-      careerHealthAverage,
-      gpa: latestGpa,
-      gradeLevel: Number(gradeLevel),
-      graduationYear: typeof studentProfile?.graduation_year === 'number' ? studentProfile.graduation_year : null,
-      state: typeof schoolState === 'string' ? schoolState : null,
-      volunteerHours: portfolio.serviceHoursTotal,
-      activitiesCount: portfolio.activitiesCount,
-      achievementsCount: portfolio.achievementsCount,
-      certifications: completedCertifications.map((row) => String(row.name || '')).filter(Boolean),
-      careerInterests: careerIds,
-      careerCategories,
-      uploadedDocumentContexts: contexts,
-      hasResume: hasAny(contexts, ['resume', 'student_resume', 'portfolio']),
-      hasTranscript: hasAny(contexts, ['transcript', 'report_card', 'progress_report']),
-      hasRecommendation: hasAny(contexts, ['recommendation', 'letter']),
-      hasFafsa: hasAny(contexts, ['fafsa']),
-    },
-  }
-}
-
-
-async function seedApplicationTasks(input: {
-  studentProfileId: string
-  scholarship: ScholarshipForMatching
-  requirements: ScholarshipRequirement[]
-  userId: string
-}) {
-  const supabase = await createNextServerSupabaseClient()
-  const seeds = buildScholarshipApplicationTaskSeeds(input.scholarship, input.requirements)
-  if (seeds.length === 0) return
-
-  await supabase.from('scholarship_application_tasks').upsert(
-    seeds.map((task) => ({
-      student_profile_id: input.studentProfileId,
-      scholarship_id: input.scholarship.id,
-      created_by_user_id: input.userId,
-      title: task.title,
-      description: task.description || null,
-      category: task.category,
-      due_date: task.dueDate || null,
-      upload_required: Boolean(task.uploadRequired),
-    })),
-    { onConflict: 'student_profile_id,scholarship_id,title', ignoreDuplicates: true },
-  )
-}
-
-export async function GET() {
-  const supabase = await createNextServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) return error('Not authenticated', 401)
 
   const studentProfileId = await getActiveStudentProfileId()
-  if (!studentProfileId) return error('No active student profile', 404)
+  const url = new URL(req.url)
+  // SCHOLARSHIP_FIXED_NOW pins the clock for parity/e2e runs only (never set in production).
+  const now = process.env.SCHOLARSHIP_FIXED_NOW ? new Date(process.env.SCHOLARSHIP_FIXED_NOW) : new Date()
+  const page = Math.max(1, Number(url.searchParams.get('page') || 1) || 1)
 
-  const { student, portfolio, academicHealth } = await buildStudentScholarshipProfile(studentProfileId)
+  const input = await loadScholarshipDiscoveryInput(supabase, studentProfileId, now)
+  const discovery = buildScholarshipDiscovery(input, { now, filters: parseFilters(url), page })
 
-  const [scholarshipsResult, requirementsResult, existingMatchesResult, applicationTasksResult] = await Promise.all([
-    // Read from the freshness-guarded view so expired/stale/broken records are
-    // excluded at the database layer, independently of the ingestion job.
-    supabase.from('student_visible_scholarships').select('*').order('deadline', { ascending: true, nullsFirst: false }).limit(100),
-    supabase.from('scholarship_requirements').select('*'),
-    supabase.from('student_scholarship_matches').select('scholarship_id,status').eq('student_profile_id', studentProfileId),
-    supabase.from('scholarship_application_tasks').select('*').eq('student_profile_id', studentProfileId).order('due_date', { ascending: true, nullsFirst: false }),
-  ])
-
-  if (scholarshipsResult.error) return error(scholarshipsResult.error.message)
-
-  const requirementsByScholarship = new Map<string, ScholarshipRequirement[]>()
-  for (const requirement of requirementsResult.data || []) {
-    const scholarshipId = String(requirement.scholarship_id)
-    const list = requirementsByScholarship.get(scholarshipId) || []
-    list.push(requirement as ScholarshipRequirement)
-    requirementsByScholarship.set(scholarshipId, list)
+  // Persist personalized suggestions (scores + reasons) for the dashboard,
+  // without ever overwriting a tracked status (also guarded by a DB trigger).
+  if (studentProfileId && discovery.forYou.items.length > 0) {
+    const tracked = new Map(input.tracked.map((t) => [t.scholarship_id, t.status]))
+    await supabase
+      .from('student_scholarship_matches')
+      .upsert(
+        discovery.forYou.items.map((item) => ({
+          student_profile_id: studentProfileId,
+          scholarship_id: item.scholarshipId,
+          match_score: Math.min(100, 40 + item.score * 5),
+          match_reason: item.reasons,
+          missing_requirements: item.toCheck,
+          readiness_percentage: discovery.readiness.percentage,
+          status: tracked.get(item.scholarshipId) ?? 'suggested',
+        })),
+        { onConflict: 'student_profile_id,scholarship_id' },
+      )
+      .then(
+        () => undefined,
+        () => undefined,
+      )
   }
-
-  const tasksByScholarship = new Map<string, Array<{ id: string; scholarship_id: string; title: string; description: string | null; category: string; status: ScholarshipApplicationTaskStatus; due_date: string | null; upload_required: boolean; uploaded_file_id: string | null; completed_at: string | null }>>()
-  for (const task of applicationTasksResult.data || []) {
-    const scholarshipId = String(task.scholarship_id)
-    const list = tasksByScholarship.get(scholarshipId) || []
-    list.push({
-      id: String(task.id),
-      scholarship_id: scholarshipId,
-      title: String(task.title),
-      description: typeof task.description === 'string' ? task.description : null,
-      category: String(task.category || 'general'),
-      status: (task.status === 'in_progress' || task.status === 'done') ? task.status : 'not_started',
-      due_date: typeof task.due_date === 'string' ? task.due_date : null,
-      upload_required: Boolean(task.upload_required),
-      uploaded_file_id: typeof task.uploaded_file_id === 'string' ? task.uploaded_file_id : null,
-      completed_at: typeof task.completed_at === 'string' ? task.completed_at : null,
-    })
-    tasksByScholarship.set(scholarshipId, list)
-  }
-
-  const existingStatus = new Map<string, ScholarshipStatus>()
-  for (const match of existingMatchesResult.data || []) {
-    if (STATUSES.has(match.status as ScholarshipStatus)) existingStatus.set(String(match.scholarship_id), match.status as ScholarshipStatus)
-  }
-
-  const matches = (scholarshipsResult.data || [])
-    // Defense-in-depth: even though the view already excludes expired/stale
-    // records, re-apply the same rule in code so the feed is safe regardless of
-    // which table/view it reads from.
-    .filter((raw) => isVisibleToStudents(raw as Record<string, unknown>))
-    .map((raw) => {
-      const row = raw as Record<string, unknown>
-      const scholarship = normalizeScholarship(row)
-      const computed = computeScholarshipMatch(student, scholarship, requirementsByScholarship.get(scholarship.id) || [])
-      return {
-        ...computed,
-        status: existingStatus.get(scholarship.id) || 'suggested',
-        scholarship: {
-          ...scholarship,
-          // Freshness/provenance fields surfaced for the detail UI.
-          source_url: typeof row.source_url === 'string' ? row.source_url : null,
-          deadline_at: typeof row.deadline_at === 'string' ? row.deadline_at : null,
-          deadline_type: typeof row.deadline_type === 'string' ? row.deadline_type : null,
-          last_verified_at: typeof row.last_verified_at === 'string' ? row.last_verified_at : null,
-          verification_status: typeof row.verification_status === 'string' ? row.verification_status : null,
-        },
-        applicationTasks: tasksByScholarship.get(scholarship.id) || [],
-        applicationProgress: computeScholarshipApplicationProgress(tasksByScholarship.get(scholarship.id) || []),
-      }
-    }).sort((a, b) => b.matchScore - a.matchScore)
-
-  if (matches.length > 0) {
-    await supabase.from('student_scholarship_matches').upsert(
-      matches.map((match) => ({
-        student_profile_id: studentProfileId,
-        scholarship_id: match.scholarshipId,
-        match_score: match.matchScore,
-        match_reason: match.matchReason,
-        missing_requirements: match.missingRequirements,
-        readiness_percentage: match.readinessPercentage,
-        status: match.status,
-      })),
-      { onConflict: 'student_profile_id,scholarship_id' },
-    )
-  }
-
-  const readiness = computeScholarshipReadiness({ student, matches })
-  const estimatedValue = matches.reduce((sum, match) => sum + Number(match.scholarship.amount || 0), 0)
-  const upcomingDeadlines = matches
-    .filter((match) => match.scholarship.deadline)
-    .slice(0, 5)
-    .map((match) => ({ id: match.scholarship.id, title: match.scholarship.title, deadline: match.scholarship.deadline }))
 
   return NextResponse.json({
     ok: true,
     studentProfileId,
-    readiness,
-    academicHealth,
-    portfolio,
-    matches,
-    counts: {
-      total: matches.length,
-      suggested: matches.filter((match) => match.status === 'suggested').length,
-      saved: matches.filter((match) => match.status === 'saved').length,
-      applying: matches.filter((match) => match.status === 'applying').length,
-      submitted: matches.filter((match) => match.status === 'submitted').length,
-      awarded: matches.filter((match) => match.status === 'awarded').length,
-    },
-    estimatedValue,
-    upcomingDeadlines,
+    hasActiveStudent: Boolean(studentProfileId),
+    now: now.toISOString(),
+    clockFixed: Boolean(process.env.SCHOLARSHIP_FIXED_NOW),
+    defaults: DEFAULT_CATALOG_FILTERS,
+    input,
+    discovery,
+    // Back-compat summary fields for older consumers.
+    readiness: discovery.readiness,
+    counts: { ...discovery.tracker.counts, total: discovery.catalog.openCount },
+    upcomingDeadlines: discovery.upcomingDeadlines,
   })
 }
 
 export async function PATCH(req: Request) {
   const supabase = await createNextServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) return error('Not authenticated', 401)
 
   const studentProfileId = await getActiveStudentProfileId()
@@ -305,27 +141,36 @@ export async function PATCH(req: Request) {
 
   const body = (await req.json().catch(() => null)) as { scholarshipId?: unknown; status?: unknown } | null
   const scholarshipId = typeof body?.scholarshipId === 'string' ? body.scholarshipId : null
-  const status = typeof body?.status === 'string' && STATUSES.has(body.status as ScholarshipStatus) ? body.status as ScholarshipStatus : null
+  const status = typeof body?.status === 'string' && STATUSES.has(body.status as ScholarshipStatus) ? (body.status as ScholarshipStatus) : null
   if (!scholarshipId || !status) return error('Missing scholarshipId or valid status')
 
   const { error: updateError } = await supabase
     .from('student_scholarship_matches')
     .upsert({ student_profile_id: studentProfileId, scholarship_id: scholarshipId, status }, { onConflict: 'student_profile_id,scholarship_id' })
+  if (updateError) return error(updateError.message, 403)
 
-  if (updateError) return error(updateError.message)
-
-  if (status === 'saved' || status === 'applying' || status === 'submitted') {
+  if ((TRACKED_STATUSES as string[]).includes(status) && status !== 'awarded' && status !== 'rejected') {
     const [{ data: scholarship }, { data: requirements }] = await Promise.all([
       supabase.from('scholarships').select('*').eq('id', scholarshipId).maybeSingle(),
       supabase.from('scholarship_requirements').select('*').eq('scholarship_id', scholarshipId),
     ])
     if (scholarship) {
-      await seedApplicationTasks({
-        studentProfileId,
-        scholarship: normalizeScholarship(scholarship as Record<string, unknown>),
-        requirements: (requirements || []) as ScholarshipRequirement[],
-        userId: session.user.id,
-      })
+      const seeds = buildScholarshipApplicationTaskSeeds(toMatching(scholarship as Record<string, unknown>), (requirements || []) as ScholarshipRequirement[])
+      if (seeds.length) {
+        await supabase.from('scholarship_application_tasks').upsert(
+          seeds.map((task) => ({
+            student_profile_id: studentProfileId,
+            scholarship_id: scholarshipId,
+            created_by_user_id: session.user.id,
+            title: task.title,
+            description: task.description || null,
+            category: task.category,
+            due_date: task.dueDate || null,
+            upload_required: Boolean(task.uploadRequired),
+          })),
+          { onConflict: 'student_profile_id,scholarship_id,title', ignoreDuplicates: true },
+        )
+      }
     }
   }
 

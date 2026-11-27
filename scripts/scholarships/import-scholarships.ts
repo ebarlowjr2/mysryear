@@ -6,6 +6,8 @@
  *   npm run scholarships:ingest
  *   npm run scholarships:ingest -- --source=fixture --limit=50 --dry-run
  *   npm run scholarships:ingest -- --source=legacy --deactivate-missing
+ *   npm run scholarships:ingest -- --refresh            (all catalog providers, same as the cron)
+ *   npm run scholarships:ingest -- --refresh --feed=snapshot --reverify=0
  *
  * Flags:
  *   --dry-run             Fetch, normalize, validate and report proposed
@@ -13,6 +15,15 @@
  *   --source=<name>       fixture (default) | legacy
  *   --limit=<n>           Cap the number of records fetched.
  *   --deactivate-missing  Retire active rows absent from a FULL import.
+ *   --refresh             Run the multi-source refresh used by the cron:
+ *                         mysryear-sponsor-verified + open-scholarships, archive
+ *                         sweep, optional sponsor-page recheck, per-source
+ *                         visible counts, one run-log row per source.
+ *   --sources=a,b         Providers for --refresh.
+ *   --feed=snapshot       Use the committed Open Scholarships snapshot instead of
+ *                         the live feed (offline/local first import).
+ *   --reverify=<n>        Recheck up to n sponsor pages (default 0 for the CLI).
+ *   --reverify-all        Recheck even records whose next check is not due yet.
  *
  * Dry-run works without any Supabase configuration (it uses an in-memory store)
  * so the pipeline can be demonstrated offline. A real (non dry-run) import
@@ -39,6 +50,11 @@ import {
 } from './supabase-service-role'
 
 type CliOptions = {
+  refresh: boolean
+  sources?: string[]
+  feed?: 'live' | 'snapshot'
+  reverify: number
+  reverifyAll: boolean
   dryRun: boolean
   source: string
   limit?: number
@@ -46,9 +62,14 @@ type CliOptions = {
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = { dryRun: false, source: 'fixture', deactivateMissing: false }
+  const options: CliOptions = { refresh: false, reverify: 0, reverifyAll: false, dryRun: false, source: 'fixture', deactivateMissing: false }
   for (const arg of argv) {
     if (arg === '--dry-run') options.dryRun = true
+    else if (arg === '--refresh') options.refresh = true
+    else if (arg === '--reverify-all') options.reverifyAll = true
+    else if (arg.startsWith('--sources=')) options.sources = arg.slice(10).split(',').filter(Boolean)
+    else if (arg === '--feed=snapshot') options.feed = 'snapshot'
+    else if (arg.startsWith('--reverify=')) options.reverify = Math.max(0, Number(arg.slice(11)) || 0)
     else if (arg === '--deactivate-missing') options.deactivateMissing = true
     else if (arg.startsWith('--source=')) options.source = arg.slice('--source='.length)
     else if (arg.startsWith('--limit=')) {
@@ -106,6 +127,26 @@ async function main() {
   }
 
   const supabase = hasConfig ? createServiceRoleClient() : null
+  if (options.refresh) {
+    if (!supabase) throw new Error('--refresh requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY')
+    const { runScholarshipRefresh } = await import('../../apps/web/src/lib/scholarships/run-refresh')
+    const result = await runScholarshipRefresh(supabase, {
+      trigger: options.dryRun ? 'dry_run' : 'manual',
+      sources: options.sources,
+      dryRun: options.dryRun,
+      limit: options.limit,
+      deactivateMissing: options.deactivateMissing,
+      reverifyLimit: options.reverify,
+      reverifyAll: options.reverifyAll,
+      openScholarshipsFeed: options.feed,
+    })
+    console.log(JSON.stringify({ ...result, reverify: { ...result.reverify, decisions: result.reverify.decisions.map(({ id, outcome, detail, applied, writeError }) => ({ id, outcome, detail, applied, writeError })) } }, null, 2))
+    if (result.status !== 'success') {
+      console.error(`Refresh ${result.status}: ${result.operationErrors.map((e) => `${e.source ?? 'all sources'}/${e.operation}: ${e.message}`).join(' | ')}`)
+      process.exitCode = result.status === 'failed' ? 1 : 2
+    }
+    return
+  }
   const adapter = await buildAdapter(options.source, supabase)
 
   let repository: ScholarshipRepository

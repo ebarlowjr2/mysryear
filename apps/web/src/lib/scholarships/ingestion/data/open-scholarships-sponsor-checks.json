@@ -1,0 +1,99 @@
+{
+  "description": "MySRYear sponsor-level checks for Open Scholarships (CC BY 4.0) records. An Open Scholarships listing is a lead; it is shown to students only when a check here confirms the CURRENT cycle on the sponsor's own page. Records without a check stay stored as 'unconfirmed' and hidden. Keyed by Open Scholarships id.",
+  "statuses": {
+    "open": "Sponsor page states the current cycle is accepting applications; closing date confirmed.",
+    "upcoming": "Sponsor page publishes the next window; opens later.",
+    "closed_early": "Sponsor page says applications stopped before the published deadline.",
+    "conflicting": "Sponsor page gives conflicting dates; needs human review (hidden).",
+    "unreachable": "Sponsor page could not be read (hidden until checked).",
+    "duplicate": "Covered by an equivalent MySRYear sponsor-verified entry (hidden to avoid duplicates)."
+  },
+  "checks": {
+    "us-apia-scholars-scholarship": {
+      "status": "open",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://apiascholars.org/scholarship/",
+      "opensAt": "2026-11-15",
+      "closesOn": "2027-01-15",
+      "closesTime": "23:59",
+      "timeZone": "America/New_York",
+      "amountMin": 2500,
+      "amountMax": 20000,
+      "eligibilitySummary": "Asian American and Pacific Islander students pursuing an associate or bachelor's degree at an accredited U.S. college; citizens, nationals or permanent residents of the U.S. (or RMI, FSM, Palau). Focus on students at or below the poverty line and first-generation college students. Page describes eligibility for undergraduates; confirm high school senior eligibility in the FAQ.",
+      "audienceLevels": ["undergraduate"],
+      "evidence": [
+        "The 2027-2028 APIA Scholarship Application is open from November 15, 2026 until January 15, 2027.",
+        "January 15, 2027 at 11:59pm ET APIA Scholarship application closes"
+      ]
+    },
+    "nv-nevada-womens-fund-scholarships": {
+      "status": "open",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://www.nevadawomensfund.org/scholarships",
+      "applyUrl": "https://www.nevadawomensfund.org/scholarships",
+      "opensAt": "2026-10-01",
+      "closesOn": "2027-01-03",
+      "timeZone": "America/Los_Angeles",
+      "minimumGpa": 3.0,
+      "eligibilitySummary": "Degree Pathway Scholarship: women living in northern or rural Nevada (all counties except Clark) enrolled full time at a northern/rural Nevada college or an accredited online program; unweighted GPA 3.0+; FAFSA Submission Summary, transcript and Nevada ID required.",
+      "audienceLevels": ["undergraduate"],
+      "note": "Open Scholarships lists 2027-01-05; the sponsor page says January 3, 2027. The sponsor date is used.",
+      "evidence": [
+        "APPLICATIONS WILL BE ACCEPTED OCTOBER 1, 2026 THRU JANUARY 3, 2027",
+        "Applicants must have an unweighted GPA of 3.0 or greater."
+      ]
+    },
+    "us-nsa-scholarship-foundation-scholarship": {
+      "status": "upcoming",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://nsacct.org/nsaf-scholarships/",
+      "opensAt": "2027-01-15",
+      "closesOn": "2027-05-01",
+      "closesTime": "23:59",
+      "timeZone": "America/Los_Angeles",
+      "amountMin": 1000,
+      "amountMax": 2500,
+      "minimumGpa": 3.0,
+      "eligibilitySummary": "U.S. or Canadian citizens majoring (or committed to majoring) in accounting at an accredited 2- or 4-year U.S. college, 3.0+ GPA. High school seniors are NOT eligible.",
+      "audienceLevels": ["undergraduate"],
+      "evidence": [
+        "Application Opens: January 15, 2027",
+        "Saturday, May 1, 2027 at 11:59 PM Pacific Time Zone",
+        "High school seniors and undergraduate students not intent on enrolling in an accounting program are NOT eligible"
+      ]
+    },
+    "us-mpower-global-citizen-scholarship": {
+      "status": "closed_early",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://www.mpowerfinancing.com/scholarships/global-citizen",
+      "closesOn": "2026-12-31",
+      "closesTime": "23:59",
+      "timeZone": "America/New_York",
+      "closureNote": "Sponsor reached its 2026 scholarship funding capacity and is not accepting new applications, although the published deadline is December 31, 2026.",
+      "evidence": [
+        "We have reached our scholarship funding capacity for 2026 and are temporarily not accepting new applications.",
+        "The application deadline for this cycle is 11:59 p.m. Eastern Standard Time (EST) on December 31, 2026."
+      ]
+    },
+    "us-american-welding-society-scholarships": {
+      "status": "conflicting",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://www.aws.org/foundation/page/scholarships",
+      "note": "Page shows both 'Apply by November 30, 2026' and 'All scholarship applications open December 1st ... deadline ... March 1st' without a year. Needs human review before publishing.",
+      "evidence": ["Apply by November 30, 2026", "All scholarship applications open December 1st."]
+    },
+    "us-cameron-impact-scholarship": {
+      "status": "unreachable",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://www.bryancameroneducationfoundation.org/scholarship",
+      "note": "Sponsor site returned HTTP 403 to an automated check; verify manually."
+    },
+    "us-amazon-future-engineer-scholarship": {
+      "status": "duplicate",
+      "checkedAt": "2026-11-22T18:00:00.000Z",
+      "checkedUrl": "https://www.amazonfutureengineer.com/scholarships",
+      "duplicateOf": "mysryear-sponsor-verified:amazon-future-engineer-2027",
+      "evidence": ["Application Opens November 3, 2026", "Application Deadline January 5, 2027"]
+    }
+  }
+}

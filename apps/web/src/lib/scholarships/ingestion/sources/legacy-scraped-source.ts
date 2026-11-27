@@ -27,6 +27,8 @@ export type LegacyScrapedRow = {
   state?: string | null
   tags?: string[] | null
   source?: string | null
+  /** When the legacy scraper captured the row (the only evidence date it has). */
+  scraped_at?: string | null
 }
 
 export type LegacyScrapedLoader = (options?: {
@@ -68,7 +70,12 @@ export class LegacyScrapedSourceAdapter implements ScholarshipSourceAdapter {
       stateEligibility: r.state ? [r.state] : [],
       skillTags: cleanTags(r.tags),
       active: true,
-      lastVerifiedAt: new Date().toISOString(),
+      // Aggregator listings are leads, not sponsor confirmation: they are stored
+      // unverified (hidden from students) with the scrape time as the only
+      // evidence date. Re-reading cached rows never stamps "verified now", and a
+      // yearless deadline ("September 30") normalizes to unknown, not 2001.
+      verificationStatus: 'unverified',
+      lastVerifiedAt: r.scraped_at ?? null,
       rawSourceMetadata: { originSite, legacyId: r.id ?? null, legacyDeadline: r.deadline ?? null },
     }
   }

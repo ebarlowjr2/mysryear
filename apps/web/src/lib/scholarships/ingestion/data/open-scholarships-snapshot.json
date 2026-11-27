@@ -1,0 +1,6613 @@
+{
+ "source": "open-scholarships",
+ "attribution": "Open Scholarships by Grudged LLC — https://github.com/Grudged/open-scholarships (CC BY 4.0). Snapshot unmodified; MySRYear maps fields and adds sponsor-level checks.",
+ "license": "CC-BY-4.0",
+ "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+ "upstreamCommit": "956be5c2fae22afd286aecef9b3a17396071c83b",
+ "snapshotTakenAt": "2026-11-22",
+ "records": [
+  {
+   "id": "nv-ggms-millennium",
+   "name": "Governor Guinn Millennium Scholarship",
+   "sponsor": "State of Nevada — Office of the State Treasurer",
+   "sponsor_type": "state",
+   "type": "scholarship",
+   "summary": "Merit award (up to $10,000 lifetime) for Nevada high school graduates who meet GPA/coursework requirements and attend an eligible Nevada college or university.",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": true,
+    "notes": "Lifetime maximum; disbursed per enrolled credit at eligible NSHE institutions."
+   },
+   "deadline": {
+    "type": "varies",
+    "date": null,
+    "notes": "Eligibility is based on Nevada high school graduation plus GPA/coursework rather than a single application deadline — verify current criteria against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.25,
+    "citizenship": [],
+    "other": [
+     "Graduate from a Nevada high school and meet the GPA / core-coursework requirements (verify current thresholds)",
+     "Enroll at an eligible NSHE (Nevada System of Higher Education) institution"
+    ],
+    "tags": [
+     "nevada",
+     "merit",
+     "statewide"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "statewide",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://nvigate.gov/programs/governor-guinn-millennium-scholarship/",
+    "apply_url": "https://www.nevadatreasurer.gov/GGMS/Forms/Forms/"
+   },
+   "provenance": {
+    "source_url": "https://nvigate.gov/programs/governor-guinn-millennium-scholarship/",
+    "source_name": "Nevada State Treasurer",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-05-26"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"Nevada residents only\" — verify scope/counties (stub scope=statewide)."
+   ]
+  },
+  {
+   "id": "nv-nevada-promise",
+   "name": "Nevada Promise Scholarship",
+   "sponsor": "Nevada System of Higher Education (NSHE)",
+   "sponsor_type": "state",
+   "type": "scholarship",
+   "summary": "Last-dollar scholarship covering up to three years of community college tuition and mandatory fees not met by other gift aid, for recent Nevada high school graduates.",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": true,
+    "notes": "Last-dollar: covers tuition and mandatory fees remaining after other gift aid; up to three years at a Nevada community college."
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "August through October (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Recent Nevada high school graduate meeting program age/timing rules",
+     "Attend a participating Nevada community college",
+     "Complete the application, required meetings, FAFSA, and community-service hours (verify current requirements)"
+    ],
+    "tags": [
+     "nevada",
+     "community-college",
+     "last-dollar"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "statewide",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://nshe.nevada.edu/system-administration/departments/asa/students/financial-aid/",
+    "apply_url": "https://nshe.nevada.edu/system-administration/departments/asa/students/financial-aid/nevada-promise-scholarship/"
+   },
+   "provenance": {
+    "source_url": "https://nshe.nevada.edu/system-administration/departments/asa/students/financial-aid/",
+    "source_name": "NSHE System Administration — State Financial Aid",
+    "last_verified": "2026-05-26",
+    "verification_method": "manual",
+    "added": "2026-05-26"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"Nevada high school graduates only\" — verify scope/counties (stub scope=statewide).",
+    "Source basis looks like 'merit'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "nv-nevada-womens-fund-scholarships",
+   "name": "Nevada Women's Fund Scholarships",
+   "sponsor": "Nevada Women's Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2027-01-05",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-10-01"
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Students pursuing education in Nevada, with financial need and Nevada ties"
+    ],
+    "tags": [
+     "nevada"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "statewide",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nevadawomensfund.org/scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.nevadawomensfund.org/scholarships",
+    "source_name": "Nevada Women's Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"northern and rural Nevada, excludes Clark County\" — verify scope/counties (stub scope=statewide).",
+    "Source basis looks like 'merit-need'; stub says 'need' — verify."
+   ]
+  },
+  {
+   "id": "nv-public-education-foundation-scholarships",
+   "name": "Public Education Foundation Scholarships",
+   "sponsor": "Public Education Foundation (Las Vegas)",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Southern Nevada / Clark County students",
+     "One application matches to many local scholarships"
+    ],
+    "tags": [
+     "nevada"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "county",
+    "counties": [
+     "Clark"
+    ]
+   },
+   "links": {
+    "info_url": "https://thepef.org/scholarships/",
+    "apply_url": "https://apply.mykaleidoscope.com/scholarships/PublicEducationFoundationGeneral2025-2026"
+   },
+   "provenance": {
+    "source_url": "https://thepef.org/scholarships/",
+    "source_name": "Public Education Foundation (Las Vegas)",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "nv-unlv-scholarships",
+   "name": "UNLV Scholarships",
+   "sponsor": "University of Nevada, Las Vegas",
+   "sponsor_type": "institution",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Priority deadline for admission and financial aid applications required; specifi (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.0,
+    "citizenship": [],
+    "other": [
+     "Admitted/enrolled UNLV students",
+     "Institutional + departmental awards"
+    ],
+    "tags": [
+     "nevada"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "institution",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.unlv.edu/finaid/scholarships",
+    "apply_url": "https://www.unlv.edu/finaid/apply"
+   },
+   "provenance": {
+    "source_url": "https://www.unlv.edu/finaid/scholarships",
+    "source_name": "University of Nevada, Las Vegas",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "nv-silver-state-opportunity-grant",
+   "name": "Silver State Opportunity Grant",
+   "sponsor": "Nevada System of Higher Education (NSHE)",
+   "sponsor_type": "state",
+   "type": "grant",
+   "summary": "Nevada's state-funded need-based grant for low-income, college-ready students attending an NSHE community or state college.",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5500,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": "Need-based; helps cover a portion of the cost of attendance. Award amounts vary by institution and need."
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Apply via FAFSA and your NSHE institution's financial aid office; verify the current cycle's deadline."
+   },
+   "eligibility": {
+    "residency": [
+     "NV"
+    ],
+    "education_level": [
+     "undergraduate",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Demonstrated financial need via FAFSA",
+     "Enroll at an eligible NSHE community college or state college",
+     "Meet enrollment / college-ready credit requirements (verify current rules)"
+    ],
+    "tags": [
+     "nevada",
+     "need-based",
+     "nshe"
+    ]
+   },
+   "geo": {
+    "state": "NV",
+    "scope": "statewide",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://nshe.nevada.edu/system-administration/departments/asa/students/financial-aid/silver-state-opportunity-grant/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://nshe.nevada.edu/system-administration/departments/asa/students/financial-aid/silver-state-opportunity-grant/",
+    "source_name": "NSHE System Administration — State Financial Aid",
+    "last_verified": "2026-05-26",
+    "verification_method": "manual",
+    "added": "2026-05-26"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"Nevada residents only\" — verify scope/counties (stub scope=statewide)."
+   ]
+  },
+  {
+   "id": "us-100-black-men-of-america-national-scholarship",
+   "name": "100 Black Men of America National Scholarship",
+   "sponsor": "100 Black Men of America, Inc.",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Graduating seniors or full-time undergrads, 2.5+ GPA, U.S. citizen/PR",
+     "Financial need + community service; awards paid to the institution"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://100blackmen.org/four-for-the-future/education/national-scholarship-program/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://100blackmen.org/four-for-the-future/education/national-scholarship-program/",
+    "source_name": "100 Black Men of America, Inc.",
+    "last_verified": "2026-08-24",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'merit-need' — verify.",
+    "Apply link pointed at the 2024-2025 cycle page, which now 404s. Cleared — find the current cycle's application link on the info page and re-add it."
+   ]
+  },
+  {
+   "id": "us-aauw-fellowships-grants",
+   "name": "AAUW Fellowships & Grants",
+   "sponsor": "American Association of University Women",
+   "sponsor_type": "foundation",
+   "type": "fellowship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Applications for the 2027-2028 cycle are now open (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Women pursuing graduate or postgraduate study",
+     "Several distinct fellowship tracks"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.aauw.org/resources/programs/fellowships-grants/",
+    "apply_url": "https://www.aauw.org/resources/programs/fellowships-grants/start-your-application/"
+   },
+   "provenance": {
+    "source_url": "https://www.aauw.org/resources/programs/fellowships-grants/",
+    "source_name": "American Association of University Women",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'merit-need' — verify."
+   ]
+  },
+  {
+   "id": "us-acb-scholarship-program",
+   "name": "ACB Scholarship Program",
+   "sponsor": "American Council of the Blind",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 7500,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2027-02-14",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-11-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Legally blind students at a U.S. post-secondary institution",
+     "Most awards require a 3.0+ GPA"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.acb.org/scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.acb.org/scholarships",
+    "source_name": "American Council of the Blind",
+    "last_verified": "2026-08-24",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "Geography: \"United States\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit-need'; stub says 'identity' — verify.",
+    "Apply link was /scholarship (404); the live page is /scholarships. Cleared rather than guessed — confirm whether ACB has a distinct application URL."
+   ]
+  },
+  {
+   "id": "us-acs-catalyst-scholarship",
+   "name": "ACS Catalyst Scholarship",
+   "sponsor": "American Chemical Society",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Chemistry / chemical-sciences majors",
+     "U.S. citizen/PR, 3.0+ GPA, demonstrated financial need; renewable"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.acs.org/funding/scholarships-fellowships/catalyst-scholarship.html",
+    "apply_url": "https://www.grantinterface.com/Home/Logon?urlkey=acsscholarship"
+   },
+   "provenance": {
+    "source_url": "https://www.acs.org/funding/scholarships-fellowships/catalyst-scholarship.html",
+    "source_name": "American Chemical Society",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-03-01 — confirm the current cycle.",
+    "Geography: \"U.S.\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'need'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-actuarial-foundation-scholarships",
+   "name": "Actuarial Foundation Scholarships",
+   "sponsor": "The Actuarial Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 20000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing actuarial science / mathematics"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.actuarialfoundation.org/scholarships/",
+    "apply_url": "https://fs8.formsite.com/J2PbbG/zuexm8yigo/index"
+   },
+   "provenance": {
+    "source_url": "https://www.actuarialfoundation.org/scholarships/",
+    "source_name": "The Actuarial Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-02-27 — confirm the current cycle.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-aiaa-foundation-undergraduate-scholarships",
+   "name": "AIAA Foundation Undergraduate Scholarships",
+   "sponsor": "American Institute of Aeronautics and Astronautics",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-10-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "AIAA student members in aerospace-related science/engineering",
+     "One application window mid-Oct through end of Jan"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://aiaa.org/get-involved/university-students/undergraduate-scholarships-graduate-awards/",
+    "apply_url": "https://aiaa.org/get-involved/university-students/undergraduate-scholarships-graduate-awards/application-requirements/"
+   },
+   "provenance": {
+    "source_url": "https://aiaa.org/get-involved/university-students/undergraduate-scholarships-graduate-awards/",
+    "source_name": "American Institute of Aeronautics and Astronautics",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-01-31 — confirm the current cycle.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-aicpa-legacy-scholarships",
+   "name": "AICPA Legacy Scholarships",
+   "sponsor": "AICPA Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Accounting students; may require student-affiliate membership"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.aicpa-cima.com/membership/landing/scholarships-and-awards",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.aicpa-cima.com/membership/landing/scholarships-and-awards",
+    "source_name": "AICPA Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-aises-scholarships",
+   "name": "AISES Scholarships",
+   "sponsor": "American Indian Science and Engineering Society",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 6500,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Multiple scholarships with varying deadlines (April 30, May 30, August 15) (auto-found — verify)",
+    "opens": "2025-12-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.0,
+    "citizenship": [],
+    "other": [
+     "Native American / Indigenous students in STEM"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://aises.org/students/scholarships/",
+    "apply_url": "https://aises.org/scholarship-application/"
+   },
+   "provenance": {
+    "source_url": "https://aises.org/students/scholarships/",
+    "source_name": "American Indian Science and Engineering Society",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-04-30 — confirm the current cycle.",
+    "Geography: \"Indigenous peoples (enrolled members of federally-recognized US tribes, Alaska Native Villages, Nati\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-allegra-ford-thomas-scholarship",
+   "name": "Allegra Ford Thomas Scholarship",
+   "sponsor": "National Center for Learning Disabilities",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "community-college",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Graduating senior entering a 2-year community college, vocational, or technical program",
+     "Documented learning disability"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://ncld.org/scholarships-awards/allegra-ford-thomas-scholarship/",
+    "apply_url": "https://apply.mykaleidoscope.com/program/AnneAllegraFordThomas2026"
+   },
+   "provenance": {
+    "source_url": "https://ncld.org/scholarships-awards/allegra-ford-thomas-scholarship/",
+    "source_name": "National Center for Learning Disabilities",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-05-10 — confirm the current cycle.",
+    "Source basis looks like 'need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-amazon-future-engineer-scholarship",
+   "name": "Amazon Future Engineer Scholarship",
+   "sponsor": "Amazon",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Applications for 2025–2026 are closed; sign up for newsletter for next cycle (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.3,
+    "citizenship": [],
+    "other": [
+     "Students pursuing computer science from underserved/underrepresented backgrounds",
+     "Includes a paid internship"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.amazonfutureengineer.com/scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.amazonfutureengineer.com/scholarships",
+    "source_name": "Amazon",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"United States\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-american-indian-college-fund-scholarships",
+   "name": "American Indian College Fund Scholarships",
+   "sponsor": "American Indian College Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 3000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-02-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Native American and Alaska Native students at accredited institutions / tribal colleges"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://collegefund.org/students/scholarships/",
+    "apply_url": "https://webportalapp.com/sp/login/aicf_scholarships"
+   },
+   "provenance": {
+    "source_url": "https://collegefund.org/students/scholarships/",
+    "source_name": "American Indian College Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2025-05-31 — confirm the current cycle.",
+    "Geography: \"United States\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-american-welding-society-scholarships",
+   "name": "American Welding Society Scholarships",
+   "sponsor": "American Welding Society Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-11-30",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "vocational",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing welding and welding-engineering education"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.aws.org/foundation/page/scholarships",
+    "apply_url": "https://scholarship.aws.org/applications/"
+   },
+   "provenance": {
+    "source_url": "https://www.aws.org/foundation/page/scholarships",
+    "source_name": "American Welding Society Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-amvets-national-scholarship",
+   "name": "AMVETS National Scholarship",
+   "sponsor": "AMVETS (American Veterans)",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 12000,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Veterans, active-duty, Guard/Reserve, and their spouses, children, and grandchildren",
+     "Application window Jan 1 - Apr 30"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://amvets.org/scholarships/",
+    "apply_url": "https://nam10.safelinks.protection.outlook.com/?url=https%3A%2F%2Fapply.mykaleidoscope.com%2Fscholarships%2FVSP2024&amp;data=05%7C02%7Cbayodele%40AMVETS.org%7Ccd81916475164c2c263208dcc8360c74%7Ce8e48e19e1484140b951097b8b2e190c%7C0%7C0%7C638605381672930846%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&amp;sdata=pdYPPG8rNm76aLOw1Vij%2BNA6wTuoOJ3miq%2FbUNjlSOo%3D&amp;reserved=0 (https://nam10.safelinks.protection.outlook.com/?url=https%3A%2F%2Fapply.mykaleidoscope.com%2Fscholarships%2FVSP2024&amp;data=05%7C02%7Cbayodele%40AMVETS.org%7Ccd81916475164c2c263208dcc8360c74%7Ce8e48e19e1484140b951097b8b2e190c%7C0%7C0%7C638605381672930846%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&amp;sdata=pdYPPG8rNm76aLOw1Vij%2BNA6wTuoOJ3miq%2FbUNjlSOo%3D&amp;reserved=0)"
+   },
+   "provenance": {
+    "source_url": "https://amvets.org/scholarships/",
+    "source_name": "AMVETS (American Veterans)",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit-need'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-anne-ford-scholarship",
+   "name": "Anne Ford Scholarship",
+   "sponsor": "National Center for Learning Disabilities",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-10-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Graduating senior enrolling full-time in a 4-year bachelor's program",
+     "Documented learning disability (ADHD + LD encouraged)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://ncld.org/scholarships-awards/anne-ford-scholarship/",
+    "apply_url": "https://apply.mykaleidoscope.com/program/AnneAllegraFordThomas2026"
+   },
+   "provenance": {
+    "source_url": "https://ncld.org/scholarships-awards/anne-ford-scholarship/",
+    "source_name": "National Center for Learning Disabilities",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-05-10 — confirm the current cycle.",
+    "Source basis looks like 'need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-aopa-flight-training-scholarships",
+   "name": "AOPA Flight Training Scholarships",
+   "sponsor": "AOPA Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "AOPA members pursuing a pilot certificate or advanced rating",
+     "High schoolers 16-18, teachers, and adults eligible"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.aopa.org/training-and-safety/learn-to-fly/aviation-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.aopa.org/training-and-safety/learn-to-fly/aviation-scholarships",
+    "source_name": "AOPA Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-apia-scholars-scholarship",
+   "name": "APIA Scholars Scholarship",
+   "sponsor": "Asian & Pacific Islander American Scholarship Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 20000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2027-01-15",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-11-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students of Asian and/or Pacific Islander heritage",
+     "Financial need; first-gen prioritized"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://apiascholars.org/scholarship/",
+    "apply_url": "https://apiascholars.org/scholarships/application-support/application-guide-tips/"
+   },
+   "provenance": {
+    "source_url": "https://apiascholars.org/scholarship/",
+    "source_name": "Asian & Pacific Islander American Scholarship Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-asme-scholarships",
+   "name": "ASME Scholarships",
+   "sponsor": "American Society of Mechanical Engineers",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application is CLOSED for 2026-27 academic year (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "ASME student members in mechanical engineering"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.asme.org/asme-programs/students-and-faculty/scholarships",
+    "apply_url": "https://www.asme.org/ASME-Programs/Students-and-Faculty/scholarships/4-Year-Baccalaureate-Graduate-Students"
+   },
+   "provenance": {
+    "source_url": "https://www.asme.org/asme-programs/students-and-faculty/scholarships",
+    "source_name": "American Society of Mechanical Engineers",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-ayn-rand-institute-essay-contests",
+   "name": "Ayn Rand Institute Essay Contests",
+   "sponsor": "Ayn Rand Institute",
+   "sponsor_type": "foundation",
+   "type": "prize",
+   "award": {
+    "amount_min": null,
+    "amount_max": 25000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Next Deadline TBD Coming soon (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students enrolled in school, ages 13+",
+     "Novel-based essay contests (Anthem / The Fountainhead / Atlas Shrugged)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://aynrand.org/students/essay-contests/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://aynrand.org/students/essay-contests/",
+    "source_name": "Ayn Rand Institute",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-barry-goldwater-scholarship",
+   "name": "Barry Goldwater Scholarship",
+   "sponsor": "Barry Goldwater Scholarship Foundation",
+   "sponsor_type": "federal",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application opens first Tuesday in September; nomination deadline last Friday in (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Sophomores/juniors pursuing research careers in STEM",
+     "Nominated by their institution"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://goldwaterscholarship.gov/",
+    "apply_url": "https://apply.scholarsapply.org/barrygoldwater/"
+   },
+   "provenance": {
+    "source_url": "https://goldwaterscholarship.gov/",
+    "source_name": "Barry Goldwater Scholarship Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-bigfuture-scholarships",
+   "name": "BigFuture Scholarships",
+   "sponsor": "College Board",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 40000,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Deadlines vary by class year (Class of 2027, 2028, 2030) (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "No essay, GPA, or test-score requirement; earn entries by completing college-planning steps",
+     "Monthly drawings open to U.S./territory students"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://bigfuture.collegeboard.org/pay-for-college/bigfuture-scholarships",
+    "apply_url": "https://bigfuture.collegeboard.org/plan-for-college/apply-to-college"
+   },
+   "provenance": {
+    "source_url": "https://bigfuture.collegeboard.org/pay-for-college/bigfuture-scholarships",
+    "source_name": "College Board",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit-need'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "us-breakthrough-junior-challenge",
+   "name": "Breakthrough Junior Challenge",
+   "sponsor": "Breakthrough Prize Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 250000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-09-15",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-05-11"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "High school students ages 13-18",
+     "Create a 90-second science/math explainer video; large post-secondary scholarship grand prize"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://breakthroughjuniorchallenge.org",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://breakthroughjuniorchallenge.org",
+    "source_name": "Breakthrough Prize Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-bridging-the-dream-scholarship-for-high-school-seniors",
+   "name": "Bridging the Dream Scholarship for High School Seniors",
+   "sponsor": "The Sallie Mae Fund",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Pell-eligible seniors heading to a 2-/4-year college or technical program",
+     "Minimum 2.75 GPA"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.salliemae.com/about/scholarship-opportunities/bridging-the-dream-scholarship-for-high-school-seniors/",
+    "apply_url": "https://www.salliemae.com/student-loans/get-ready-to-borrow/understand-the-student-loan-application-process/"
+   },
+   "provenance": {
+    "source_url": "https://www.salliemae.com/about/scholarship-opportunities/bridging-the-dream-scholarship-for-high-school-seniors/",
+    "source_name": "The Sallie Mae Fund",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-burger-king-scholars-bk-mclamore-foundation",
+   "name": "Burger King Scholars (BK McLamore Foundation)",
+   "sponsor": "Burger King Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-10-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Graduating high school seniors (US/Canada/Puerto Rico)",
+     "GPA + financial need + work/community involvement"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.burgerkingscholars.com/",
+    "apply_url": "https://scholarshipamerica.org/scholarship/burgerking/?utm_source=CouponDrop&utm_medium=Coupon&utm_term=scholarship%20application%20burger%20king&utm_campaign=Nov%20Coupon%20Drop&_gl=1*t7h6sp*_ga*NzcwMDAxOTEzLjE3NTk5MzY4NjM.*_ga_GR8N6KG4K2*czE3NTk5MzY4NjIkbzEkZzEkdDE3NTk5MzcyMDYkajYwJGwwJGgw"
+   },
+   "provenance": {
+    "source_url": "https://www.burgerkingscholars.com/",
+    "source_name": "Burger King Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2025-12-15 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-cameron-impact-scholarship",
+   "name": "Cameron Impact Scholarship",
+   "sponsor": "Bryan Cameron Education Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2027-05-01",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2027-02-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.7,
+    "citizenship": [],
+    "other": [
+     "Full-tuition merit award for ~15 seniors; 3.7+ unweighted GPA, U.S. citizen",
+     "Closes at the earlier of the deadline or 3,000 applications"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.bryancameroneducationfoundation.org/scholarship",
+    "apply_url": "https://www.bryancameroneducationfoundation.org/component/jsfsubmit/4"
+   },
+   "provenance": {
+    "source_url": "https://www.bryancameroneducationfoundation.org/scholarship",
+    "source_name": "Bryan Cameron Education Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-chick-fil-a-remarkable-futures-scholarship",
+   "name": "Chick-fil-A Remarkable Futures Scholarship",
+   "sponsor": "Chick-fil-A, Inc.",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 25000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Open to employed Chick-fil-A restaurant Team Members",
+     "Tiers of $1,000, $2,500, and $25,000"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.chick-fil-a.com/remarkable-futures-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.chick-fil-a.com/remarkable-futures-scholarships",
+    "source_name": "Chick-fil-A, Inc.",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'other'; stub says 'merit' — verify."
+   ]
+  },
+  {
+   "id": "us-cobell-scholarship",
+   "name": "Cobell Scholarship",
+   "sponsor": "Indigenous Education, Inc.",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Multiple application windows vary by program (e.g., Undergraduate: December 15 t (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "community-college",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Enrolled member of a U.S. federally recognized tribe or Alaska Native Corporation",
+     "Undergraduate, graduate, vocational/trade, and summer tracks"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.cobellscholar.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.cobellscholar.org/",
+    "source_name": "Indigenous Education, Inc.",
+    "last_verified": "2026-08-24",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "Geography: \"Enrolled members of U.S. Federally-recognized American Indian Tribes and Alaska Native Corporations \" — verify scope/counties (stub scope=national).",
+    "Site restructured: /our-scholarships and /application-process both 404. Repointed to the working org root; re-add the deep links once the new paths are confirmed."
+   ]
+  },
+  {
+   "id": "us-coolidge-scholarship",
+   "name": "Coolidge Scholarship",
+   "sponsor": "Calvin Coolidge Presidential Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Full-ride merit scholarship; apply as a high school junior (verify timing)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.coolidgescholars.org/",
+    "apply_url": "https://coolidgescholars.org/apply/"
+   },
+   "provenance": {
+    "source_url": "https://www.coolidgescholars.org/",
+    "source_name": "Calvin Coolidge Presidential Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-courage-to-grow-scholarship",
+   "name": "Courage to Grow Scholarship",
+   "sponsor": "Courage to Grow",
+   "sponsor_type": "private",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 1000,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-06-30",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.5,
+    "citizenship": [],
+    "other": [
+     "Recurring award; short essay, low barrier to entry"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://couragetogrowscholarship.com/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://couragetogrowscholarship.com/",
+    "source_name": "Courage to Grow",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"U.S. citizens only\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "us-dar-scholarships",
+   "name": "DAR Scholarships",
+   "sponsor": "Daughters of the American Revolution",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 25000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2024-11-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "~27 named scholarships, $1,000-$25,000; most do NOT require DAR membership",
+     "U.S. citizens; applications open Nov 1 - Jan 31"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://dar.academicworks.com/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://dar.academicworks.com/",
+    "source_name": "Daughters of the American Revolution",
+    "last_verified": "2026-08-24",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "Geography: \"United States\" — verify scope/counties (stub scope=national).",
+    "Apply link was the literal AcademicWorks template placeholder %{profile_application_path}, not a real URL — an extraction artifact. Cleared; the info portal at dar.academicworks.com is the way in."
+   ]
+  },
+  {
+   "id": "us-davidson-fellows-scholarship",
+   "name": "Davidson Fellows Scholarship",
+   "sponsor": "Davidson Institute",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 100000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "2027 application will open in Fall 2026 (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students 18 or younger with a significant project in STEM, literature, music, or philosophy"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.davidsongifted.org/gifted-programs/fellows-scholarship/",
+    "apply_url": "https://www.davidsongifted.org/gifted-programs/fellows-scholarship/eligibility/how-to-apply/"
+   },
+   "provenance": {
+    "source_url": "https://www.davidsongifted.org/gifted-programs/fellows-scholarship/",
+    "source_name": "Davidson Institute",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"U.S. citizens or Permanent Residents residing in the United States, or stationed overseas due to act\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-davis-putter-scholarship-fund",
+   "name": "Davis-Putter Scholarship Fund",
+   "sponsor": "Davis-Putter Scholarship Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application deadline approaching as of April 1, 2025 (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students active in movements for social and economic justice, with financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.davisputter.org/",
+    "apply_url": "https://www.davisputter.org/apply"
+   },
+   "provenance": {
+    "source_url": "https://www.davisputter.org/",
+    "source_name": "Davis-Putter Scholarship Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-dell-scholars-program",
+   "name": "Dell Scholars Program",
+   "sponsor": "Michael & Susan Dell Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 20000,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-12-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.4,
+    "citizenship": [],
+    "other": [
+     "Students in approved college-readiness programs; grit-focused",
+     "Verify program participation requirement"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.dellscholars.org/scholarship/",
+    "apply_url": "https://apply.dellscholars.org/Account/Login?ReturnUrl=%2F"
+   },
+   "provenance": {
+    "source_url": "https://www.dellscholars.org/scholarship/",
+    "source_name": "Michael & Susan Dell Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-02-15 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-discover-student-loans-scholarship",
+   "name": "Discover Student Loans Scholarship",
+   "sponsor": "Discover",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Recurring award with a quick entry; verify current terms"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.discover.com/student-loans/scholarships/",
+    "apply_url": "https://www.discover.com/credit-cards/card-smarts/apply-for-credit-card-online/"
+   },
+   "provenance": {
+    "source_url": "https://www.discover.com/student-loans/scholarships/",
+    "source_name": "Discover",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-dod-smart-scholarship-for-service",
+   "name": "DoD SMART Scholarship-for-Service",
+   "sponsor": "U.S. Department of Defense",
+   "sponsor_type": "federal",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 46000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "First Friday in December (auto-found — verify)",
+    "opens": "2026-08-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "STEM majors who accept post-graduation DoD civilian employment",
+     "Full tuition, annual stipend, health insurance, and a guaranteed job; U.S. citizens"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.smartscholarship.org/smart",
+    "apply_url": "https://www.smartscholarship.org/smart/en?id=kb_article&amp;sys_id=0383c5d6db2a03006bb8f4b40f961956"
+   },
+   "provenance": {
+    "source_url": "https://www.smartscholarship.org/smart",
+    "source_name": "U.S. Department of Defense",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-doodle-for-google",
+   "name": "Doodle for Google",
+   "sponsor": "Google",
+   "sponsor_type": "employer",
+   "type": "prize",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S. K-12 students; citizen or permanent resident",
+     "National winner receives a college scholarship plus a school tech package"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://doodles.google.com/d4g/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://doodles.google.com/d4g/",
+    "source_name": "Google",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-dosomething-org-scholarships",
+   "name": "DoSomething.org Scholarships",
+   "sponsor": "DoSomething.org",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 1500,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "rolling",
+    "date": null,
+    "notes": "Earn scholarship through completing 7 or 30-day offline mode streak (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Earned by joining volunteer / social-action campaigns; no GPA or essay"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.dosomething.org/us/about/easy-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.dosomething.org/us/about/easy-scholarships",
+    "source_name": "DoSomething.org",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'other'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-dr-pepper-tuition-giveaway",
+   "name": "Dr Pepper Tuition Giveaway",
+   "sponsor": "Dr Pepper (Keurig Dr Pepper)",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S. students ages 18-24; no minimum GPA or major",
+     "Video contest; large per-winner tuition awards"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.drpeppertuition.com/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.drpeppertuition.com/",
+    "source_name": "Dr Pepper (Keurig Dr Pepper)",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-elks-national-foundation-most-valuable-student",
+   "name": "Elks National Foundation Most Valuable Student",
+   "sponsor": "Elks National Foundation",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 7500,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-11-12",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-08-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S. high school seniors; leadership + financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.elks.org/scholars/scholarships/mvs.cfm",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.elks.org/scholars/scholarships/mvs.cfm",
+    "source_name": "Elks National Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"United States citizens only\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-equitable-excellence-scholarship",
+   "name": "Equitable Excellence Scholarship",
+   "sponsor": "Equitable Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "High school seniors who show drive and contribution to community"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://equitable.com/foundation/equitable-excellence-scholarship",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://equitable.com/foundation/equitable-excellence-scholarship",
+    "source_name": "Equitable Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-folds-of-honor-higher-education-scholarship",
+   "name": "Folds of Honor Higher Education Scholarship",
+   "sponsor": "Folds of Honor Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-02-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Children and spouses of fallen or disabled U.S. service members and first responders",
+     "Application window Feb 1 - Mar 31"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://foldsofhonor.org/scholarships/military-scholarships/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://foldsofhonor.org/scholarships/military-scholarships/",
+    "source_name": "Folds of Honor Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2025-03-31 — confirm the current cycle.",
+    "Source basis looks like 'need'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-ge-reagan-foundation-scholarship",
+   "name": "GE-Reagan Foundation Scholarship",
+   "sponsor": "Ronald Reagan Presidential Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 40000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-10-13"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Leadership, drive, integrity, citizenship; financial need considered"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.reaganfoundation.org/education/scholarship-programs/ge-reagan-foundation-scholarship-program/",
+    "apply_url": "https://www.usnews.com/education/best-colleges/paying-for-college/articles/applying-for-large-dollar-scholarships-heres-what-to-know"
+   },
+   "provenance": {
+    "source_url": "https://www.reaganfoundation.org/education/scholarship-programs/ge-reagan-foundation-scholarship-program/",
+    "source_name": "Ronald Reagan Presidential Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-01-05 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-gen-and-kelly-tanabe-scholarship",
+   "name": "Gen and Kelly Tanabe Scholarship",
+   "sponsor": "Gen and Kelly Tanabe",
+   "sponsor_type": "private",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Open to a wide range of students; short essay"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.genkellyscholarship.com/",
+    "apply_url": "https://www.genkellyscholarship.com/apply"
+   },
+   "provenance": {
+    "source_url": "https://www.genkellyscholarship.com/",
+    "source_name": "Gen and Kelly Tanabe",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-generation-google-scholarship",
+   "name": "Generation Google Scholarship",
+   "sponsor": "Google",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Computer science students from historically underrepresented groups",
+     "Leadership + academic achievement"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://buildyourfuture.withgoogle.com/scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://buildyourfuture.withgoogle.com/scholarships",
+    "source_name": "Google",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-gloria-barron-prize-for-young-heroes",
+   "name": "Gloria Barron Prize for Young Heroes",
+   "sponsor": "Barron Prize",
+   "sponsor_type": "foundation",
+   "type": "prize",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Ages 8-18 leading a significant service project benefiting people or the environment",
+     "Open to U.S. and Canada residents"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://barronprize.org/apply/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://barronprize.org/apply/",
+    "source_name": "Barron Prize",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2026-04-15 — confirm the current cycle.",
+    "Geography: \"U.S. and Canada residents; U.S. territories not eligible\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-golden-door-scholars",
+   "name": "Golden Door Scholars",
+   "sponsor": "Golden Door Scholars",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Applications are closed (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "High-performing students facing barriers, including DACA/undocumented",
+     "Partner-college network"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.goldendoorscholars.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.goldendoorscholars.org/",
+    "source_name": "Golden Door Scholars",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"Southeast concentration, nationwide eligibility\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-hagan-scholarship",
+   "name": "Hagan Scholarship",
+   "sponsor": "Hagan Scholarship Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 7500,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Rural / small-town public high school seniors with financial need",
+     "Verify eligible-county list"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://haganscholarship.org/",
+    "apply_url": "https://haganscholarships.org/application/"
+   },
+   "provenance": {
+    "source_url": "https://haganscholarship.org/",
+    "source_name": "Hagan Scholarship Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit-need'; stub says 'need' — verify."
+   ]
+  },
+  {
+   "id": "us-hispanic-heritage-youth-awards",
+   "name": "Hispanic Heritage Youth Awards",
+   "sponsor": "Hispanic Heritage Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-11-01",
+    "notes": "Applications between cycles — 2027 cohort deadline 'coming soon'; apply link (hhfyouthawards.com) confirmed live, verify the open date at the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Latino high school seniors; regional and category awards"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://hispanicheritage.org/programs/leadership/youth-awards/",
+    "apply_url": "https://hhfyouthawards.com"
+   },
+   "provenance": {
+    "source_url": "https://hispanicheritage.org/programs/leadership/youth-awards/",
+    "source_name": "Hispanic Heritage Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-hispanic-scholarship-fund",
+   "name": "Hispanic Scholarship Fund",
+   "sponsor": "Hispanic Scholarship Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-01-05"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Students of Hispanic heritage",
+     "Minimum GPA and FAFSA/Dream Act application required (verify)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.hsf.net/scholarship",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.hsf.net/scholarship",
+    "source_name": "Hispanic Scholarship Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2026-02-15 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-horatio-alger-national-scholarship",
+   "name": "Horatio Alger National Scholarship",
+   "sponsor": "Horatio Alger Association",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students who have faced and overcome adversity, with financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://scholars.horatioalger.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://scholars.horatioalger.org/",
+    "source_name": "Horatio Alger Association",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-ieee-pes-scholarship-plus-initiative",
+   "name": "IEEE PES Scholarship Plus Initiative",
+   "sponsor": "IEEE Power & Energy Society",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-01-20"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Electrical engineering undergrads (3.0+ GPA, ABET program) committed to power & energy",
+     "U.S./Puerto Rico/Canada"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.ee-scholarship.org/",
+    "apply_url": "https://ieee.secure-platform.com/a/solicitations/1366/home"
+   },
+   "provenance": {
+    "source_url": "https://www.ee-scholarship.org/",
+    "source_name": "IEEE Power & Energy Society",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2025-05-14 — confirm the current cycle.",
+    "Geography: \"USA, Canada, Puerto Rico; IEEE Regions 1-7\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-ihs-scholarship-program",
+   "name": "IHS Scholarship Program",
+   "sponsor": "Indian Health Service",
+   "sponsor_type": "federal",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Member (or descendant, some tracks) of a federally recognized tribe/Alaska Native village",
+     "Health-profession programs; Health Professions track carries an IHS service commitment"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.ihs.gov/scholarship/scholarships/",
+    "apply_url": "https://www.ihs.gov/scholarship/apply/"
+   },
+   "provenance": {
+    "source_url": "https://www.ihs.gov/scholarship/scholarships/",
+    "source_name": "Indian Health Service",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"American Indian and Alaska Native, must be members or descendants of federally recognized, state-rec\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-imagine-america-high-school-scholarship",
+   "name": "Imagine America High School Scholarship",
+   "sponsor": "Imagine America Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 1000,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2024-09-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.5,
+    "citizenship": [],
+    "other": [
+     "Graduating seniors enrolling at a participating career/trade college",
+     "Each high school may nominate up to five seniors"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://imagine-america.org/scholarships/high-school-scholarships",
+    "apply_url": "https://iaf-portal.web.app"
+   },
+   "provenance": {
+    "source_url": "https://imagine-america.org/scholarships/high-school-scholarships",
+    "source_name": "Imagine America Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2024-12-31 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-jack-kent-cooke-foundation-college-scholarship",
+   "name": "Jack Kent Cooke Foundation College Scholarship",
+   "sponsor": "Jack Kent Cooke Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 55000,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-11-11",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "High-achieving high school seniors with financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.jkcf.org/our-scholarships/college-scholarship-program/",
+    "apply_url": "https://www.jkcf.org/our-scholarships/college-scholarship-program/how-to-apply/"
+   },
+   "provenance": {
+    "source_url": "https://www.jkcf.org/our-scholarships/college-scholarship-program/",
+    "source_name": "Jack Kent Cooke Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-jackie-robinson-foundation-scholarship",
+   "name": "Jackie Robinson Foundation Scholarship",
+   "sponsor": "Jackie Robinson Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Minority high school seniors with financial need and leadership"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.jackierobinson.org/apply/",
+    "apply_url": "https://jackierobinson.org/apply/application-faqs/"
+   },
+   "provenance": {
+    "source_url": "https://www.jackierobinson.org/apply/",
+    "source_name": "Jackie Robinson Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-01-07 — confirm the current cycle.",
+    "Geography: \"United States\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit-need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-jacl-national-scholarship-program",
+   "name": "JACL National Scholarship Program",
+   "sponsor": "Japanese American Citizens League",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Must be an active National JACL member",
+     "Freshman, undergraduate, graduate, law, and creative/performing arts tracks"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://jacl.org/scholarships",
+    "apply_url": "https://docs.google.com/forms/d/e/1FAIpQLSeTn12EyxgD1hVHd3d0wtFBAZwSs5Tv9id98iIGEPMVKhGF9A/viewform?usp=header"
+   },
+   "provenance": {
+    "source_url": "https://jacl.org/scholarships",
+    "source_name": "Japanese American Citizens League",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-04-03 — confirm the current cycle.",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-jeannette-rankin-national-scholar-grant",
+   "name": "Jeannette Rankin National Scholar Grant",
+   "sponsor": "Jeannette Rankin Foundation",
+   "sponsor_type": "foundation",
+   "type": "grant",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-11-03"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "community-college",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Women and nonbinary students age 35 or older with financial need",
+     "First associate's/bachelor's or technical-vocational training; renewable"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://rankinfoundation.org/national-scholar-grant/",
+    "apply_url": "https://rankinfoundation.org/volunteer-application/"
+   },
+   "provenance": {
+    "source_url": "https://rankinfoundation.org/national-scholar-grant/",
+    "source_name": "Jeannette Rankin Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-02-13 — confirm the current cycle."
+   ]
+  },
+  {
+   "id": "us-john-f-kennedy-profile-in-courage-essay-contest",
+   "name": "John F. Kennedy Profile in Courage Essay Contest",
+   "sponsor": "John F. Kennedy Library Foundation",
+   "sponsor_type": "foundation",
+   "type": "prize",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2025-09-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S. high school students grades 9-12 (incl. home school and citizens abroad)",
+     "Essay on an act of political courage by a U.S. elected official"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.jfklibrary.org/learn/education/profile-in-courage-essay-contest",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.jfklibrary.org/learn/education/profile-in-courage-essay-contest",
+    "source_name": "John F. Kennedy Library Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"United States\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-korean-american-scholarship-foundation-scholarship",
+   "name": "Korean American Scholarship Foundation Scholarship",
+   "sponsor": "Korean American Scholarship Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.5,
+    "citizenship": [],
+    "other": [
+     "Students of Korean heritage enrolled full-time in the U.S., 3.0+ GPA",
+     "Apply via the regional chapter covering your school"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.kasf.org/scholarships/",
+    "apply_url": "https://www.kasf.org/apply/"
+   },
+   "provenance": {
+    "source_url": "https://www.kasf.org/scholarships/",
+    "source_name": "Korean American Scholarship Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit-need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-league-foundation-scholarship",
+   "name": "LEAGUE Foundation Scholarship",
+   "sponsor": "LEAGUE Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Opens in January, closes in April annually (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Graduating U.S. senior who self-identifies as LGBTQ+ or a supporter",
+     "U.S. citizen/legal resident, 3.0+ GPA, accepted to an accredited U.S. college"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.leaguefoundation.org/",
+    "apply_url": "https://www.leaguefoundation.org/index.php/application"
+   },
+   "provenance": {
+    "source_url": "https://www.leaguefoundation.org/",
+    "source_name": "LEAGUE Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"US high school students\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-lulac-national-scholarship-fund",
+   "name": "LULAC National Scholarship Fund",
+   "sponsor": "LULAC National Educational Service Centers",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application currently closed (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "community-college",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "U.S. citizen, permanent resident, or DACA recipient enrolled full-time",
+     "Requires a participating LULAC Council in your area"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.lnesc.org/scholarships/lulac/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.lnesc.org/scholarships/lulac/",
+    "source_name": "LULAC National Educational Service Centers",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-maldef-law-school-scholarship-program",
+   "name": "MALDEF Law School Scholarship Program",
+   "sponsor": "Mexican American Legal Defense and Educational Fund",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Open to any student enrolled at an accredited U.S. law school",
+     "Selected on commitment to advancing Latino civil rights"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.maldef.org/resources/leadership-programs/law-school-scholarship-program/",
+    "apply_url": "https://www.maldef.org/wp-content/uploads/2026/03/2026-2027-MALDEF-Law-School-Scholarship-Application-3.19.26.doc"
+   },
+   "provenance": {
+    "source_url": "https://www.maldef.org/resources/leadership-programs/law-school-scholarship-program/",
+    "source_name": "Mexican American Legal Defense and Educational Fund",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit-need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-mcdonald-s-hacer-national-scholarship",
+   "name": "McDonald's HACER National Scholarship",
+   "sponsor": "McDonald's",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application period is now closed (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S. seniors with at least one parent of Hispanic/Latino heritage",
+     "~$1M awarded annually nationwide"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.mcdonalds.com/us/en-us/community/hacer.html",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.mcdonalds.com/us/en-us/community/hacer.html",
+    "source_name": "McDonald's",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source page could not be fetched/rendered — verify everything by hand."
+   ]
+  },
+  {
+   "id": "us-mikeroweworks-work-ethic-scholarship",
+   "name": "mikeroweWORKS Work Ethic Scholarship",
+   "sponsor": "mikeroweWORKS Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 34000,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing skilled trades / technical training",
+     "Work-ethic essay + S.W.E.A.T. pledge"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.mikeroweworks.org/scholarship/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.mikeroweworks.org/scholarship/",
+    "source_name": "mikeroweWORKS Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2025-10-31 — confirm the current cycle.",
+    "Source basis looks like 'merit'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "us-mpower-global-citizen-scholarship",
+   "name": "MPOWER Global Citizen Scholarship",
+   "sponsor": "MPOWER Financing",
+   "sponsor_type": "private",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 8000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-12-31",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "International students, DACA recipients, or U.S./Canadian permanent residents (citizens ineligible)",
+     "Enrolled in/accepted to a full-time degree at an MPOWER-supported U.S./Canada school"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.mpowerfinancing.com/scholarships/global-citizen",
+    "apply_url": "https://app.mpowerfinancing.com/eligibility"
+   },
+   "provenance": {
+    "source_url": "https://www.mpowerfinancing.com/scholarships/global-citizen",
+    "source_name": "MPOWER Financing",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"international and DACA students only; excludes U.S. citizens studying in U.S. and Canadian citizens \" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-nacme-scholarships",
+   "name": "NACME Scholarships",
+   "sponsor": "National Action Council for Minorities in Engineering",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 500,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Multiple scholarships with varying deadlines (e.g., 9/1/2026, 9/11/2026, 10/2/20 (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 1.0,
+    "citizenship": [],
+    "other": [
+     "Underrepresented-minority students in engineering at NACME partner schools"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nacme.org/scholarships",
+    "apply_url": "https://www.nacme.org/scholarship/504"
+   },
+   "provenance": {
+    "source_url": "https://www.nacme.org/scholarships",
+    "source_name": "National Action Council for Minorities in Engineering",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source GPA min 3.0 differs from stub 1.0 — verify.",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-national-ffa-scholarships",
+   "name": "National FFA Scholarships",
+   "sponsor": "National FFA Organization",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "FFA members; agriculture and many other fields",
+     "One application for many awards"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.ffa.org/participate/grants-and-scholarships/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.ffa.org/participate/grants-and-scholarships/",
+    "source_name": "National FFA Organization",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-national-garden-clubs-scholarships",
+   "name": "National Garden Clubs Scholarships",
+   "sponsor": "National Garden Clubs, Inc.",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Horticulture, environment, conservation, botany, forestry, plant/wildlife science, landscape design majors",
+     "U.S. citizen/PR, 3.25+ GPA, sophomore year and up"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://gardenclub.org/college-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://gardenclub.org/college-scholarships",
+    "source_name": "National Garden Clubs, Inc.",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2025-02-01 — confirm the current cycle.",
+    "Source basis looks like 'merit-need'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-national-history-day-contest",
+   "name": "National History Day Contest",
+   "sponsor": "National History Day",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students in grades 6-12 nationwide",
+     "100+ cash prizes plus scholarships"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nhd.org",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.nhd.org",
+    "source_name": "National History Day",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-national-merit-scholarship-program",
+   "name": "National Merit Scholarship Program",
+   "sponsor": "National Merit Scholarship Corporation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Qualify via the PSAT/NMSQT in the junior year"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nationalmerit.org/",
+    "apply_url": "https://osa.nationalmerit.org/"
+   },
+   "provenance": {
+    "source_url": "https://www.nationalmerit.org/",
+    "source_name": "National Merit Scholarship Corporation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-national-press-club-scholarships",
+   "name": "National Press Club Scholarships",
+   "sponsor": "National Press Club Journalism Institute",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing journalism (sports writing, broadcast, diversity in journalism)",
+     "Several awards, some renewable"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.press.org/students",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.press.org/students",
+    "source_name": "National Press Club Journalism Institute",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-national-technical-honor-society-scholarship",
+   "name": "National Technical Honor Society Scholarship",
+   "sponsor": "National Technical Honor Society",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "vocational",
+     "community-college",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Active NTHS members in good standing (CTE students)",
+     "Apply via the NTHS member portal"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://nths.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://nths.org/",
+    "source_name": "National Technical Honor Society",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-national-youngarts-award",
+   "name": "National YoungArts Award",
+   "sponsor": "National YoungArts Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-10-06",
+    "notes": "2027 application opens Summer 2026 (auto-found — verify)",
+    "opens": "2026-07-21"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Grades 10-12 or ages 15-18; U.S. citizen, PR, or eligible to receive taxable U.S. income",
+     "National competition across 10 arts disciplines"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://youngarts.org/apply/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://youngarts.org/apply/",
+    "source_name": "National YoungArts Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-nsa-scholarship-foundation-scholarship",
+   "name": "NSA Scholarship Foundation Scholarship",
+   "sponsor": "National Society of Accountants Scholarship Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2027-05-01",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-01-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.0,
+    "citizenship": [],
+    "other": [
+     "Declared accounting majors at accredited U.S. schools, 3.0+ GPA",
+     "U.S./Canadian citizens"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://nsacct.org/nsaf-scholarships/",
+    "apply_url": "https://nsacct.org/nsaf-scholarships/application/"
+   },
+   "provenance": {
+    "source_url": "https://nsacct.org/nsaf-scholarships/",
+    "source_name": "National Society of Accountants Scholarship Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"United States or Canadian citizens; permanent residents not eligible except Arizona\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit-need'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-nsbe-scholarships",
+   "name": "NSBE Scholarships",
+   "sponsor": "National Society of Black Engineers",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Fall 2026 Scholarship Cycle will open soon; Spring/Summer GPA Verification Windo (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.0,
+    "citizenship": [],
+    "other": [
+     "NSBE members pursuing engineering and technical degrees"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nsbe.org/scholarships",
+    "apply_url": "https://app.smarterselect.com/matching/1774/start_page"
+   },
+   "provenance": {
+    "source_url": "https://www.nsbe.org/scholarships",
+    "source_name": "National Society of Black Engineers",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-nsna-foundation-nursing-scholarships",
+   "name": "NSNA Foundation Nursing Scholarships",
+   "sponsor": "National Student Nurses' Association Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Enrolled nursing students",
+     "Academic achievement + financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.nsna.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.nsna.org/",
+    "source_name": "National Student Nurses' Association Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-obama-chesky-voyager-scholarship-for-public-service",
+   "name": "Obama-Chesky Voyager Scholarship for Public Service",
+   "sponsor": "The Obama Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 50000,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Applications are now closed (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students entering junior year at a 4-year U.S. college pursuing public service; financial need required",
+     "U.S. citizen/PR/DACA; includes a funded 'Summer Voyage'"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.obama.org/programs/voyager-scholarship/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.obama.org/programs/voyager-scholarship/",
+    "source_name": "The Obama Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'service'; stub says 'merit-need' — verify."
+   ]
+  },
+  {
+   "id": "us-out-to-innovate-scholarship",
+   "name": "Out to Innovate Scholarship",
+   "sponsor": "Out to Innovate (NOGLSTP)",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-06-30",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.75,
+    "citizenship": [],
+    "other": [
+     "LGBTQ+ undergraduate in a STEM or STEM-teaching major",
+     "Completed 2+ years of post-high-school education, 2.75+ GPA"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.outtoinnovate.org/scholarships",
+    "apply_url": "https://www.outtoinnovate.org/apply-for-a-scholarship-for-the-2026-2027-academic-year-deadline-june-30-2026-"
+   },
+   "provenance": {
+    "source_url": "https://www.outtoinnovate.org/scholarships",
+    "source_name": "Out to Innovate (NOGLSTP)",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review"
+  },
+  {
+   "id": "us-p-e-o-star-scholarship",
+   "name": "P.E.O. STAR Scholarship",
+   "sponsor": "P.E.O. International",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Women in their final year of high school with strong leadership and academics",
+     "Plan to attend an accredited U.S./Canada institution; chapter-recommended"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.peointernational.org/educational-support/star-scholarship/",
+    "apply_url": "https://www.peointernational.org/educational-support/star-scholarship/eligibility-and-application-process/"
+   },
+   "provenance": {
+    "source_url": "https://www.peointernational.org/educational-support/star-scholarship/",
+    "source_name": "P.E.O. International",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"U.S. or Canada\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-palantir-women-in-technology-scholarship",
+   "name": "Palantir Women in Technology Scholarship",
+   "sponsor": "Palantir Technologies",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Undergraduate women majoring in computer science, software engineering, or a related technical field",
+     "Open to students at U.S./Canada/Mexico institutions"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.palantir.com/careers/students/scholarship/wit-north-america/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.palantir.com/careers/students/scholarship/wit-north-america/",
+    "source_name": "Palantir Technologies",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-patsy-takemoto-mink-education-support-award",
+   "name": "Patsy Takemoto Mink Education Support Award",
+   "sponsor": "Patsy Takemoto Mink Education Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "2026-27 cycle closed August 1, 2026; 2027-28 information available May 2027 (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate",
+     "community-college",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Low-income mothers (women age 17+) with minor children",
+     "Enrolled in an accredited U.S. postsecondary program"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.patsyminkfoundation.org/education-support-application",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.patsyminkfoundation.org/education-support-application",
+    "source_name": "Patsy Takemoto Mink Education Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Geography: \"U.S. residents only\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-paul-daisy-soros-fellowships-for-new-americans",
+   "name": "Paul & Daisy Soros Fellowships for New Americans",
+   "sponsor": "Paul & Daisy Soros Fellowships for New Americans",
+   "sponsor_type": "foundation",
+   "type": "fellowship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 90000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Immigrant or child of two immigrant parents (a 'New American'), age 30 or younger",
+     "Enrolling full-time in a U.S. graduate/professional degree program"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://pdsoros.org/",
+    "apply_url": "https://pdsoros.org/application-process/"
+   },
+   "provenance": {
+    "source_url": "https://pdsoros.org/",
+    "source_name": "Paul & Daisy Soros Fellowships for New Americans",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-point-foundation-flagship-scholarship",
+   "name": "Point Foundation Flagship Scholarship",
+   "sponsor": "Point Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "LGBTQ students with leadership and financial need"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://pointfoundation.org/",
+    "apply_url": "https://pointfoundation.org/scholarships/tips"
+   },
+   "provenance": {
+    "source_url": "https://pointfoundation.org/",
+    "source_name": "Point Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-questbridge-national-college-match",
+   "name": "QuestBridge National College Match",
+   "sponsor": "QuestBridge",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-10-01",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "High-achieving high school seniors from low-income households",
+     "Full four-year scholarships to partner colleges"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.questbridge.org/high-school-students/national-college-match",
+    "apply_url": "https://www.questbridge.org/apply-to-college"
+   },
+   "provenance": {
+    "source_url": "https://www.questbridge.org/high-school-students/national-college-match",
+    "source_name": "QuestBridge",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-regeneron-science-talent-search",
+   "name": "Regeneron Science Talent Search",
+   "sponsor": "Society for Science",
+   "sponsor_type": "foundation",
+   "type": "prize",
+   "award": {
+    "amount_min": null,
+    "amount_max": 250000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-11-05",
+    "notes": "2026 application period now closed; 2027 application opens June 1, 2026 (auto-found — verify)",
+    "opens": "2026-06-01"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Original STEM research competition for high school seniors"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.societyforscience.org/regeneron-sts/",
+    "apply_url": "https://www.societyforscience.org/regeneron-sts/application-requirements/"
+   },
+   "provenance": {
+    "source_url": "https://www.societyforscience.org/regeneron-sts/",
+    "source_name": "Society for Science",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-ron-brown-scholar-program",
+   "name": "Ron Brown Scholar Program",
+   "sponsor": "Ron Brown Scholar Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 40000,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "2025 Application is now open; specific deadline date not provided on page (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Black/African American high school seniors"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.ronbrown.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.ronbrown.org/",
+    "source_name": "Ron Brown Scholar Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'merit'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-sae-engineering-scholarships",
+   "name": "SAE Engineering Scholarships",
+   "sponsor": "SAE International",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing engineering/STEM (mobility, automotive, aerospace, commercial-vehicle)",
+     "One application matches to multiple named scholarships"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.sae.org/participate/scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.sae.org/participate/scholarships",
+    "source_name": "SAE International",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-scholarship-america-dream-award",
+   "name": "Scholarship America Dream Award",
+   "sponsor": "Scholarship America",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Renewable, need-based award for students past their first year"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://scholarshipamerica.org/students/browse-scholarships/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://scholarshipamerica.org/students/browse-scholarships/",
+    "source_name": "Scholarship America",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-scholarships-for-military-children",
+   "name": "Scholarships for Military Children",
+   "sponsor": "Fisher House Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Children of active-duty, retired, or eligible military families"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://militaryscholar.org/",
+    "apply_url": "http://www.militaryscholar.org"
+   },
+   "provenance": {
+    "source_url": "https://militaryscholar.org/",
+    "source_name": "Fisher House Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'identity'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "us-scholarshpe-scholarship-program",
+   "name": "ScholarSHPE Scholarship Program",
+   "sponsor": "Society of Hispanic Professional Engineers",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-02-02"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 2.5,
+    "citizenship": [],
+    "other": [
+     "Active SHPE member pursuing a STEM degree, 2.5+ GPA",
+     "One ScholarSHPE Common Application matches multiple awards"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://shpe.org/engage/programs/scholarshpe/",
+    "apply_url": "https://shpe.awardspring.com/Account/Register"
+   },
+   "provenance": {
+    "source_url": "https://shpe.org/engage/programs/scholarshpe/",
+    "source_name": "Society of Hispanic Professional Engineers",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-02-16 — confirm the current cycle.",
+    "Geography: \"United States including all U.S. territories\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-scholastic-art-writing-awards",
+   "name": "Scholastic Art & Writing Awards",
+   "sponsor": "Alliance for Young Artists & Writers",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Opens in fall; deadlines determined by region and begin in December (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "U.S./Canada students grades 7-12; regional then national judging",
+     "National Medalists eligible for scholarships; fee waivers available"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://artandwriting.org/awards/how-to-enter/",
+    "apply_url": "https://portal.artandwriting.org"
+   },
+   "provenance": {
+    "source_url": "https://artandwriting.org/awards/how-to-enter/",
+    "source_name": "Alliance for Young Artists & Writers",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-skilled-nation-scholarship",
+   "name": "SKILLED Nation Scholarship",
+   "sponsor": "SKILLED Nation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-09-01",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "vocational",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students pursuing skilled-trade training (construction, healthcare, manufacturing, energy, transportation, tech)",
+     "One universal application matches multiple awards (formerly SkillPointe)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://skilled-nation.org/apply/skilled-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://skilled-nation.org/apply/skilled-scholarships",
+    "source_name": "SKILLED Nation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "needs-review",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-skillsusa-scholarships-and-grants",
+   "name": "SkillsUSA Scholarships and Grants",
+   "sponsor": "SkillsUSA",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 2500,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-08-26",
+    "notes": "Multiple deadlines: April 17, 2026 for most scholarships; June 30, 2026 for NAPA (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school",
+     "vocational",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Active SkillsUSA members in career & technical education",
+     "Multiple national awards (NTHS/SkillsUSA, Marsha Daves, NAPA)"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.skillsusa.org/recognition/scholarships-and-grants/",
+    "apply_url": "https://www.skillsusa.org/wp-content/uploads/2024/12/What-Makes-a-Great-SkillsUSA-Scholarship-Application_mks.pdf"
+   },
+   "provenance": {
+    "source_url": "https://www.skillsusa.org/recognition/scholarships-and-grants/",
+    "source_name": "SkillsUSA",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-sme-education-foundation-scholarships",
+   "name": "SME Education Foundation Scholarships",
+   "sponsor": "SME Education Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 20000,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "community-college",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Manufacturing / engineering-technology fields (CNC, robotics, mechatronics, automation)",
+     "60+ named awards via one application"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://scholarships.smeef.org/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://scholarships.smeef.org/",
+    "source_name": "SME Education Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source shows a past deadline 2026-02-01 — confirm the current cycle.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-stamps-scholars",
+   "name": "Stamps Scholars",
+   "sponsor": "Stamps Family Charitable Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 98000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Full-cost merit award at partner universities",
+     "Leadership and impact focus"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://stampsscholars.org/",
+    "apply_url": "https://www.stampsscholars.org/our-program/how-to-apply/"
+   },
+   "provenance": {
+    "source_url": "https://stampsscholars.org/",
+    "source_name": "Stamps Family Charitable Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-taco-bell-live-m-s-scholarship",
+   "name": "Taco Bell Live Más Scholarship",
+   "sponsor": "Taco Bell Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 25000,
+    "currency": "USD",
+    "basis": "other",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Applications now closed (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Passion-driven video application (not GPA/test based)",
+     "Ages 16-26"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.tacobellfoundation.org/live-mas-scholarship/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.tacobellfoundation.org/live-mas-scholarship/",
+    "source_name": "Taco Bell Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'merit'; stub says 'other' — verify."
+   ]
+  },
+  {
+   "id": "us-techforce-foundation-scholarships",
+   "name": "TechForce Foundation Scholarships",
+   "sponsor": "TechForce Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 3500,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Multiple cycles throughout the year (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "vocational",
+     "community-college",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students in accredited vehicle/technician programs (auto, diesel, aviation, marine, welding, HVAC)",
+     "One general application; FAFSA/financial hardship required"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://techforce.org/scholarships/",
+    "apply_url": "https://techforce.org/app/sign-up"
+   },
+   "provenance": {
+    "source_url": "https://techforce.org/scholarships/",
+    "source_name": "TechForce Foundation",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"United States\" — verify scope/counties (stub scope=national).",
+    "Source basis looks like 'need'; stub says 'merit-need' — verify."
+   ]
+  },
+  {
+   "id": "us-the-american-legion-legacy-scholarship",
+   "name": "The American Legion Legacy Scholarship",
+   "sponsor": "The American Legion",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 20000,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate",
+     "vocational"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Children of post-9/11 service members who died on active duty or veterans with a 50%+ VA disability rating",
+     "Need-based"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.legion.org/get-involved/scholarships/the-american-legion-legacy-scholarship",
+    "apply_url": "https://register.legion.org/legacy-scholarship-application"
+   },
+   "provenance": {
+    "source_url": "https://www.legion.org/get-involved/scholarships/the-american-legion-legacy-scholarship",
+    "source_name": "The American Legion",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source shows a past deadline 2026-03-25 — confirm the current cycle.",
+    "Source basis looks like 'need'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-the-gates-scholarship",
+   "name": "The Gates Scholarship",
+   "sponsor": "The Gates Scholarship",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-09-15",
+    "notes": "Verify the current cycle's deadline against the source.",
+    "opens": "2026-07-15"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior"
+    ],
+    "fields_of_study": [],
+    "gpa_min": 3.3,
+    "citizenship": [],
+    "other": [
+     "Pell-eligible high school seniors from minority backgrounds",
+     "Last-dollar; full cost of attendance"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.thegatesscholarship.org/scholarship",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.thegatesscholarship.org/scholarship",
+    "source_name": "The Gates Scholarship",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-thedream-us-national-scholarship",
+   "name": "TheDream.US National Scholarship",
+   "sponsor": "TheDream.US",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 33000,
+    "currency": "USD",
+    "basis": "need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "community-college"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Undocumented students with DACA or TPS (or eligible)",
+     "Attend a partner college"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.thedream.us/scholarships/",
+    "apply_url": "https://www.thedream.us/scholarships/national-scholarship/"
+   },
+   "provenance": {
+    "source_url": "https://www.thedream.us/scholarships/",
+    "source_name": "TheDream.US",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Geography: \"Not available in California or Washington; for undocumented students in locked-out states\" — verify scope/counties (stub scope=national)."
+   ]
+  },
+  {
+   "id": "us-thurgood-marshall-college-fund-scholarships",
+   "name": "Thurgood Marshall College Fund Scholarships",
+   "sponsor": "Thurgood Marshall College Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "merit-need",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application deadlines vary by individual scholarship; see specific scholarship p (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "For students at TMCF member HBCUs/PBIs and other eligible accredited schools",
+     "One general application auto-matches to open scholarships"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://tmcf.org/scholarships/open-scholarships/",
+    "apply_url": "https://tmcf.org/scholarships/application-process/"
+   },
+   "provenance": {
+    "source_url": "https://tmcf.org/scholarships/open-scholarships/",
+    "source_name": "Thurgood Marshall College Fund",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active"
+  },
+  {
+   "id": "us-tillman-scholars",
+   "name": "Tillman Scholars",
+   "sponsor": "Pat Tillman Foundation",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Application deadline varies each year; check Scholar Applications page for curre (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Active-duty service members, veterans, and military spouses",
+     "Leadership and service focus"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://pattillmanfoundation.org/",
+    "apply_url": "https://pattillmanfoundation.org/apply-old/scholar-pillars/"
+   },
+   "provenance": {
+    "source_url": "https://pattillmanfoundation.org/",
+    "source_name": "Pat Tillman Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'need'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-truman-scholarship",
+   "name": "Truman Scholarship",
+   "sponsor": "Harry S. Truman Scholarship Foundation",
+   "sponsor_type": "federal",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "service",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "College juniors committed to public-service careers",
+     "Nominated by their institution"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.truman.gov/",
+    "apply_url": "https://www.truman.gov/apply"
+   },
+   "provenance": {
+    "source_url": "https://www.truman.gov/",
+    "source_name": "Harry S. Truman Scholarship Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'merit'; stub says 'service' — verify."
+   ]
+  },
+  {
+   "id": "us-tylenol-future-care-scholarship",
+   "name": "TYLENOL Future Care Scholarship",
+   "sponsor": "Kenvue (TYLENOL)",
+   "sponsor_type": "employer",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate",
+     "graduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Medicine, nursing, pharmacy, or other patient-care healthcare majors with 1+ year remaining",
+     "U.S./PR/DC residents"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.tylenol.com/tylenol-future-care-scholarship",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.tylenol.com/tylenol-future-care-scholarship",
+    "source_name": "Kenvue (TYLENOL)",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  },
+  {
+   "id": "us-udall-undergraduate-scholarship",
+   "name": "Udall Undergraduate Scholarship",
+   "sponsor": "Udall Foundation",
+   "sponsor_type": "federal",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "field",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Students in environment fields, or Native American students in tribal health/policy"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.udall.gov/",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.udall.gov/",
+    "source_name": "Udall Foundation",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page.",
+    "Source basis looks like 'merit'; stub says 'field' — verify."
+   ]
+  },
+  {
+   "id": "us-uncf-general-scholarship",
+   "name": "UNCF General Scholarship",
+   "sponsor": "United Negro College Fund",
+   "sponsor_type": "foundation",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": null,
+    "currency": "USD",
+    "basis": "identity",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": null,
+    "notes": "General deadline information not specified; various programs have different dead (auto-found — verify)"
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school-senior",
+     "undergraduate"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Primarily African American students with financial need",
+     "One application matches to many UNCF programs"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://uncf.org/scholarships",
+    "apply_url": "https://uncf.org/pages/Applying-for-Scholarships-and-Grants"
+   },
+   "provenance": {
+    "source_url": "https://uncf.org/scholarships",
+    "source_name": "United Negro College Fund",
+    "last_verified": "2026-05-27",
+    "verification_method": "manual",
+    "added": "2026-05-27"
+   },
+   "status": "active",
+   "review_flags": [
+    "Source basis looks like 'need'; stub says 'identity' — verify."
+   ]
+  },
+  {
+   "id": "us-vfw-voice-of-democracy-audio-essay-scholarship",
+   "name": "VFW Voice of Democracy Audio-Essay Scholarship",
+   "sponsor": "Veterans of Foreign Wars",
+   "sponsor_type": "civic",
+   "type": "scholarship",
+   "award": {
+    "amount_min": null,
+    "amount_max": 35000,
+    "currency": "USD",
+    "basis": "merit",
+    "renewable": null,
+    "notes": null
+   },
+   "deadline": {
+    "type": "annual",
+    "date": "2026-10-31",
+    "notes": "Verify the current cycle's deadline against the source."
+   },
+   "eligibility": {
+    "residency": [
+     "US"
+    ],
+    "education_level": [
+     "high-school"
+    ],
+    "fields_of_study": [],
+    "gpa_min": null,
+    "citizenship": [],
+    "other": [
+     "Audio-essay competition open to all U.S. students in grades 9-12 (no military affiliation required)",
+     "National first place is a large award; deadline Oct 31"
+    ],
+    "tags": [
+     "national"
+    ]
+   },
+   "geo": {
+    "state": null,
+    "scope": "national",
+    "counties": []
+   },
+   "links": {
+    "info_url": "https://www.vfw.org/community/youth-and-education/youth-scholarships",
+    "apply_url": null
+   },
+   "provenance": {
+    "source_url": "https://www.vfw.org/community/youth-and-education/youth-scholarships",
+    "source_name": "Veterans of Foreign Wars",
+    "last_verified": "2026-06-16",
+    "verification_method": "manual",
+    "added": "2026-06-16"
+   },
+   "status": "active",
+   "review_flags": [
+    "No distinct application link on the source page — applicants apply via the info page."
+   ]
+  }
+ ]
+}
